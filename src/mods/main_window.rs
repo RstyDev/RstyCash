@@ -1,0 +1,9 @@
+pub mod cuadro_principal;
+pub mod cuadro_venta;
+pub mod main_page;
+pub mod pago;
+pub mod pagos;
+pub mod producto;
+pub mod productos;
+pub mod resumen_pago;
+pub mod select_clientes;
