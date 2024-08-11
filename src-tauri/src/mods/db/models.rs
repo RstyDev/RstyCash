@@ -148,8 +148,14 @@ impl Mapper {
             ))),
         }
     }
-    pub fn cliente(cliente: ClienteDB)->Cli{
-        Cli::build(cliente.id, Arc::from(cliente.nombre), cliente.dni, cliente.activo, cliente.time, cliente.limite)
+    pub fn cliente(cliente: ClienteDB) -> Cli {
+        Cli::build(
+            cliente.dni,
+            Arc::from(cliente.nombre),
+            cliente.activo,
+            cliente.time,
+            cliente.limite,
+        )
     }
     pub async fn venta(db: &Pool<Sqlite>, venta: VentaDB, user: &Option<Arc<User>>) -> Res<Venta> {
         {
@@ -292,16 +298,15 @@ impl Mapper {
             }
             let qres: Option<ClienteDB> = sqlx::query_as!(
                 ClienteDB,
-                r#"select id as "id:_", nombre, dni as "dni: _", limite as "limite: _", activo, time from clientes where id = ? limit 1"#,
+                r#"select dni as "dni: _", nombre, limite as "limite: _", activo, time from clientes where dni = ? limit 1"#,
                 venta.cliente
             )
             .fetch_optional(db)
             .await?;
             let cliente = match qres {
                 Some(cliente) => Cliente::Regular(Cli::build(
-                    cliente.id,
-                    Arc::from(cliente.nombre),
                     cliente.dni,
+                    Arc::from(cliente.nombre),
                     cliente.activo,
                     cliente.time,
                     cliente.limite,
@@ -381,11 +386,10 @@ pub mod map {
         pub cajero: Option<String>,
     }
 
-    #[derive(FromRow,Clone)]
+    #[derive(FromRow, Clone)]
     pub struct ClienteDB {
-        pub id: i32,
-        pub nombre: String,
         pub dni: i32,
+        pub nombre: String,
         pub limite: Option<f32>,
         pub activo: bool,
         pub time: NaiveDateTime,
@@ -558,7 +562,7 @@ pub mod map {
         pub time: NaiveDateTime,
         pub monto_total: f32,
         pub monto_pagado: f32,
-        pub cliente: Option<i64>,
+        pub cliente: i32,
         pub cerrada: bool,
         pub paga: bool,
         pub pos: bool,

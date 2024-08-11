@@ -15,6 +15,7 @@ chrono = {version= "0.4.38" ,features = ["serde"] }
 serde = { version = "1.0.204", features = ["derive","rc"] }
 console_error_panic_hook = "0.1.7"
 getrandom = { version = "0.2", features = ["js"]}
+#tauri-interop = { version = "2.1.6", features = ["event"] }
 [workspace]
 members = ["src-tauri"]
 

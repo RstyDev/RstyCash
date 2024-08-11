@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 
-#[derive(Clone, Serialize, Deserialize, Default)]
+#[derive(Clone, Serialize, Deserialize, Default, Debug)]
 pub struct Caja {
     pub id: i32,
     pub inicio: NaiveDateTime,

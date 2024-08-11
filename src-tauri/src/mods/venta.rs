@@ -1,7 +1,7 @@
-use crate::mods::db::map::{BigIntDB, ClienteDB, VentaDB};
+use crate::mods::db::map::{BigIntDB, ClienteDB, IntDB, VentaDB};
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::{query, Pool, Sqlite};
+use sqlx::{query, query_as, Pool, Sqlite};
 use std::sync::Arc;
 
 use Valuable as V;
@@ -57,9 +57,20 @@ pub struct VentaSHC {
 impl<'a> Venta {
     pub async fn new(vendedor: Option<Arc<User>>, db: &Pool<Sqlite>, pos: bool) -> Res<Venta> {
         let time = Utc::now().naive_local();
-        let res= query(
-            "insert into ventas (time, monto_total, monto_pagado, cliente, cerrada, paga, pos ) values (?, ?, ?, ?, ?, ?, ?)").bind(time).bind(0.0).bind(0.0).bind(None::<i64>).bind(false).bind(false).bind(pos).execute(db).await?;
-        let id = res.last_insert_rowid() as i32;
+        let qres = query_as!(
+            IntDB,
+            r#"select dni as "int:_" from clientes where nombre = ?"#,
+            "Final"
+        )
+        .fetch_one(db)
+        .await;
+
+        let id= match query(
+            "insert into ventas (time, monto_total, monto_pagado, cliente, cerrada, paga, pos ) values (?, ?, ?, ?, ?, ?, ?)").bind(time).bind(0.0).bind(0.0).bind(qres.unwrap().int).bind(false).bind(false).bind(pos).execute(db).await{
+                Ok(a) => a.last_insert_rowid() as i32,
+                Err(e) => {println!("Aca el error de insert venta {e}");0},
+            };
+
         let cliente = Cliente::new(None);
         Ok(Venta {
             monto_total: 0.0,
@@ -81,7 +92,7 @@ impl<'a> Venta {
     ) -> Res<Venta> {
         let qres: Option<VentaDB> = sqlx::query_as!(
             VentaDB,
-            r#"select id as "id:_", time, monto_total as "monto_total:_", monto_pagado as "monto_pagado:_", cliente, cerrada, paga, pos from ventas where pos = ? and cerrada = ?"#,
+            r#"select id as "id:_", time, monto_total as "monto_total:_", monto_pagado as "monto_pagado:_", cliente as "cliente:_", cerrada, paga, pos from ventas where pos = ? and cerrada = ?"#,
             pos,
             false
         )
@@ -310,21 +321,20 @@ impl<'a> Venta {
             })
         }
     }
-    pub async fn set_cliente(&mut self, id: i64, db: &Pool<Sqlite>) -> Res<()> {
+    pub async fn set_cliente(&mut self, id: i32, db: &Pool<Sqlite>) -> Res<()> {
         if id == 0 {
             self.cliente = Cliente::Final;
             Ok(())
         } else {
             let qres: Option<ClienteDB> =
-                sqlx::query_as!(ClienteDB, r#"select id as "id:_", nombre, dni as "dni:_", limite as "limite:_", activo, time from clientes where id = ? limit 1"#, id)
+                sqlx::query_as!(ClienteDB, r#"select dni as "dni:_", nombre, limite as "limite:_", activo, time from clientes where dni = ? limit 1"#, id)
                     .fetch_optional(db)
                     .await?;
             match qres {
                 Some(model) => {
                     self.cliente = Cliente::Regular(Cli::build(
-                        model.id,
-                        Arc::from(model.nombre),
                         model.dni,
+                        Arc::from(model.nombre),
                         model.activo,
                         model.time,
                         model.limite,
@@ -369,7 +379,7 @@ impl<'a> Venta {
                     }
                     Cliente::Regular(cli) => {
                         paga = self.paga;
-                        cliente = Some(*cli.id());
+                        cliente = Some(*cli.dni());
                     }
                 }
                 sqlx::query("update ventas set time = ?, monto_total = ?, monto_pagado = ?, cliente = ?, cerrada = ?, paga = ?, pos = ? where id = ?")
@@ -386,7 +396,7 @@ impl<'a> Venta {
                     }
                     Cliente::Regular(cli) => {
                         paga = self.paga;
-                        cliente = Some(*cli.id());
+                        cliente = Some(*cli.dni());
                     }
                 }
                 sqlx::query("insert into ventas (time, monto_total, monto_pagado, cliente, cerrada, paga, pos)

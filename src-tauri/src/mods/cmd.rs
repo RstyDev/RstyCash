@@ -874,7 +874,7 @@ pub mod commands {
     }
     pub fn pagar_deuda_especifica_2(
         sistema: State<Mutex<Sistema>>,
-        cliente: i64,
+        cliente: i32,
         venta: Venta,
     ) -> Res<Venta> {
         let sis = block_on(sistema.lock());
@@ -901,7 +901,7 @@ pub mod commands {
         sis.access();
         Ok(sis.set_cantidad_producto_venta(index, cantidad, pos)?)
     }
-    pub fn set_cliente_2(sistema: State<Mutex<Sistema>>, id: i64, pos: bool) -> Res<Venta> {
+    pub fn set_cliente_2(sistema: State<Mutex<Sistema>>, id: i32, pos: bool) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.set_cliente(id, pos)?;
         Ok(sis.venta(pos))
@@ -949,7 +949,15 @@ pub mod commands {
         user: User,
     ) -> Res<SistemaSH> {
         let mut sis = block_on(sistema.lock());
-        println!("desde try_login {:#?}", user);
+        // window.emit(
+        //     "main",
+        //     Payload {
+        //         message: Some("inicio sesion".to_string()),
+        //         pos: Some(false),
+        //         val: None,
+        //     },
+        // )?;
+        // println!("desde try_login {:#?}", user);
         let rango = block_on(sis.try_login(user))?;
         let menu = window
             .app_handle()
@@ -968,18 +976,18 @@ pub mod commands {
                 }
             },
         }
-        window.emit(
-            "main",
-            Payload {
-                message: Some("inicio sesion".to_string()),
-                pos: None,
-                val: None,
-            },
-        )?;
-        if let Some(window) = Window::get_window(&window, "main") {
-            window.maximize()?;
-        }
-        close_window_2(window)?;
+        // window.emit(
+        //     "main",
+        //     Payload {
+        //         message: Some("inicio sesion".to_string()),
+        //         pos: None,
+        //         val: None,
+        //     },
+        // )?;
+        // if let Some(window) = Window::get_window(&window, "main") {
+        window.maximize()?;
+        // }
+        // close_window_2(window)?;
         let clientes = block_on(sis.get_clientes())?;
         let user = sis.arc_user().as_ref().clone();
         let conf = sis.configs().clone();

@@ -113,9 +113,8 @@ CREATE TABLE IF NOT EXISTS cajas (
     cajero text
 );
 CREATE TABLE IF NOT EXISTS clientes (
-    id integer PRIMARY KEY AUTOINCREMENT not null,
+    dni integer PRIMARY KEY not null,
     nombre TEXT not null,
-    dni integer not null,
     limite real,
     activo boolean not null,
     time datetime not null
@@ -242,11 +241,11 @@ CREATE TABLE IF NOT EXISTS ventas (
     time DATETIME NOT NULL,
     monto_total REAL NOT NULL,
     monto_pagado REAL NOT NULL,
-    cliente INTEGER,
+    cliente INTEGER NOT NULL,
     cerrada BOOLEAN NOT NULL,
     paga BOOLEAN NOT NULL,
     pos BOOLEAN NOT NULL,
-    FOREIGN KEY (cliente) REFERENCES clientes(id)
+    FOREIGN KEY (cliente) REFERENCES clientes(dni)
 );
 CREATE TABLE IF NOT EXISTS totales (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,

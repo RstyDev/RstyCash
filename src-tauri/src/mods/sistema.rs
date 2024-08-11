@@ -11,6 +11,7 @@ use crate::mods::{
     get_hash, leer_file, AppError, Caja, Cli, Config, Db, Movimiento, Pago, Pesable, Presentacion,
     Producto, Proveedor, Rango, RelacionProdProv, Res, Rubro, User, Valuable, Venta,
 };
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite};
 use std::{collections::HashSet, sync::Arc};
@@ -159,7 +160,10 @@ impl<'a> Sistema {
         let registro = Vec::new();
         println!("{:#?}", caja);
         let w1 = Arc::clone(&db);
-        
+        if let Err(e) = block_on(Cliente::insert_final(db.as_ref())) {
+            println!("Error insertando final {e}");
+        }
+
         let mut sis = Sistema {
             user: None,
             db,
@@ -177,9 +181,24 @@ impl<'a> Sistema {
             relaciones,
             stash,
             registro,
-            clientes: Vec::new(),
+            // clientes: Vec::new(),
+            clientes: vec![],
         };
+        /*//*----- */ */
+        if block_on(Cli::existe(37559798, &sis.db))?{
+            let _test = block_on(Cli::new_to_db(
+                &sis.db,
+                Cli::build(
+                    37559798,
+                    "Lucas".into(),
+                    true,
+                    Utc::now().naive_local(),
+                    Some(3000000.0),
+                ),
+            ))?;
+        }
         sis.clientes = block_on(sis.get_clientes())?;
+
         async_runtime::block_on(async {
             Sistema::procesar(Arc::clone(&sis.db), sis.proveedores.clone()).await
         })?;
@@ -329,16 +348,18 @@ impl<'a> Sistema {
     }
 
     pub async fn get_clientes(&self) -> Res<Vec<Cli>> {
-        let qres: Vec<ClienteDB> = sqlx::query_as!(ClienteDB, r#"select id as "id:_", nombre, dni as "dni:_", limite as "limite:_", activo, time from clientes "#)
-            .fetch_all(self.db())
-            .await?;
+        let qres: Vec<ClienteDB> = sqlx::query_as!(
+            ClienteDB,
+            r#"select dni as "dni:_", nombre, limite as "limite:_", activo, time from clientes "#
+        )
+        .fetch_all(self.db())
+        .await?;
         Ok(qres
             .iter()
             .map(|cli| {
                 Cli::build(
-                    cli.id,
-                    Arc::from(cli.nombre.to_owned()),
                     cli.dni,
+                    Arc::from(cli.nombre.to_owned()),
                     cli.activo,
                     cli.time,
                     cli.limite,
@@ -605,7 +626,7 @@ impl<'a> Sistema {
                 .unwrap();
         });
     }
-    pub fn pagar_deuda_especifica(&self, cliente: i64, venta: Venta) -> Res<Venta> {
+    pub fn pagar_deuda_especifica(&self, cliente: i32, venta: Venta) -> Res<Venta> {
         async_runtime::block_on(async {
             Cli::pagar_deuda_especifica(cliente, &self.db, venta, &self.user).await
         })
@@ -889,7 +910,7 @@ impl<'a> Sistema {
             })
         }
     }
-    pub fn set_cliente(&mut self, id: i64, pos: bool) -> Res<()> {
+    pub fn set_cliente(&mut self, id: i32, pos: bool) -> Res<()> {
         if pos {
             async_runtime::block_on(async { self.ventas.a.set_cliente(id, &self.db).await })
         } else {

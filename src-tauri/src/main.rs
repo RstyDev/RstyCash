@@ -267,13 +267,9 @@ async fn open_edit_settings(handle: tauri::AppHandle) -> Res<()> {
 }
 #[tauri::command]
 async fn open_login(handle: tauri::AppHandle, window: Window) -> Res<()> {
-    
     loop {
         if window
-            .emit(
-                "main",
-                Payload::new(Some(String::from("aca")), None, None),
-            )
+            .emit("main", Payload::new(Some(String::from("aca")), None, None))
             .is_ok()
         {
             break;
@@ -300,7 +296,7 @@ async fn open_stash<'a>(
 #[tauri::command]
 fn pagar_deuda_especifica(
     sistema: State<Mutex<Sistema>>,
-    cliente: i64,
+    cliente: i32,
     venta: Venta,
 ) -> Res<Venta> {
     Ok(pagar_deuda_especifica_2(sistema, cliente, venta)?)
@@ -321,7 +317,7 @@ fn set_cantidad_producto_venta(
     )?)
 }
 #[tauri::command]
-fn set_cliente(sistema: State<Mutex<Sistema>>, id: i64, pos: bool) -> Res<Venta> {
+fn set_cliente(sistema: State<Mutex<Sistema>>, id: i32, pos: bool) -> Res<Venta> {
     Ok(set_cliente_2(sistema, id, pos)?)
 }
 #[tauri::command]

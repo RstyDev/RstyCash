@@ -1,6 +1,8 @@
+use std::rc::Rc;
+
 use serde::{Deserialize, Serialize};
 use sycamore::{
-    prelude::{component, view, Html, Scope, View},
+    prelude::{component, create_signal_from_rc, view, Html, Scope, View},
     Prop,
 };
 use sycamore::{

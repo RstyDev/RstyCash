@@ -1,7 +1,7 @@
 use chrono::{NaiveDateTime, Utc};
 
 use crate::mods::db::{
-    map::{ClienteDB, FloatDB, PagoDB, VentaDB},
+    map::{ClienteDB, FloatDB, IntDB, PagoDB, VentaDB},
     Mapper,
 };
 use serde::{Deserialize, Serialize};
@@ -18,9 +18,8 @@ pub enum Cliente {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Cli {
-    id: i32,
-    nombre: Arc<str>,
     dni: i32,
+    nombre: Arc<str>,
     activo: bool,
     created: NaiveDateTime,
     limite: Cuenta,
@@ -34,7 +33,7 @@ impl Cli {
     pub async fn new_to_db(db: &Pool<Sqlite>, cliente: Cli) -> Res<Cli> {
         let model: Option<ClienteDB> = sqlx::query_as!(
             ClienteDB,
-            r#"select id as "id:_", nombre, dni as "dni: _", limite as "limite: _", activo, time from clientes where dni = ? limit 1"#,
+            r#"select dni as "dni: _", nombre, limite as "limite: _", activo, time from clientes where dni = ? limit 1"#,
             cliente.dni
         )
         .fetch_optional(db)
@@ -47,9 +46,9 @@ impl Cli {
                 })
             }
             None => {
-                let qres = sqlx::query("insert into clientes values (?, ?, ?, ?, ?)")
-                    .bind(cliente.nombre.as_ref())
+                sqlx::query("insert into clientes values (?, ?, ?, ?, ?)")
                     .bind(cliente.dni)
+                    .bind(cliente.nombre.as_ref())
                     .bind(match cliente.limite {
                         Cuenta::Unauth => None,
                         Cuenta::Auth(a) => Some(a),
@@ -59,9 +58,8 @@ impl Cli {
                     .execute(db)
                     .await?;
                 Ok(Cli {
-                    id: qres.last_insert_rowid() as i32,
-                    nombre: Arc::from(cliente.nombre.as_ref()),
                     dni: cliente.dni,
+                    nombre: Arc::from(cliente.nombre.as_ref()),
                     limite: cliente.limite,
                     activo: cliente.activo,
                     created: cliente.created,
@@ -70,17 +68,15 @@ impl Cli {
         }
     }
     pub fn build(
-        id: i32,
-        nombre: Arc<str>,
         dni: i32,
+        nombre: Arc<str>,
         activo: bool,
         created: NaiveDateTime,
         limite: Option<f32>,
     ) -> Cli {
         Cli {
-            id,
-            nombre,
             dni,
+            nombre,
             limite: match limite {
                 Some(limit) => Cuenta::Auth(limit),
                 None => Cuenta::Unauth,
@@ -89,10 +85,16 @@ impl Cli {
             created,
         }
     }
-    pub fn id(&self) -> &i32 {
-        &self.id
+    pub async fn existe(dni: i32, db: &Pool<Sqlite>)->Res<bool>{
+        Ok(sqlx::query_as!(
+            IntDB,
+            r#"select dni as "int:_" from clientes where dni = ?"#,
+            37559798
+        )
+        .fetch_optional(db)
+        .await?
+        .is_none())
     }
-    #[cfg(test)]
     pub fn dni(&self) -> &i32 {
         &self.dni
     }
@@ -106,8 +108,8 @@ impl Cli {
     pub async fn get_deuda(&self, db: &Pool<Sqlite>) -> Res<f32> {
         let model: sqlx::Result<Vec<FloatDB>> = sqlx::query_as!(
             FloatDB,
-            r#"select monto as "float:_" from deudas where id = ? "#,
-            self.id
+            r#"select monto as "float:_" from deudas where cliente = ? "#,
+            self.dni
         )
         .fetch_all(db)
         .await;
@@ -121,8 +123,8 @@ impl Cli {
         let mut ventas = Vec::new();
         let qres: Vec<VentaDB> = sqlx::query_as!(
             VentaDB,
-            r#"select id as "id:_", time, monto_total as "monto_total:_", monto_pagado as "monto_pagado:_", cliente, cerrada, paga, pos from ventas where cliente = ? and paga = ? "#,
-            self.id,
+            r#"select id as "id:_", time, monto_total as "monto_total:_", monto_pagado as "monto_pagado:_", cliente as "cliente:_", cerrada, paga, pos from ventas where cliente = ? and paga = ? "#,
+            self.dni,
             false
         )
         .fetch_all(db)
@@ -134,14 +136,14 @@ impl Cli {
     }
 
     pub async fn pagar_deuda_especifica(
-        id_cliente: i64,
+        id_cliente: i32,
         db: &Pool<Sqlite>,
         venta: Venta,
         user: &Option<Arc<User>>,
     ) -> Res<Venta> {
         let qres: Option<VentaDB> = sqlx::query_as!(
             VentaDB,
-            r#"select id as "id:_", time, monto_total as "monto_total:_", monto_pagado as "monto_pagado:_", cliente, cerrada, paga, pos from ventas where id = ? and cliente = ? and paga = ? "#,
+            r#"select id as "id:_", time, monto_total as "monto_total:_", monto_pagado as "monto_pagado:_", cliente as "cliente:_", cerrada, paga, pos from ventas where id = ? and cliente = ? and paga = ? "#,
             *venta.id(),
             id_cliente,
             false
@@ -153,7 +155,7 @@ impl Cli {
             None => return Err(AppError::IncorrectError(String::from("Id inexistente"))),
         };
 
-        if venta.cliente.unwrap() == id_cliente {
+        if venta.cliente == id_cliente {
             let venta = Mapper::venta(db, venta, user).await?;
             sqlx::query!(
                 "update ventas set paga = ? where id = ? ",
@@ -174,7 +176,7 @@ impl Cli {
     ) -> Res<f32> {
         let qres: Vec<VentaDB> = sqlx::query_as!(
             VentaDB,
-            r#"select id as "id:_", time, monto_total as "monto_total:_", monto_pagado as "monto_pagado:_", cliente, cerrada, paga, pos from ventas where cliente = ? and paga = ? "#,
+            r#"select id as "id:_", time, monto_total as "monto_total:_", monto_pagado as "monto_pagado:_", cliente as "cliente:_", cerrada, paga, pos from ventas where cliente = ? and paga = ? "#,
             id,
             false
         )
@@ -243,6 +245,27 @@ impl Cliente {
     }
     pub fn to_shared_complete(&self) -> Self {
         self.clone()
+    }
+    pub async fn insert_final(db: &Pool<Sqlite>) -> Res<()> {
+        if sqlx::query_as!(
+            IntDB,
+            r#"select dni as "int:_" from clientes where nombre = ?"#,
+            "Final"
+        )
+        .fetch_optional(db)
+        .await?
+        .is_none()
+        {
+            sqlx::query("insert into clientes values (?, ?, ?, ?, ?)")
+                .bind(1)
+                .bind("Final")
+                .bind(None::<f32>)
+                .bind(true)
+                .bind(NaiveDateTime::MIN)
+                .execute(db)
+                .await?;
+        }
+        Ok(())
     }
 }
 

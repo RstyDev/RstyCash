@@ -111,10 +111,12 @@ impl Db {
             }
             prods_query.push_str(prods_row);
             for (j, _) in prod.codigos_de_barras().iter().enumerate() {
-                if j > 0 || i > 0 {
-                    codigos_query.push(',');
+                if prod.codigos_de_barras()[j] != 0 {
+                    if j > 0 || i > 0 {
+                        codigos_query.push(',');
+                    }
+                    codigos_query.push_str(codigos_row);
                 }
-                codigos_query.push_str(codigos_row);
             }
         }
         let mut cod_args = sqlx::query(codigos_query.as_str());
@@ -132,7 +134,9 @@ impl Db {
                 .bind(prod.presentacion().get_cantidad())
                 .bind(Utc::now().naive_local());
             for code in prod.codigos_de_barras() {
-                cod_args = cod_args.bind(*code).bind(*prod.id());
+                if *code != 0 {
+                    cod_args = cod_args.bind(*code).bind(*prod.id());
+                }
             }
         }
         prod_args.execute(db).await?;
@@ -246,7 +250,7 @@ impl Db {
         if proveedores.len() > 0 {
             let mut query = String::from("insert into proveedores values (?, ?, ?, ?)"); //id, nombre, contacto, updated
             let row = ", (?, ?, ?, ?)";
-            for _ in 0..proveedores.len() {
+            for _ in 1..proveedores.len() {
                 query.push_str(row);
             }
             let mut sql = sqlx::query(query.as_str());

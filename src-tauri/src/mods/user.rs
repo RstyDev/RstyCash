@@ -11,7 +11,7 @@ pub struct User {
     rango: Rango,
 }
 
-#[derive(Serialize, Deserialize,Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct UserSHC {
     pub id: Arc<str>,
     pub nombre: Arc<str>,

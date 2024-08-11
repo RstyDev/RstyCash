@@ -4,5 +4,5 @@ CREATE TABLE IF NOT EXISTS deudas (
     cliente INTEGER NOT NULL,
     pago INTEGER NOT NULL,
     monto REAL NOT NULL,
-    FOREIGN KEY (cliente) REFERENCES clientes(id)
+    FOREIGN KEY (cliente) REFERENCES clientes(dni)
 )
