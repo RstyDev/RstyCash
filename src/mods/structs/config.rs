@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, sync::Arc};
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, Copy)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, Copy, PartialEq)]
 pub enum Formato {
     #[default]
     Tmv,
     Mtv,
 }
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Mayusculas {
     #[default]
     Upper,
@@ -27,7 +27,7 @@ impl Display for Mayusculas {
         )
     }
 }
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct Config {
     pub politica_redondeo: f32,
     pub formato_producto: Formato,

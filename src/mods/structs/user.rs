@@ -7,7 +7,7 @@ pub fn get_hash(pass: &str) -> i64 {
     h.finish() as i64
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct User {
     pub id: String,
     pub nombre: String,
@@ -83,7 +83,7 @@ impl User {
         }
     }
 }
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq)]
 pub enum Rango {
     #[default]
     Admin,

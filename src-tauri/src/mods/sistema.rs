@@ -106,7 +106,7 @@ impl<'a> Sistema {
             async_runtime::block_on(async { Caja::new(&db.as_ref(), Some(0.0), &configs).await })?;
         let w2 = Arc::clone(&db);
         let w3 = Arc::clone(&db);
-        let r2 = Arc::clone(&db);
+        // let _r2 = Arc::clone(&db);
         let sis = Sistema {
             user,
             db,
@@ -185,7 +185,7 @@ impl<'a> Sistema {
             clientes: vec![],
         };
         /*//*----- */ */
-        if block_on(Cli::existe(37559798, &sis.db))?{
+        if block_on(Cli::existe(37559798, &sis.db))? {
             let _test = block_on(Cli::new_to_db(
                 &sis.db,
                 Cli::build(
@@ -247,7 +247,7 @@ impl<'a> Sistema {
 
         let read_db2 = Arc::clone(&db);
         let db2 = db.clone();
-        let a: JoinHandle<Result<(), AppError>> = async_runtime::spawn(async move {
+        let _a: JoinHandle<Result<(), AppError>> = async_runtime::spawn(async move {
             let medios = [CUENTA, "Efectivo", "Crédito", "Débito"];
             for i in 0..medios.len() {
                 sqlx::query("insert into medios_pago values (?, ?)")
@@ -571,7 +571,7 @@ impl<'a> Sistema {
         self.user = None;
     }
 
-    fn splitx(filtro: &str) -> Res<(f32, &str)> {
+    fn _splitx(filtro: &str) -> Res<(f32, &str)> {
         let partes = filtro.split('*').collect::<Vec<&str>>();
         match partes.len() {
             1 => Ok((1.0, partes[0])),
@@ -940,7 +940,12 @@ impl<'a> Sistema {
             user: self.user.clone().unwrap().to_shared(),
             caja: self.caja.to_shared_complete(),
             configs: self.configs.to_shared_complete(),
-            clientes: self.clientes.clone(),
+            clientes: self
+                .clientes
+                .iter()
+                .cloned()
+                .filter(|c| c.nombre() != "Final")
+                .collect::<Vec<Cli>>(),
             ventas: [self.ventas.a.to_shared(), self.ventas.b.to_shared()],
             proveedores: self
                 .proveedores

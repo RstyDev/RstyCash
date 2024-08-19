@@ -29,22 +29,22 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
 }
-#[derive(Prop)]
+#[derive(Prop,Clone,Debug,PartialEq)]
 pub struct StateProps {
-    pub venta_a: Rc<Venta>,
-    pub venta_b: Rc<Venta>,
-    pub config: Rc<Config>,
-    pub clientes: Rc<Vec<Cliente>>,
-    pub pos: Rc<bool>,
+    pub venta_a: RcSignal<Venta>,
+    pub venta_b: RcSignal<Venta>,
+    pub config: RcSignal<Config>,
+    pub clientes: RcSignal<Vec<Cliente>>,
+    pub pos: RcSignal<bool>,
 }
 
 #[component]
 pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
-    let venta_a = create_signal_from_rc(cx, props.venta_a);
-    let venta_b = create_signal_from_rc(cx, props.venta_b);
-    let config = create_signal_from_rc(cx, props.config);
-    let pos = create_signal_from_rc(cx, props.pos);
-    let clientes = create_signal_from_rc(cx, props.clientes);
+    let clientes = props.clientes.clone();
+    let venta_a = props.venta_a.clone();
+    let venta_b = props.venta_b.clone();
+    let config = props.config.clone();
+    let pos = props.pos.clone();
     view!(cx,
       header(){
         section(id="header"){
@@ -54,12 +54,12 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
             }
           }
           div(){
-            SelectClientes(clientes= clientes.get())
+            SelectClientes(clientes= props.clientes.get())
           }
         }
       }
       main(class="main-screen"){
-        CuadroPrincipal(venta_a=venta_a.get(), venta_b=venta_b.get(), config=config.get(), pos=pos.get(),clientes=clientes.get())
+        CuadroPrincipal(venta_a=props.venta_a.clone(), venta_b=props.venta_b.clone(), config=props.config.clone(), pos=props.pos,clientes=clientes)
         ResumenPago(venta=match pos.get().as_ref(){
             true => venta_a.get(),
             false => venta_b.get(),

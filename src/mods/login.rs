@@ -2,7 +2,9 @@ use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
 use sycamore::{
-    prelude::{component, create_signal_from_rc, view, Html, Scope, View},
+    prelude::{
+        component, create_rc_signal_from_rc, create_signal_from_rc, view, Html, Scope, Signal, View,
+    },
     Prop,
 };
 use sycamore::{
@@ -24,7 +26,7 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
 }
-#[derive(Prop, Default)]
+#[derive(Prop)]
 pub struct LoginProps {
     pub user: RcSignal<User>,
 }
@@ -59,6 +61,7 @@ pub fn Login<G: Html>(cx: Scope, props: LoginProps) -> View<G> {
     //let us = create_signal(cx, props.args);
     //let dato=Event::new("type").unwrap().target().unwrap();
 
+    // let us = create_rc_signal_from_rc(props.user);
     let pass = create_signal(cx, String::from(""));
     let user = create_signal(cx, String::from(""));
     let input_ingresar: View<G> = input()

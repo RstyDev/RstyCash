@@ -85,11 +85,11 @@ impl Cli {
             created,
         }
     }
-    pub async fn existe(dni: i32, db: &Pool<Sqlite>)->Res<bool>{
+    pub async fn existe(dni: i32, db: &Pool<Sqlite>) -> Res<bool> {
         Ok(sqlx::query_as!(
             IntDB,
             r#"select dni as "int:_" from clientes where dni = ?"#,
-            37559798
+            dni
         )
         .fetch_optional(db)
         .await?
@@ -101,7 +101,6 @@ impl Cli {
     pub fn limite(&self) -> &Cuenta {
         &self.limite
     }
-    #[cfg(test)]
     pub fn nombre(&self) -> &str {
         self.nombre.as_ref()
     }

@@ -4,11 +4,9 @@
 mod mods;
 use commands::*;
 use mods::{
-    cmd::*, crear_file, db::db, leer_file, Caja, Cli, Config, Pago, Presentacion, Producto,
-    Proveedor, Rango, RelacionProdProv, Result as Res, Rubro, Sistema, SistemaSH, User, UserSH,
-    UserSHC, Valuable as V, Venta,
+    cmd::*, db::db, Caja, Cli, Config, Pago, Producto, Proveedor, Rango, Result as Res, Rubro,
+    Sistema, SistemaSH, User, UserSHC, Valuable as V, Venta,
 };
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::{
     async_runtime::{block_on, Mutex},

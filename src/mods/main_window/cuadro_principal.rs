@@ -17,25 +17,22 @@ extern "C" {
 
 #[component]
 pub fn CuadroPrincipal<G: Html>(cx: Scope, props: StateProps) -> View<G> {
-    let pos = create_signal_from_rc(cx, props.pos);
-    let venta_a = create_signal_from_rc(cx, props.venta_a);
-    let venta_b = create_signal_from_rc(cx, props.venta_b);
-    let config = create_signal_from_rc(cx, props.config);
-
+    let pos = props.pos.clone();
+    let pos2 = props.pos.clone();
     view! {cx,
         section(id="cuadro-principal"){
             section(class="ayb"){
-                a(id="v-a",class=format!("a-boton {}",match pos.get().as_ref(){true=>"v-actual",false=>""})){
+                a(id="v-a",class=format!("a-boton {}",match props.pos.clone().get().as_ref(){true=>"v-actual",false=>""})){
                     "Venta A"
                 }
                 a(id="v-a",class=format!("a-boton {}",match pos.get().as_ref(){true=>"",false=>"v-actual"})){
                     "Venta B"
                 }
             }
-            CuadroVenta(venta=match pos.get().as_ref(){
-                true => Rc::from(venta_a.get()),
-                false => Rc::from(venta_b.get()),
-            },config=config.get())
+            CuadroVenta(venta=match pos2.get().as_ref(){
+                true => Rc::from(props.venta_a.get()),
+                false => Rc::from(props.venta_b.get()),
+            },config=props.config.get())
         }
     }
 }

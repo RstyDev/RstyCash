@@ -16,7 +16,6 @@ impl Payload {
 pub mod commands {
     use crate::mods::{
         cmd::{Payload, DENEGADO, INDEX},
-        get_hash,
         sistema::SistemaSH,
         AppError, Caja, Cli, Config, Pago, Pesable, Producto, Proveedor, Rango, Res, Rubro,
         Sistema, User, Valuable as V, Venta,
@@ -70,7 +69,7 @@ pub mod commands {
         menu.get_item("add user").set_enabled(state)?;
         Ok(menu.get_item("edit settings").set_enabled(state)?)
     }
-    pub fn agregar_cliente_2(
+    pub fn _agregar_cliente_2(
         sistema: State<Mutex<Sistema>>,
         window: Window,
         cliente: Cli,
@@ -125,7 +124,7 @@ pub mod commands {
         }
         Ok(sis.venta(pos).pagos())
     }
-    pub fn agregar_pesable_2<'a>(
+    pub fn _agregar_pesable_2<'a>(
         window: Window,
         sistema: State<Mutex<Sistema>>,
         mut pesable: Pesable,
@@ -146,7 +145,7 @@ pub mod commands {
         sistema: State<Mutex<Sistema>>,
         producto: Producto,
     ) -> Res<String> {
-        let mut sis = block_on(sistema.lock());
+        let sis = block_on(sistema.lock());
         match sis.arc_user().rango() {
             Rango::Admin => {
                 let prod = block_on(sis.agregar_producto(producto))?;
@@ -986,11 +985,13 @@ pub mod commands {
         // )?;
         // if let Some(window) = Window::get_window(&window, "main") {
         window.maximize()?;
+        window.set_decorations(true)?;
         // }
         // close_window_2(window)?;
-        let clientes = block_on(sis.get_clientes())?;
-        let user = sis.arc_user().as_ref().clone();
-        let conf = sis.configs().clone();
+
+        // let clientes = block_on(sis.get_clientes())?;
+        // let user = sis.arc_user().as_ref().clone();
+        // let conf = sis.configs().clone();
         Ok(sis.to_shared())
     }
     pub fn unstash_sale_2(

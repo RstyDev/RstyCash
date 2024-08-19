@@ -1,7 +1,12 @@
 use serde::{Deserialize, Serialize};
+use sycamore::prelude::RcSignal;
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+use crate::mods::main_window::main_page::StateProps;
+
+use super::User;
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum Windows {
-    Main,
-    Login,
+    Main(StateProps),
+    Login(RcSignal<User>),
 }

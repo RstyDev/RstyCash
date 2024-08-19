@@ -1,17 +1,17 @@
 use crate::mods::{AppError, Res};
 use sqlx::{
-    migrate::{MigrateDatabase, MigrateError, Migrator},
-    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqliteQueryResult},
-    Error, Executor, Pool, Sqlite, SqlitePool,
+    migrate::MigrateDatabase,
+    sqlite::{SqliteConnectOptions, SqliteJournalMode},
+    Executor, Pool, Sqlite, SqlitePool,
 };
-use std::{env, path, str::FromStr};
+use std::str::FromStr;
 
 pub async fn db() -> Res<Pool<Sqlite>> {
     let url = "sqlite://sqlite.db";
     let mut exists = true;
     if !Sqlite::database_exists(url).await.unwrap_or(false) {
         match Sqlite::create_database(url).await {
-            Ok(a) => {
+            Ok(_) => {
                 exists = false;
                 println!("Create db success")
             }
@@ -47,11 +47,8 @@ pub async fn db() -> Res<Pool<Sqlite>> {
 
 pub async fn fresh(db: &Pool<Sqlite>) {
     down(db).await;
-    match sqlx::query(QUERY).execute(db).await {
-        Ok(a) => {}
-        Err(e) => loop {
-            println!("{}", e)
-        },
+    if let Err(e) = sqlx::query(QUERY).execute(db).await {
+        println!("{}", e);
     };
     // let migrations = path::Path::new("./migrations");
     // println!("{:#?}", migrations);

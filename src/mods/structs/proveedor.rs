@@ -7,7 +7,7 @@ pub struct Proveedor {
     pub nombre: Arc<str>,
     pub contacto: Option<i64>,
 }
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ProveedorSH {
     pub id: i32,
     pub nombre: Arc<str>,

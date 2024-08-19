@@ -10,9 +10,8 @@ pub enum Cliente {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Cli {
-    pub id: i32,
-    pub nombre: String,
     pub dni: i32,
+    pub nombre: String,
     pub activo: bool,
     pub created: NaiveDateTime,
     pub limite: Cuenta,
@@ -24,17 +23,15 @@ pub enum Cuenta {
 }
 impl Cli {
     pub fn new(
-        id: i32,
-        nombre: String,
         dni: i32,
+        nombre: String,
         activo: bool,
         created: NaiveDateTime,
         limite: Cuenta,
     ) -> Cli {
         Cli {
-            id,
-            nombre,
             dni,
+            nombre,
             activo,
             created,
             limite,
@@ -53,7 +50,7 @@ impl PartialEq for Cuenta {
 impl PartialEq for Cliente {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (Self::Regular(l0), Self::Regular(r0)) => l0.id == r0.id,
+            (Self::Regular(l0), Self::Regular(r0)) => l0.dni == r0.dni,
 
             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
         }
