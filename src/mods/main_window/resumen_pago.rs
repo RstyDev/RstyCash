@@ -10,22 +10,22 @@ use crate::mods::main_window::pagos::Pagos;
 use crate::mods::structs::{Config, Valuable, Venta};
 #[derive(Prop)]
 pub struct ResumenProps {
-    pub venta: Rc<Venta>,
-    pub config: Rc<Config>,
+    pub venta: RcSignal<Venta>,
+    pub config: RcSignal<Config>,
 }
 impl ResumenProps {
-    pub fn new(venta: Rc<Venta>, config: Rc<Config>) -> ResumenProps {
+    pub fn new(venta: RcSignal<Venta>, config: RcSignal<Config>) -> ResumenProps {
         ResumenProps { venta, config }
     }
 }
 
 #[component]
 pub fn ResumenPago<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
-    let venta = create_signal_from_rc(cx, props.venta.clone());
+    let venta = props.venta.clone();
 
     let prods = create_signal(cx, venta.get().productos.clone());
     let a_pagar = create_rc_signal(venta.get().monto_total - venta.get().monto_pagado);
-    let format = props.config.formato_producto;
+    let format = props.config.get().formato_producto;
     view!(cx,
         aside(id="resumen-y-pago"){
             article(){

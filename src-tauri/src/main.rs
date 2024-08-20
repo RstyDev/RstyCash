@@ -4,8 +4,8 @@
 mod mods;
 use commands::*;
 use mods::{
-    cmd::*, db::db, Caja, Cli, Config, Pago, Producto, Proveedor, Rango, Result as Res, Rubro,
-    Sistema, SistemaSH, User, UserSHC, Valuable as V, Venta,
+    cmd::*, db::db, Caja, Cli, Cliente, Config, MedioPago, Pago, Producto, Proveedor, Rango,
+    Result as Res, Rubro, Sistema, SistemaSH, User, UserSHC, Valuable as V, Venta,
 };
 use std::sync::Arc;
 use tauri::{
@@ -152,7 +152,7 @@ fn get_caja(sistema: State<Mutex<Sistema>>) -> Res<Caja> {
     Ok(get_caja_2(sistema)?)
 }
 #[tauri::command]
-fn get_clientes(sistema: State<Mutex<Sistema>>) -> Res<Vec<Cli>> {
+fn get_clientes(sistema: State<Mutex<Sistema>>) -> Res<Vec<Cliente>> {
     Ok(get_clientes_2(sistema)?)
 }
 #[tauri::command]
@@ -188,7 +188,7 @@ fn get_log_state(sistema: State<Mutex<Sistema>>) -> Res<bool> {
     Ok(get_log_state_2(sistema)?)
 }
 #[tauri::command]
-fn get_medios_pago(sistema: State<Mutex<Sistema>>) -> Res<Vec<String>> {
+fn get_medios_pago(sistema: State<Mutex<Sistema>>) -> Res<Vec<MedioPago>> {
     Ok(get_medios_pago_2(sistema)?)
 }
 #[tauri::command]

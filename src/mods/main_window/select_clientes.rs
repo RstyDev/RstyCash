@@ -46,11 +46,6 @@ pub fn SelectClientes<G: Html>(cx: Scope, props: ClientesProps) -> View<G> {
             }
         )
     });
-    log(format!("Aca estan los clientes   {:#?}", clientes.get()).as_str());
-
     view!(cx, (view))
 }
-/*<select id="cliente" value={selectValue(client)} disabled={disabledCli} onChange={(e)=>{select(e)}}>
-    <option value='0' defaultValue="selected" >Consumidor Final</option>
-    {clientes}
-</select>); */
+

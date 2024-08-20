@@ -1,4 +1,4 @@
-use super::Res;
+use super::{MedioPago, Res};
 use crate::mods::db::map::{ConfigDB, MedioPagoDB};
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite};
@@ -10,7 +10,7 @@ pub struct Config {
     formato_producto: Formato,
     modo_mayus: Mayusculas,
     cantidad_productos: u8,
-    medios_pago: Vec<Arc<str>>,
+    medios_pago: Vec<MedioPago>,
 }
 
 impl Config {
@@ -28,8 +28,8 @@ impl Config {
                 .await;
                 let medios = medios?
                     .iter()
-                    .map(|med| Arc::from(med.medio.to_owned()))
-                    .collect::<Vec<Arc<str>>>();
+                    .map(|med| MedioPago::build(&med.medio, med.id))
+                    .collect::<Vec<MedioPago>>();
                 Ok(Config::build(
                     conf.politica,
                     conf.formato.as_str(),
@@ -57,7 +57,7 @@ impl Config {
         formato_producto: &str,
         modo_mayus: &str,
         cantidad_productos: u8,
-        medios_pago: Vec<Arc<str>>,
+        medios_pago: Vec<MedioPago>,
     ) -> Config {
         let formato_producto = match formato_producto {
             "Tmv" => Formato::Tmv,
@@ -81,7 +81,7 @@ impl Config {
     pub fn cantidad_productos(&self) -> &u8 {
         &self.cantidad_productos
     }
-    pub fn medios_pago(&self) -> &Vec<Arc<str>> {
+    pub fn medios_pago(&self) -> &Vec<MedioPago> {
         &self.medios_pago
     }
     pub fn politica(&self) -> f32 {
@@ -105,9 +105,9 @@ impl Default for Config {
             modo_mayus: Mayusculas::default(),
             cantidad_productos: 20,
             medios_pago: vec![
-                Arc::from("Efectivo"),
-                Arc::from("Crédito"),
-                Arc::from("Débito"),
+                MedioPago::build("Efectivo", 1),
+                MedioPago::build("Crédito", 2),
+                MedioPago::build("Débito", 3),
             ],
         }
     }

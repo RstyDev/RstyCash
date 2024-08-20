@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, sync::Arc};
 
+use super::MedioPago;
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Copy, PartialEq)]
 pub enum Formato {
     #[default]
@@ -33,7 +35,7 @@ pub struct Config {
     pub formato_producto: Formato,
     pub modo_mayus: Mayusculas,
     pub cantidad_productos: u8,
-    pub medios_pago: Vec<Arc<str>>,
+    pub medios_pago: Vec<MedioPago>,
 }
 
 impl Config {
@@ -42,7 +44,7 @@ impl Config {
         formato_producto: Formato,
         modo_mayus: Mayusculas,
         cantidad_productos: u8,
-        medios_pago: Vec<Arc<str>>,
+        medios_pago: Vec<MedioPago>,
     ) -> Config {
         Config {
             politica_redondeo,

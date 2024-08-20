@@ -90,7 +90,7 @@ impl Venta {
         }
     }
 }
-impl PartialEq for Venta{
+impl PartialEq for Venta {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }

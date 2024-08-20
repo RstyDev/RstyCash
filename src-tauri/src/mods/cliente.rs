@@ -29,6 +29,15 @@ pub enum Cuenta {
     Auth(f32),
     Unauth,
 }
+impl PartialEq for Cliente {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Regular(l0), Self::Regular(r0)) => l0.dni == r0.dni,
+            (Self::Final, Self::Final) => true,
+            _ => false,
+        }
+    }
+}
 impl Cli {
     pub async fn new_to_db(db: &Pool<Sqlite>, cliente: Cli) -> Res<Cli> {
         let model: Option<ClienteDB> = sqlx::query_as!(

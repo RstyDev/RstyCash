@@ -25,7 +25,7 @@ const CUENTA: &str = "Cuenta Corriente";
 pub struct Sistema {
     user: Option<Arc<User>>,
     db: Arc<Pool<Sqlite>>,
-    clientes: Vec<Cli>,
+    clientes: Vec<Cliente>,
     caja: Caja,
     configs: Config,
     ventas: Ventas,
@@ -38,7 +38,7 @@ pub struct Sistema {
 pub struct SistemaSH {
     user: UserSH,
     caja: Caja,
-    clientes: Vec<Cli>,
+    clientes: Vec<Cliente>,
     configs: Config,
     ventas: [VentaSH; 2],
     proveedores: Vec<ProveedorSH>,
@@ -347,25 +347,47 @@ impl<'a> Sistema {
         self.user.is_some()
     }
 
-    pub async fn get_clientes(&self) -> Res<Vec<Cli>> {
+    pub async fn get_clientes(&self) -> Res<Vec<Cliente>> {
         let qres: Vec<ClienteDB> = sqlx::query_as!(
             ClienteDB,
             r#"select dni as "dni:_", nombre, limite as "limite:_", activo, time from clientes "#
         )
         .fetch_all(self.db())
         .await?;
+        println!(
+            "{:#?}",
+            qres.iter()
+                .map(|cli| {
+                    if cli.dni == 1 {
+                        Cliente::Final
+                    } else {
+                        Cliente::Regular(Cli::build(
+                            cli.dni,
+                            Arc::from(cli.nombre.to_owned()),
+                            cli.activo,
+                            cli.time,
+                            cli.limite,
+                        ))
+                    }
+                })
+                .collect::<Vec<Cliente>>()
+        );
         Ok(qres
             .iter()
             .map(|cli| {
-                Cli::build(
-                    cli.dni,
-                    Arc::from(cli.nombre.to_owned()),
-                    cli.activo,
-                    cli.time,
-                    cli.limite,
-                )
+                if cli.dni == 1 {
+                    Cliente::Final
+                } else {
+                    Cliente::Regular(Cli::build(
+                        cli.dni,
+                        Arc::from(cli.nombre.to_owned()),
+                        cli.activo,
+                        cli.time,
+                        cli.limite,
+                    ))
+                }
             })
-            .collect::<Vec<Cli>>())
+            .collect::<Vec<Cliente>>())
     }
     pub async fn try_login(&mut self, user: User) -> Res<Rango> {
         let id = user.id();
@@ -940,12 +962,7 @@ impl<'a> Sistema {
             user: self.user.clone().unwrap().to_shared(),
             caja: self.caja.to_shared_complete(),
             configs: self.configs.to_shared_complete(),
-            clientes: self
-                .clientes
-                .iter()
-                .cloned()
-                .filter(|c| c.nombre() != "Final")
-                .collect::<Vec<Cli>>(),
+            clientes: self.clientes.clone(),
             ventas: [self.ventas.a.to_shared(), self.ventas.b.to_shared()],
             proveedores: self
                 .proveedores

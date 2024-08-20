@@ -5,9 +5,18 @@
     "modo_mayus": "Camel",
     "cantidad_productos": 20,
     "medios_pago": [
-      "Efectivo",
-      "Crédito",
-      "Débito"
+      {
+        "id": 1,
+        "medio": "Efectivo"
+      },
+      {
+        "id": 1,
+        "medio": "Débito"
+      },
+      {
+        "id": 1,
+        "medio": "Crédito"
+      }
     ]
   }
 ]

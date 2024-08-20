@@ -48,8 +48,8 @@ impl Mapper {
         .await;
         let medios = medios?
             .iter()
-            .map(|model| Arc::from(model.medio.to_owned()))
-            .collect::<Vec<Arc<str>>>();
+            .map(|model| MedioPago::build(&model.medio, model.id))
+            .collect::<Vec<MedioPago>>();
         Ok(Config::build(
             config.politica,
             config.formato.as_str(),
@@ -304,13 +304,19 @@ impl Mapper {
             .fetch_optional(db)
             .await?;
             let cliente = match qres {
-                Some(cliente) => Cliente::Regular(Cli::build(
-                    cliente.dni,
-                    Arc::from(cliente.nombre),
-                    cliente.activo,
-                    cliente.time,
-                    cliente.limite,
-                )),
+                Some(cliente) => {
+                    if cliente.dni == 1 {
+                        Cliente::Final
+                    } else {
+                        Cliente::Regular(Cli::build(
+                            cliente.dni,
+                            Arc::from(cliente.nombre),
+                            cliente.activo,
+                            cliente.time,
+                            cliente.limite,
+                        ))
+                    }
+                }
                 None => Cliente::Final,
             };
             Ok(Venta::build(

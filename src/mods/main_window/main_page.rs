@@ -29,7 +29,7 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
 }
-#[derive(Prop,Clone,Debug,PartialEq)]
+#[derive(Prop, Clone, Debug, PartialEq)]
 pub struct StateProps {
     pub venta_a: RcSignal<Venta>,
     pub venta_b: RcSignal<Venta>,
@@ -41,6 +41,7 @@ pub struct StateProps {
 #[component]
 pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let clientes = props.clientes.clone();
+
     let venta_a = props.venta_a.clone();
     let venta_b = props.venta_b.clone();
     let config = props.config.clone();
@@ -61,10 +62,10 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
       main(class="main-screen"){
         CuadroPrincipal(venta_a=props.venta_a.clone(), venta_b=props.venta_b.clone(), config=props.config.clone(), pos=props.pos,clientes=clientes)
         ResumenPago(venta=match pos.get().as_ref(){
-            true => venta_a.get(),
-            false => venta_b.get(),
+            true => venta_a.clone(),
+            false => venta_b.clone(),
         },
-        config=config.get())
+        config=config.clone())
       }
     )
 }

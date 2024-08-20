@@ -1,5 +1,5 @@
+use super::{Caja, Cliente, Config, Proveedor, User, Venta};
 use sycamore::prelude::RcSignal;
-use super::{User, Caja, Config, Venta, Proveedor, Cliente};
 #[derive(Clone)]
 pub struct Rcs {
     pub user: RcSignal<User>,

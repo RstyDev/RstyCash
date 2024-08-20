@@ -55,7 +55,7 @@ impl Caja {
         let caja;
         let mut totales = HashMap::new();
         for medio in config.medios_pago() {
-            totales.insert(Arc::clone(medio), 0.0);
+            totales.insert(Arc::clone(&medio.desc()), 0.0);
         }
         let caja_mod: sqlx::Result<Option<CajaDB>> =
             query_as!(CajaDB,

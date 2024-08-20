@@ -17,8 +17,8 @@ pub mod commands {
     use crate::mods::{
         cmd::{Payload, DENEGADO, INDEX},
         sistema::SistemaSH,
-        AppError, Caja, Cli, Config, Pago, Pesable, Producto, Proveedor, Rango, Res, Rubro,
-        Sistema, User, Valuable as V, Venta,
+        AppError, Caja, Cli, Cliente, Config, MedioPago, Pago, Pesable, Producto, Proveedor, Rango,
+        Res, Rubro, Sistema, User, Valuable as V, Venta,
     };
     use std::sync::Arc;
     use tauri::async_runtime::{block_on, spawn, Mutex};
@@ -378,7 +378,7 @@ pub mod commands {
         sis.access();
         Ok(sis.caja().clone())
     }
-    pub fn get_clientes_2(sistema: State<Mutex<Sistema>>) -> Res<Vec<Cli>> {
+    pub fn get_clientes_2(sistema: State<Mutex<Sistema>>) -> Res<Vec<Cliente>> {
         let sis = block_on(sistema.lock());
         sis.access();
         Ok(block_on(sis.get_clientes())?)
@@ -423,14 +423,14 @@ pub mod commands {
     pub fn get_log_state_2(sistema: State<Mutex<Sistema>>) -> Res<bool> {
         Ok(block_on(sistema.lock()).user().is_some())
     }
-    pub fn get_medios_pago_2(sistema: State<Mutex<Sistema>>) -> Res<Vec<String>> {
+    pub fn get_medios_pago_2(sistema: State<Mutex<Sistema>>) -> Res<Vec<MedioPago>> {
         let sis = block_on(sistema.lock());
         sis.access();
         Ok(sis
             .configs()
             .medios_pago()
             .iter()
-            .map(|m| m.to_string())
+            .map(|m| m.clone())
             .collect())
     }
     pub fn get_productos_filtrado_2(sistema: State<Mutex<Sistema>>, filtro: &str) -> Res<Vec<V>> {
