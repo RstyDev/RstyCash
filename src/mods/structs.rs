@@ -1,6 +1,7 @@
 mod caja;
 mod cliente;
 mod config;
+mod enums;
 mod medio_pago;
 mod pago;
 mod pesable;
@@ -16,6 +17,7 @@ mod windows;
 pub use caja::*;
 pub use cliente::*;
 pub use config::*;
+pub use enums::*;
 pub use medio_pago::*;
 pub use pago::*;
 pub use pesable::*;

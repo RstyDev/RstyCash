@@ -15,28 +15,28 @@ pub struct Producto {
     pub presentacion: Presentacion,
     pub proveedores: Vec<RelacionProdProv>,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ProductoSH {
-    id: i32,
-    codigo_de_barras: [u8; 8],
-    precio_venta: f32,
-    tipo_producto: Arc<str>,
-    marca: Arc<str>,
-    variedad: Arc<str>,
-    presentacion: Presentacion,
+    pub id: i32,
+    pub codigo_de_barras: [u8; 8],
+    pub precio_venta: f32,
+    pub tipo_producto: Arc<str>,
+    pub marca: Arc<str>,
+    pub variedad: Arc<str>,
+    pub presentacion: Presentacion,
 }
 #[derive(Serialize, Deserialize)]
 pub struct ProductoSHC {
-    id: i32,
-    codigos_de_barras: [[u8; 8]; 3],
-    precio_venta: f32,
-    porcentaje: f32,
-    precio_costo: f32,
-    tipo_producto: Arc<str>,
-    marca: Arc<str>,
-    variedad: Arc<str>,
-    presentacion: Presentacion,
-    proveedores: Vec<RelacionProdProv>,
+    pub id: i32,
+    pub codigos_de_barras: [[u8; 8]; 3],
+    pub precio_venta: f32,
+    pub porcentaje: f32,
+    pub precio_costo: f32,
+    pub tipo_producto: Arc<str>,
+    pub marca: Arc<str>,
+    pub variedad: Arc<str>,
+    pub presentacion: Presentacion,
+    pub proveedores: Vec<RelacionProdProv>,
 }
 impl Producto {
     pub fn new(
@@ -141,6 +141,12 @@ impl PartialEq for Producto {
         self.id == other.id
     }
 }
+impl PartialEq for ProductoSH {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct RelacionProdProv {
     pub proveedor: i32,

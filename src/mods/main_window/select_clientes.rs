@@ -16,13 +16,35 @@ extern "C" {
 }
 #[derive(Prop)]
 pub struct ClientesProps {
-    clientes: Rc<Vec<Cliente>>,
+    clientes: RcSignal<Vec<Cliente>>,
+    venta: RcSignal<Venta>,
 }
 #[component]
 pub fn SelectClientes<G: Html>(cx: Scope, props: ClientesProps) -> View<G> {
-    let clientes = create_signal_from_rc(cx, props.clientes);
+    let clientes = create_signal_from_rc(cx, props.clientes.get());
+    let venta = props.venta.clone();
+
+    let id_select = create_signal(cx, String::new());
     let actual: &Signal<Cliente> = create_signal(cx, clientes.get()[0].clone());
-    let view: View<G> = view!(cx,select(id="cliente",value=match actual.get().as_ref(){
+    let view: View<G> = view!(cx,select(id="cliente",bind:value=id_select,on:change=move |_|{
+        let cliente = match id_select.get().as_ref().as_str(){
+            "Final"=>Cliente::Final,
+            nombre=>{
+                let mut cliente=Cliente::Final;
+                for cli in clientes.get().as_ref(){
+                    match cli{
+                        Cliente::Final => (),
+                        Cliente::Regular(a) => if a.nombre.eq(nombre){
+                            cliente = Cliente::Regular(a.clone())
+                        },
+                    }
+                }
+                cliente
+            }
+        };
+        venta.set(Venta{ cliente: cliente, ..venta.get().as_ref().clone()})
+
+    },value=match actual.get().as_ref(){
         Cliente::Final => "Final",
         Cliente::Regular(c) => c.nombre.as_ref(),
     }){
@@ -48,4 +70,3 @@ pub fn SelectClientes<G: Html>(cx: Scope, props: ClientesProps) -> View<G> {
     });
     view!(cx, (view))
 }
-

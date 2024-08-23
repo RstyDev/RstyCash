@@ -1,6 +1,6 @@
 use crate::mods::{
     main_window::{pago::*, resumen_pago::*, *},
-    structs::{Config, MedioPago, Venta},
+    structs::{Cliente, Config, Cuenta, MedioPago, Venta},
 };
 use sycamore::{
     prelude::*,
@@ -21,27 +21,56 @@ extern "C" {
 
 #[component]
 pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
-    let venta = props.venta.clone();
+    let (venta, venta1, venta2) = (
+        props.venta.clone(),
+        props.venta.clone(),
+        props.venta.clone(),
+    );
     let conf = props.config.clone();
+    let conf1 = props.config.clone();
     let pagos = create_signal(cx, venta.get().pagos.clone());
-    let medios = create_signal(cx, {
-        match venta.get().cliente {
-            crate::mods::structs::Cliente::Final => conf
-                .get()
-                .medios_pago
-                .iter()
-                .cloned()
-                .filter(|m| m.id != 0)
-                .collect::<Vec<MedioPago>>(),
-            crate::mods::structs::Cliente::Regular(_) => conf.get().medios_pago.clone(),
+    let medios = create_rc_signal({
+        let filtrado = conf
+            .get()
+            .medios_pago
+            .iter()
+            .cloned()
+            .filter(|m| m.id != 0)
+            .collect::<Vec<MedioPago>>();
+        match venta.get().cliente.clone() {
+            Cliente::Final => filtrado,
+            Cliente::Regular(cli) => match cli.limite {
+                Cuenta::Auth(_) => conf.get().medios_pago.clone(),
+                Cuenta::Unauth => filtrado,
+            },
         }
     });
-
+    let medios2 = medios.clone();
+    create_memo(cx, move || {
+        venta.track();
+        log(format!("A ver Venta de Pagos {:#?}", venta.get()).as_str());
+        let filtrado = conf
+            .get()
+            .medios_pago
+            .iter()
+            .cloned()
+            .filter(|m| m.id != 0)
+            .collect::<Vec<MedioPago>>();
+        medios2.set(match venta.get().cliente.clone() {
+            Cliente::Final => filtrado,
+            Cliente::Regular(cli) => match cli.limite {
+                Cuenta::Auth(_) => conf.get().medios_pago.clone(),
+                Cuenta::Unauth => filtrado,
+            },
+        })
+    });
+    log(format!("A ver Conf de Pagos {:#?}", conf1.get()).as_str());
+    log(format!("A ver los medios de Pagos {:#?}", medios).as_str());
     let logg = pagos.get().len();
     let state = create_rc_signal(String::new());
     let s2 = RcSignal::clone(&state);
     let memo = create_memo(cx, move || {
-        s2.get();
+        s2.track();
         log(format!("{}", s2.get()).as_str())
     });
     //let medios = create_signal(cx, props.config.get().medios_pago.clone());
@@ -51,11 +80,11 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
             Keyed(
                 iterable = pagos,
                 view=move |cx,x|{
-                    PagoComp(cx,PagoProps::new(true, vec![x.medio_pago], x.monto, None))
+                    PagoComp(cx,PagoProps::new(true, create_rc_signal(vec![x.medio_pago]), x.monto, None))
                 },
                 key=|x|x.int_id
             )
-            PagoComp(pagado=false, opciones=medios.get().as_ref().clone(), monto=venta.get().monto_total - venta.get().monto_pagado, state=Some(state))
+            PagoComp(pagado=false, opciones=medios.clone(), monto=venta1.get().monto_total - venta1.get().monto_pagado, state=Some(state))
         }
     )
 }

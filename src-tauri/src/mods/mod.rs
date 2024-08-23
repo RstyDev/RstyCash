@@ -28,6 +28,6 @@ pub use proveedor::Proveedor;
 pub use rubro::Rubro;
 pub use sistema::{Sistema, SistemaSH};
 pub use user::*;
-pub use valuable::{Presentacion, Valuable, ValuableTrait};
+pub use valuable::{Presentacion, Valuable, ValuableSH, ValuableSHC, ValuableTrait};
 pub use venta::Venta;
 pub use windows::Windows;

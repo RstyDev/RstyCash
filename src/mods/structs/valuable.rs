@@ -1,12 +1,28 @@
 use serde::{Deserialize, Serialize};
 
-use super::{pesable::Pesable, producto::Producto, rubro::Rubro, Formato};
+use super::{
+    pesable::Pesable, producto::Producto, rubro::Rubro, Formato, PesableSH, PesableSHC, ProductoSH,
+    ProductoSHC, RubroSHC,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Valuable {
     Prod((u8, Producto)),
     Pes((f32, Pesable)),
     Rub((u8, Rubro)),
+}
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+pub enum ValuableSH {
+    Prod((u8, ProductoSH)),
+    Pes((f32, PesableSH)),
+    Rub((u8, RubroSHC)),
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum ValuableSHC {
+    Prod((u8, ProductoSHC)),
+    Pes((f32, PesableSHC)),
+    Rub((u8, RubroSHC)),
 }
 
 impl Valuable {

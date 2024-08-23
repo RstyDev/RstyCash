@@ -1,4 +1,10 @@
-use super::{redondeo, Config, Formato, Pesable, Producto, Res, Rubro};
+use super::{
+    pesable::{PesableSH, PesableSHC},
+    producto::{ProductoSH, ProductoSHC},
+    redondeo,
+    rubro::RubroSHC,
+    Config, Formato, Pesable, Producto, Res, Rubro,
+};
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite};
 use std::fmt::{self, Display};
@@ -9,6 +15,19 @@ pub enum Valuable {
     Prod((u8, Producto)),
     Pes((f32, Pesable)),
     Rub((u8, Rubro)),
+}
+#[derive(Serialize, Deserialize)]
+pub enum ValuableSH {
+    Prod((u8, ProductoSH)),
+    Pes((f32, PesableSH)),
+    Rub((u8, RubroSHC)),
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum ValuableSHC {
+    Prod((u8, ProductoSHC)),
+    Pes((f32, PesableSHC)),
+    Rub((u8, RubroSHC)),
 }
 
 impl Valuable {
@@ -64,6 +83,15 @@ impl Valuable {
             Valuable::Prod((_, prod)) => prod.editar(db).await,
             Valuable::Pes((_, pes)) => pes.editar(db).await,
             Valuable::Rub((_, rub)) => rub.editar(db).await,
+        }
+    }
+    pub fn to_shared(&self) -> ValuableSH {
+        match self {
+            Valuable::Prod(p) => {
+                ValuableSH::Prod((p.0, p.1.to_shared(p.1.codigos_de_barras()[0]).unwrap()))
+            }
+            Valuable::Pes(p) => ValuableSH::Pes((p.0, p.1.to_shared())),
+            Valuable::Rub(r) => ValuableSH::Rub((r.0, r.1.to_shared_complete())),
         }
     }
 }

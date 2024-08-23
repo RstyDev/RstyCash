@@ -10,21 +10,21 @@ pub struct Pesable {
     pub costo_kilo: f32,
     pub descripcion: Arc<str>,
 }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PesableSH {
-    id: i32,
-    codigo: [u8; 8],
-    precio_peso: f32,
-    descripcion: Arc<str>,
+    pub id: i32,
+    pub codigo: [u8; 8],
+    pub precio_peso: f32,
+    pub descripcion: Arc<str>,
 }
 #[derive(Serialize, Deserialize)]
 pub struct PesableSHC {
-    id: i32,
-    codigo: [u8; 8],
-    precio_peso: f32,
-    porcentaje: f32,
-    costo_kilo: f32,
-    descripcion: Arc<str>,
+    pub id: i32,
+    pub codigo: [u8; 8],
+    pub precio_peso: f32,
+    pub porcentaje: f32,
+    pub costo_kilo: f32,
+    pub descripcion: Arc<str>,
 }
 impl Pesable {
     pub fn new(
@@ -79,6 +79,11 @@ impl Pesable {
 }
 
 impl PartialEq for Pesable {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+impl PartialEq for PesableSH {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }

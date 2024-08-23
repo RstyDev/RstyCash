@@ -1,9 +1,9 @@
 use js_sys::wasm_bindgen;
-use std::sync::Arc;
+use sycamore::prelude::{create_memo, create_signal_from_rc};
 use sycamore::rt::Event;
 use sycamore::{
-    prelude::{component, create_signal, view, Html, Keyed, Prop, Scope, View},
-    reactive::{RcSignal, Signal},
+    prelude::{component, view, Html, Keyed, Prop, Scope, View},
+    reactive::RcSignal,
 };
 use wasm_bindgen::prelude::*;
 
@@ -21,14 +21,14 @@ extern "C" {
 #[derive(Prop)]
 pub struct PagoProps {
     pagado: bool,
-    opciones: Vec<MedioPago>,
+    opciones: RcSignal<Vec<MedioPago>>,
     monto: f32,
     state: Option<RcSignal<String>>,
 }
 impl PagoProps {
     pub fn new(
         pagado: bool,
-        opciones: Vec<MedioPago>,
+        opciones: RcSignal<Vec<MedioPago>>,
         monto: f32,
         state: Option<RcSignal<String>>,
     ) -> PagoProps {
@@ -43,7 +43,11 @@ impl PagoProps {
 
 #[component]
 pub fn PagoComp<G: Html>(cx: Scope, props: PagoProps) -> View<G> {
-    let opts = create_signal(cx, props.opciones);
+    let opts = create_signal_from_rc(cx, props.opciones.get());
+    create_memo(cx, move || {
+        props.opciones.track();
+        opts.set(props.opciones.get().as_ref().clone())
+    });
 
     view! {cx,
         form(id="form-pago"){

@@ -5,7 +5,7 @@ mod mods;
 use commands::*;
 use mods::{
     cmd::*, db::db, Caja, Cli, Cliente, Config, MedioPago, Pago, Producto, Proveedor, Rango,
-    Result as Res, Rubro, Sistema, SistemaSH, User, UserSHC, Valuable as V, Venta,
+    Result as Res, Rubro, Sistema, SistemaSH, User, UserSHC, Valuable as V, ValuableSH, Venta,
 };
 use std::sync::Arc;
 use tauri::{
@@ -192,8 +192,11 @@ fn get_medios_pago(sistema: State<Mutex<Sistema>>) -> Res<Vec<MedioPago>> {
     Ok(get_medios_pago_2(sistema)?)
 }
 #[tauri::command]
-fn get_productos_filtrado(sistema: State<Mutex<Sistema>>, filtro: &str) -> Res<Vec<V>> {
-    Ok(get_productos_filtrado_2(sistema, filtro)?)
+fn get_productos_filtrado(sistema: State<Mutex<Sistema>>, filtro: &str) -> Res<Vec<ValuableSH>> {
+    Ok(get_productos_filtrado_2(sistema, filtro)?
+        .iter()
+        .map(|v| v.to_shared())
+        .collect::<Vec<ValuableSH>>())
 }
 #[tauri::command]
 fn get_proveedores(sistema: State<'_, Mutex<Sistema>>) -> Res<Vec<String>> {

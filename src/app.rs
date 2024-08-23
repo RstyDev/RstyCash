@@ -1,8 +1,8 @@
 use crate::mods::{
     main_window::main_page::{MainPage, StateProps},
     structs::{
-        Caja, Cliente, Config, Proveedor, Rango, Rcs, SistemaSH, User, UserSHC, Valuable, Venta,
-        Windows,
+        Caja, Cliente, Config, Pos, Proveedor, Rango, Rcs, SistemaSH, User, UserSHC, Valuable,
+        Venta, Windows,
     },
     Login, LoginAux,
 };
@@ -100,11 +100,17 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
     });
     let rc_logged = create_rc_signal(false);
     let window = create_signal(cx, Windows::Login(rc_user.clone()));
-    let rc_pos = create_rc_signal(true);
-
+    let rc_a1 = rc_a.clone();
     let rc_conf1 = rc_conf.clone();
-    let (rc_a1, rc_a2) = (rc_a.clone(), rc_a.clone());
-    let (rc_b1, rc_b2) = (rc_b.clone(), rc_b.clone());
+    let rc_clientes1 = rc_clientes.clone();
+    let rc_pos = create_rc_signal(Pos::A {
+        venta: rc_a1,
+        config: rc_conf1,
+        clientes: rc_clientes1,
+    });
+    let rc_conf1 = rc_conf.clone();
+    let (rc_a1, rc_a2, rc_a3) = (rc_a.clone(), rc_a.clone(), rc_a.clone());
+    let (rc_b1, rc_b2, rc_b3) = (rc_b.clone(), rc_b.clone(), rc_b.clone());
     let (rc_clientes1, rc_clientes2, rc_clientes3) = (
         rc_clientes.clone(),
         rc_clientes.clone(),
@@ -112,6 +118,7 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
     );
     let (rc_user1, rc_user2, rc_user3) = (rc_user.clone(), rc_user.clone(), rc_user.clone());
     let (rc_logged1, rc_logged2) = (rc_logged.clone(), rc_logged.clone());
+    let rc_pos1 = rc_pos.clone();
 
     let rend = create_selector(cx, move || window.get().as_ref().clone());
 

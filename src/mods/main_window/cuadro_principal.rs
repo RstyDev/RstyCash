@@ -1,10 +1,17 @@
 use crate::mods::{
     main_window::{cuadro_venta::*, main_page::*},
-    structs::{Config, Venta},
+    structs::{Cliente, Config, Pos, Venta},
 };
 use std::rc::Rc;
 use sycamore::prelude::*;
 use wasm_bindgen::prelude::*;
+#[derive(Prop)]
+pub struct PrincProps{
+    pub venta: RcSignal<Venta>,
+    pub config: RcSignal<Config>,
+    pub clientes: RcSignal<Vec<Cliente>>,
+    pub pos: RcSignal<Pos>,
+}
 
 #[wasm_bindgen]
 extern "C" {
@@ -16,23 +23,10 @@ extern "C" {
 }
 
 #[component]
-pub fn CuadroPrincipal<G: Html>(cx: Scope, props: StateProps) -> View<G> {
-    let pos = props.pos.clone();
-    let pos2 = props.pos.clone();
+pub fn CuadroPrincipal<G: Html>(cx: Scope, props: PrincProps) -> View<G> {
     view! {cx,
         section(id="cuadro-principal"){
-            section(class="ayb"){
-                a(id="v-a",class=format!("a-boton {}",match props.pos.clone().get().as_ref(){true=>"v-actual",false=>""})){
-                    "Venta A"
-                }
-                a(id="v-a",class=format!("a-boton {}",match pos.get().as_ref(){true=>"",false=>"v-actual"})){
-                    "Venta B"
-                }
-            }
-            CuadroVenta(venta=match pos2.get().as_ref(){
-                true => Rc::from(props.venta_a.get()),
-                false => Rc::from(props.venta_b.get()),
-            },config=props.config.get())
+            CuadroVenta(venta=Rc::from(props.venta.get()),config=props.config.get())
         }
     }
 }
