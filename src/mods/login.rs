@@ -15,16 +15,13 @@ use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen::JsValue;
 use web_sys::Event;
 
-use crate::mods::structs::{get_hash, Rango};
+use crate::mods::{lib::debug, structs::{get_hash, Rango}};
 
 use super::structs::{User, UserSHC};
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
 }
 #[derive(Prop)]
 pub struct LoginProps {
@@ -85,7 +82,7 @@ pub fn Login<G: Html>(cx: Scope, props: LoginProps) -> View<G> {
             input(type="text",placeholder="Usuario",
             bind:value=user,
             on:input=move |_|{
-                log(format!("{:#?}",user.get()).as_str());
+                debug(user.get(),85);
             })
             input(type="password",placeholder="Contraseña",bind:value=pass)
 

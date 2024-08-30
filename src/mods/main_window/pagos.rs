@@ -1,6 +1,5 @@
 use crate::mods::{
-    main_window::{pago::*, resumen_pago::*, *},
-    structs::{Cliente, Config, Cuenta, MedioPago, Venta},
+    lib::debug, main_window::{pago::*, resumen_pago::*, *}, structs::{Cliente, Config, Cuenta, MedioPago, Venta}
 };
 use sycamore::{
     prelude::*,
@@ -14,9 +13,6 @@ use super::resumen_pago::ResumenProps;
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
 }
 
 #[component]
@@ -48,7 +44,7 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
     let medios2 = medios.clone();
     create_memo(cx, move || {
         venta.track();
-        log(format!("A ver Venta de Pagos {:#?}", venta.get()).as_str());
+        debug(venta.get(),51);
         let filtrado = conf
             .get()
             .medios_pago
@@ -64,17 +60,17 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
             },
         })
     });
-    log(format!("A ver Conf de Pagos {:#?}", conf1.get()).as_str());
-    log(format!("A ver los medios de Pagos {:#?}", medios).as_str());
+    debug(conf1.get(),64);
+    debug(medios.clone(),65);
     let logg = pagos.get().len();
     let state = create_rc_signal(String::new());
     let s2 = RcSignal::clone(&state);
     let memo = create_memo(cx, move || {
         s2.track();
-        log(format!("{}", s2.get()).as_str())
+        debug(s2.get(),71);
     });
     //let medios = create_signal(cx, props.config.get().medios_pago.clone());
-    log(&logg.to_string());
+    debug(logg,74);
     view!(cx,
         article(id="pagos"){
             Keyed(

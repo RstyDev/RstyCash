@@ -1,10 +1,8 @@
 use crate::mods::{
-    main_window::main_page::{MainPage, StateProps},
-    structs::{
+    lib::debug, main_window::main_page::{MainPage, StateProps}, structs::{
         Caja, Cliente, Config, Pos, Proveedor, Rango, Rcs, SistemaSH, User, UserSHC, Valuable,
         Venta, Windows,
-    },
-    Login, LoginAux,
+    }, Login, LoginAux
 };
 
 use serde::{Deserialize, Serialize};
@@ -28,9 +26,6 @@ extern "C" {
 
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "event"])]
     async fn listen(event: &str, args: JsValue) -> JsValue;
-
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
 }
 
 #[derive(Serialize, Deserialize)]
@@ -81,7 +76,7 @@ async fn try_login(datos: Rcs) {
             );
             datos.logged.set(true);
         }
-        Err(e) => log(format!("Linea 90 front {}", e.to_string()).as_str()),
+        Err(e) => debug(e, 79),
     }
 }
 #[component]
@@ -156,7 +151,7 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
     });
 
     create_effect(cx, move || {
-        log(format!("aca los clientes de app {:#?}", rc_clientes.get()).as_str());
+        debug(rc_clientes.get(), 157);
     });
     view!(cx,
         div{

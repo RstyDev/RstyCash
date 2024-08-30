@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use sycamore::prelude::{RcSignal, ReadSignal};
+use sycamore::prelude::{RcSignal, ReadSignal, Signal};
 
 use super::{Cliente, Config, Venta};
 #[derive(Debug, PartialEq, Clone)]
@@ -26,7 +26,7 @@ pub enum Buscando{
         pos: RcSignal<Pos>,
     },
     True {
-        search: RcSignal<Rc<str>>,
+        search: RcSignal<String>,
         venta: RcSignal<Venta>,
     },
 }

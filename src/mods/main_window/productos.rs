@@ -21,9 +21,6 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
 }
 #[derive(Prop)]
 pub struct ProdsProps {

@@ -13,9 +13,6 @@ use crate::mods::structs::MedioPago;
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
 }
 
 #[derive(Prop)]
@@ -62,7 +59,6 @@ pub fn PagoComp<G: Html>(cx: Scope, props: PagoProps) -> View<G> {
             )
         }
             input(type="submit", value=match props.pagado{true => "Borrar",false => "Pagar"}, on:click=move |a:Event|{
-                log("aca");
                 a.prevent_default();
                 match &props.state{
                    Some(s) => s.set(String::from("Desde Pago")),
