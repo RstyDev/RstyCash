@@ -324,8 +324,8 @@ impl Producto {
             proveedores: self.proveedores.clone(),
         }
     }
-    pub fn from_shared(producto: ProductoSH, db: &Pool<Sqlite>)->Res<Self>{
-        block_on(async{let qres = sqlx::query_as!(ProductoDB,r#"select id as "id:_",
+    pub async fn from_shared(producto: ProductoSH, db: &Pool<Sqlite>)->Res<Self>{
+        let qres = sqlx::query_as!(ProductoDB,r#"select id as "id:_",
         precio_venta as "precio_venta:_",
         porcentaje as "porcentaje:_",
         precio_costo as "precio_costo:_",
@@ -335,7 +335,7 @@ impl Producto {
         presentacion,
         size as "size:_",
         updated_at from productos where id = ?"#,producto.id).fetch_one(db).await?;
-        Mapper::producto(db, qres).await})
+        Mapper::producto(db, qres).await
     }
     pub fn from_shared_complete(producto: ProductoSHC) -> Self {
         Producto {

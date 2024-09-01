@@ -112,7 +112,7 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
         rc_clientes.clone(),
     );
     let (rc_user1, rc_user2, rc_user3) = (rc_user.clone(), rc_user.clone(), rc_user.clone());
-    let (rc_logged1, rc_logged2) = (rc_logged.clone(), rc_logged.clone());
+    let (rc_logged1, rc_logged2, rc_logged3) = (rc_logged.clone(), rc_logged.clone(), rc_logged.clone());
     let rc_pos1 = rc_pos.clone();
 
     let rend = create_selector(cx, move || window.get().as_ref().clone());
@@ -141,13 +141,16 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
     let datos_2 = datos.clone();
     let _res = create_memo(cx, move || {
         let datos_3 = datos_2.clone();
+        let rc_logged = rc_logged3.clone();
         spawn_local(async move {
-            try_login(datos_3).await;
+            if !rc_logged.get().as_ref(){
+                try_login(datos_3).await;
+            }
         });
-        rc_user3.set_rc(datos_2.user.get());
-        rc_a.set_rc(datos_2.venta_a.get());
-        rc_b.set_rc(datos_2.venta_b.get());
-        rc_clientes3.set_rc(datos_2.clientes.get());
+        rc_user3.set_rc_silent(datos_2.user.get());
+        rc_a.set_rc_silent(datos_2.venta_a.get());
+        rc_b.set_rc_silent(datos_2.venta_b.get());
+        rc_clientes3.set_rc_silent(datos_2.clientes.get());
     });
 
     create_effect(cx, move || {

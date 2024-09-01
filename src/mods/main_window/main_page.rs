@@ -37,6 +37,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let search = create_signal(cx,String::new());
     let rc_search = create_rc_signal_from_rc(search.get());
     let rc_search1 = rc_search.clone();
+    let rc_search2 = rc_search.clone();
     let venta_a1 = props.venta_a.clone();
     let venta_a2 = props.venta_a.clone();
     let venta_b1 = props.venta_b.clone();
@@ -60,11 +61,17 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
   create_effect(cx, move ||{
     rc_search.set(search.get().as_ref().to_owned());
   });
+  // create_memo(cx,move ||{
+  //   let rc_s = rc_search2.clone();
+  //   let rc = rc_s.get().as_ref().clone();
+  //   if rc.eq("")&&!rc.eq(search.get().as_ref().into()){
+  //     search.set(rc);
+  //   }
+  // });
     let pos_selector = create_selector(cx, move || pos2.get().as_ref().clone());
     let buscando = create_selector(cx, move || {
-        let pos = pos1.clone();
 
-        if search.get().len() > 0 {
+        if rc_search1.get().len() > 0 {
             Buscando::True {
                 nav: nav2.clone(),
                 search: rc_search1.clone(),
@@ -143,7 +150,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                   "Enter"=>{
                     e.prevent_default();
                     nav.set(Nav::Enter);
-                    search.set("".to_string());
+                    //search.set("".to_string());
                     //debug("enter",156)
                   },
                   _=>(),

@@ -94,7 +94,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                 debug("ENT",81,"busqueda");
                 if let Some((_,act)) = actual.get().as_ref().clone(){
                     let pos = props.pos.clone();
-                    
+                    let search = props.search.clone();
                     spawn_local_scoped(cx, async move {
                         let sale;
                         let res=add_to_sale(act, match pos.get().as_ref(){
@@ -107,6 +107,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                                 false
                             },
                         }).await;
+                        search.set("".to_string());
                         debug(res.clone(),110,"busqueda");
                         sale.set(Venta::from_shared_complete(res));
                     });

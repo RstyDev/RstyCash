@@ -682,9 +682,9 @@ impl<'a> Sistema {
     }
     pub async fn agregar_producto_a_venta(&mut self, prod: ValuableSH, pos: bool) -> Res<()> {
         let prod = match prod{
-            ValuableSH::Prod(p) => Valuable::Prod((p.0,Producto::from_shared(p.1, &self.db)?)),
-            ValuableSH::Pes(p) => todo!(),
-            ValuableSH::Rub(r) => todo!(),
+            ValuableSH::Prod(p) => Valuable::Prod((p.0,Producto::from_shared(p.1, &self.db).await?)),
+            ValuableSH::Pes(p) => Valuable::Pes((p.0,Pesable::from_shared(p.1, &self.db).await?)),
+            ValuableSH::Rub(r) => Valuable::Rub((r.0,Rubro::from_shared_complete(r.1))),
         };
         let existe = match &prod {
             Valuable::Prod((_, prod)) => {
