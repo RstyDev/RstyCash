@@ -82,7 +82,7 @@ pub fn Login<G: Html>(cx: Scope, props: LoginProps) -> View<G> {
             input(type="text",placeholder="Usuario",
             bind:value=user,
             on:input=move |_|{
-                debug(user.get(),85);
+                debug(user.get(),85,"login");
             })
             input(type="password",placeholder="Contraseña",bind:value=pass)
 

@@ -15,10 +15,7 @@ impl Payload {
 }
 pub mod commands {
     use crate::mods::{
-        cmd::{Payload, DENEGADO, INDEX},
-        sistema::SistemaSH,
-        AppError, Caja, Cli, Cliente, Config, MedioPago, Pago, Pesable, Producto, Proveedor, Rango,
-        Res, Rubro, Sistema, User, Valuable as V, Venta,
+        cmd::{Payload, DENEGADO, INDEX}, sistema::SistemaSH, AppError, Caja, Cli, Cliente, Config, MedioPago, Pago, Pesable, Producto, Proveedor, Rango, Res, Rubro, Sistema, User, Valuable as V, ValuableSH, Venta
     };
     use std::sync::Arc;
     use tauri::async_runtime::{block_on, spawn, Mutex};
@@ -158,13 +155,13 @@ pub mod commands {
     pub fn agregar_producto_a_venta_2(
         sistema: State<Mutex<Sistema>>,
         window: Window,
-        prod: V,
+        prod: ValuableSH,
         pos: bool,
     ) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        match &prod {
-            V::Prod(_) => {
+        match prod {
+            ValuableSH::Prod(_) => {
                 block_on(sis.agregar_producto_a_venta(prod, pos))?;
                 loop {
                     if let Ok(_) = window
@@ -176,17 +173,17 @@ pub mod commands {
                     }
                 }
             }
-            V::Pes(a) => {
-                spawn(open_select_amount_2(
-                    window.app_handle(),
-                    V::Pes(a.clone()),
-                    pos,
-                ));
+            ValuableSH::Pes(a) => {
+                // spawn(open_select_amount_2(
+                //     window.app_handle(),
+                //     V::Pes((a.0,Pesable::from_shared(a.1))),
+                //     pos,
+                // ));
             }
-            V::Rub(a) => {
+            ValuableSH::Rub(a) => {
                 spawn(open_select_amount_2(
                     window.app_handle(),
-                    V::Rub(a.clone()),
+                    V::Rub((a.0,Rubro::from_shared_complete(a.1))),
                     pos,
                 ));
             }
@@ -226,7 +223,7 @@ pub mod commands {
     pub fn agregar_rub_o_pes_a_venta_2(
         sistema: State<Mutex<Sistema>>,
         window: Window,
-        val: V,
+        val: ValuableSH,
         pos: bool,
     ) -> Res<()> {
         let mut sis = block_on(sistema.lock());

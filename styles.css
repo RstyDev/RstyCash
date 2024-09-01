@@ -244,7 +244,7 @@ input:disabled {
   animation: mov-error 0.2s infinite;
 }
 
-.focuseado {
+.actual {
   border: solid 2px white;
   border-radius: 3px;
 
@@ -269,7 +269,11 @@ input:disabled {
 
   
 }
-
+ul.no-bullets {
+  list-style-type: none; /* Remove bullets */
+  padding: 0; /* Remove padding */
+  margin: 0; /* Remove margins */
+}
 article.ayb {
   display: inline;
   position: fixed;

@@ -18,7 +18,7 @@ use std::{collections::HashSet, sync::Arc};
 use tauri::async_runtime::{self, block_on};
 use Valuable as V;
 
-use super::{proveedor::ProveedorSH, venta::VentaSH, Cliente, UserSH};
+use super::{proveedor::ProveedorSH, venta::VentaSH, Cliente, UserSH, ValuableSH};
 
 const CUENTA: &str = "Cuenta Corriente";
 #[derive(Clone)]
@@ -680,7 +680,12 @@ impl<'a> Sistema {
         async_runtime::block_on(async { Proveedor::new_to_db(proveedor, self.db()).await })?;
         Ok(())
     }
-    pub async fn agregar_producto_a_venta(&mut self, prod: V, pos: bool) -> Res<()> {
+    pub async fn agregar_producto_a_venta(&mut self, prod: ValuableSH, pos: bool) -> Res<()> {
+        let prod = match prod{
+            ValuableSH::Prod(p) => Valuable::Prod((p.0,Producto::from_shared(p.1, &self.db)?)),
+            ValuableSH::Pes(p) => todo!(),
+            ValuableSH::Rub(r) => todo!(),
+        };
         let existe = match &prod {
             Valuable::Prod((_, prod)) => {
                 let qres: Option<IntDB> = sqlx::query_as!(

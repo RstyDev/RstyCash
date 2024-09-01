@@ -5,12 +5,12 @@ use crate::mods::{
     lib::debug, main_window::{
         busqueda::Busqueda, cuadro_principal::CuadroPrincipal, resumen_pago::ResumenPago,
         select_clientes::*,
-    }, structs::{Buscando, Cliente, Config, Pos, Venta}
+    }, structs::{Buscando, Cliente, Config, Nav, Pos, Venta}
 };
 use serde_wasm_bindgen::from_value;
 use sycamore::{prelude::*, web::html::header};
 use wasm_bindgen::prelude::*;
-use web_sys::Event;
+use web_sys::{Event, KeyboardEvent};
 
 #[wasm_bindgen]
 extern "C" {
@@ -32,6 +32,8 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let clientes1 = props.clientes.clone();
     let clientes2 = props.clientes.clone();
     let clientes3=props.clientes.clone();
+    let nav = create_rc_signal(Nav::Esc);
+    let nav2 = nav.clone();
     let search = create_signal(cx,String::new());
     let rc_search = create_rc_signal_from_rc(search.get());
     let rc_search1 = rc_search.clone();
@@ -54,6 +56,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let pos6 = props.pos.clone();
     let pos7 = props.pos.clone();
     let pos8 = props.pos.clone();
+    let pos9 = props.pos.clone();
   create_effect(cx, move ||{
     rc_search.set(search.get().as_ref().to_owned());
   });
@@ -63,21 +66,9 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
 
         if search.get().len() > 0 {
             Buscando::True {
+                nav: nav2.clone(),
                 search: rc_search1.clone(),
-                venta: match pos1.get().as_ref() {
-                    Pos::A {
-                        venta,
-                        config,
-                        clientes,
-                    } => {
-                      venta.clone()},
-                    Pos::B {
-                        venta,
-                        config: _,
-                        clientes: _,
-                    } => {
-                      venta.clone()},
-                },
+                pos: pos9.clone(),
             }
         } else {
             Buscando::False {
@@ -99,7 +90,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
             }
         }
     });
-    create_memo(cx, move || debug(pos4.get(),109));
+    create_memo(cx, move || debug(pos4.get(),109,"main page"));
     create_memo(cx, move || {
         venta_a4.track();
         venta_b3.track();
@@ -129,18 +120,46 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
         section(id="header"){
           article(){
             form(autocomplete="off"){
-              input(type="text",id="buscador",placeholder="Buscar producto..",bind:value=search){}
+              input(type="text",id="buscador",placeholder="Buscar producto..",bind:value=search,on:keydown=move|e:Event|{
+                let keyup_event: web_sys::KeyboardEvent = e.clone().unchecked_into();
+                let key = keyup_event.key();
+                match key.as_ref(){
+                  "ArrowDown"=>{
+                    e.prevent_default();
+                    nav.set(Nav::Down);
+                    //debug("down",137)
+                  },
+                  "ArrowUp"=>{
+                    e.prevent_default();
+                    nav.set(Nav::Up);
+                    //debug("up",142)
+                  },
+                  "Escape"=>{
+                    e.prevent_default();
+                    nav.set(Nav::Esc);
+                    search.set("".to_string());
+                    //debug("esc",151)
+                  },
+                  "Enter"=>{
+                    e.prevent_default();
+                    nav.set(Nav::Enter);
+                    search.set("".to_string());
+                    //debug("enter",156)
+                  },
+                  _=>(),
+                }
+              }){}
             }
           }
           article(class="ayb"){
             a(on:click=move|_|{
                 pos5.set(Pos::A { venta: venta_a1.clone(), config: config3.clone(), clientes:clientes3.clone(),  })
-            },id="v-a",class=format!("a-boton {}",match pos7.clone().get().as_ref(){Pos::A { venta:_, config:_, clientes:_,  }=>"v-actual",Pos::B { venta, config, clientes,  }=>""})){
+            },id="v-a",class=format!("a-boton {}",match pos7.clone().get().as_ref(){Pos::A { venta:_, config:_, clientes:_,  }=>"v-actual",Pos::B { venta:_, config:_, clientes:_,  }=>""})){
                 "Venta A"
             }
             a(on:click=move|_|{
                 pos6.set(Pos::B { venta: venta_b2.clone(), config: config2.clone(), clientes:clientes2.clone(),  })
-            },id="v-a",class=format!("a-boton {}",match props.pos.get().as_ref(){Pos::A { venta:_, config:_, clientes:_,  }=>"",Pos::B { venta, config, clientes,  }=>"v-actual"})){
+            },id="v-a",class=format!("a-boton {}",match props.pos.get().as_ref(){Pos::A { venta:_, config:_, clientes:_,  }=>"",Pos::B { venta:_, config:_, clientes:_,  }=>"v-actual"})){
                 "Venta B"
             }
         }
@@ -158,8 +177,8 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
         (match pos_selector.get().as_ref().clone(){
             Pos::A { venta, config, clientes:_ , } => view!(cx,
               (match buscando.get().as_ref().clone(){
-                Buscando::True{search, venta } => view!(cx,
-                  Busqueda(search = search.clone(), venta = venta.clone())
+                Buscando::True{search, nav, pos } => view!(cx,
+                  Busqueda(search = search.clone(), nav = nav.clone(), pos = pos.clone())
                 ),
                 Buscando::False { venta,  config, clientes, pos } => view!(cx,
                   CuadroPrincipal(venta=venta.clone(), config=config.clone(), pos= pos.clone(),clientes=clientes.clone())
@@ -170,8 +189,8 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
             ),
             Pos::B { venta, config, clientes:_ , } => view!(cx,
               (match buscando.get().as_ref().clone(){
-                Buscando::True{search, venta} => view!(cx,
-                  Busqueda(search = search.clone(), venta = venta.clone())
+                Buscando::True{search, nav, pos } => view!(cx,
+                  Busqueda(search = search.clone(), nav = nav.clone(),pos = pos.clone())
                 ),
                 Buscando::False { venta, config, clientes, pos } => view!(cx,
                   CuadroPrincipal(venta=venta.clone(), config=config.clone(), pos= pos.clone(),clientes=clientes.clone())

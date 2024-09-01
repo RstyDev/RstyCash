@@ -76,7 +76,7 @@ async fn try_login(datos: Rcs) {
             );
             datos.logged.set(true);
         }
-        Err(e) => debug(e, 79),
+        Err(e) => debug(e, 79,"app"),
     }
 }
 #[component]
@@ -151,7 +151,7 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
     });
 
     create_effect(cx, move || {
-        debug(rc_clientes.get(), 157);
+        debug(rc_clientes.get(), 157,"app");
     });
     view!(cx,
         div{

@@ -64,7 +64,7 @@ async fn agregar_producto<'a>(
 fn agregar_producto_a_venta(
     sistema: State<Mutex<Sistema>>,
     window: Window,
-    prod: V,
+    prod: ValuableSH,
     pos: bool,
 ) -> Res<Venta> {
     Ok(agregar_producto_a_venta_2(sistema, window, prod, pos)?)
@@ -85,7 +85,7 @@ fn agregar_rubro(window: Window, sistema: State<Mutex<Sistema>>, rubro: Rubro) -
 fn agregar_rub_o_pes_a_venta(
     sistema: State<Mutex<Sistema>>,
     window: Window,
-    val: V,
+    val: ValuableSH,
     pos: bool,
 ) -> Res<()> {
     Ok(agregar_rub_o_pes_a_venta_2(sistema, window, val, pos)?)

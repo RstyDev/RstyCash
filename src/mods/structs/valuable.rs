@@ -11,7 +11,7 @@ pub enum Valuable {
     Pes((f32, Pesable)),
     Rub((u8, Rubro)),
 }
-#[derive(Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum ValuableSH {
     Prod((u8, ProductoSH)),
     Pes((f32, PesableSH)),
@@ -38,6 +38,17 @@ impl Valuable {
             Valuable::Prod((_, prod)) => prod.codigos_de_barras[0],
             Valuable::Pes((_, pes)) => pes.codigo,
             Valuable::Rub((_, rub)) => rub.codigo,
+        }
+    }
+}
+
+impl PartialEq for ValuableSH{
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Prod(l0), Self::Prod(r0)) => l0.1.id == r0.1.id,
+            (Self::Pes(l0), Self::Pes(r0)) => l0.1.id == r0.1.id,
+            (Self::Rub(l0), Self::Rub(r0)) => l0.1.id == r0.1.id,
+            _ => false,
         }
     }
 }
