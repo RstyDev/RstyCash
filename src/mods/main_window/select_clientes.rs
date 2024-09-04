@@ -1,16 +1,7 @@
-use crate::mods::{
-    main_window::{cuadro_venta::*, main_page::*},
-    structs::{Cliente, Config, Venta},
-};
-use std::rc::Rc;
+use crate::mods::structs::{Cliente, Venta};
 use sycamore::prelude::*;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
 #[derive(Prop)]
 pub struct ClientesProps {
     clientes: RcSignal<Vec<Cliente>>,

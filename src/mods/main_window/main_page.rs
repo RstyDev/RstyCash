@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::mods::{
     lib::debug,
     main_window::{
@@ -8,16 +6,11 @@ use crate::mods::{
     },
     structs::{Buscando, Cliente, Config, Nav, Pos, Venta},
 };
-use serde_wasm_bindgen::from_value;
-use sycamore::{prelude::*, web::html::header};
-use wasm_bindgen::prelude::*;
-use web_sys::{Event, KeyboardEvent};
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
+use sycamore::prelude::*;
+use wasm_bindgen::prelude::*;
+use web_sys::Event;
+
 #[derive(Prop, Clone, Debug, PartialEq)]
 pub struct StateProps {
     pub venta_a: RcSignal<Venta>,
@@ -63,19 +56,19 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let pos8 = props.pos.clone();
     let pos9 = props.pos.clone();
     create_effect(cx, move || {
-      if !rc_search.get().as_ref().eq(search.get().as_ref()){
-        rc_search.set(search.get().as_ref().to_owned());
-      }
+        if !rc_search.get().as_ref().eq(search.get().as_ref()) {
+            rc_search.set(search.get().as_ref().to_owned());
+        }
     });
-    create_memo(cx,move||{
-      if *aux.get(){
-        search.set("".to_string());
-        aux.set(false);
-      }
-      debug(aux.get(),70, "main de rc_search");
-      // if rc.as_str() == ""{
-      //   search.set_rc(rc)
-      // }
+    create_memo(cx, move || {
+        if *aux.get() {
+            search.set("".to_string());
+            aux.set(false);
+        }
+        debug(aux.get(), 70, "main de rc_search");
+        // if rc.as_str() == ""{
+        //   search.set_rc(rc)
+        // }
     });
     let pos_selector = create_selector(cx, move || pos2.get().as_ref().clone());
     let buscando = create_selector(cx, move || {
@@ -84,7 +77,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                 nav: nav2.clone(),
                 search: rc_search1.clone(),
                 pos: pos9.clone(),
-                aux: search_aux.clone()
+                aux: search_aux.clone(),
             }
         } else {
             Buscando::False {
@@ -106,8 +99,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
             }
         }
     });
-    
-    
+
     create_memo(cx, move || {
         venta_a4.track();
         venta_b3.track();

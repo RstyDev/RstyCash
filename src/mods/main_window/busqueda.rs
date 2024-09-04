@@ -1,35 +1,19 @@
 use crate::mods::{
-    lib::debug,
-    structs::{Nav, Pos, ValuableSH, Venta, VentaSHC},
+    lib::{call, debug},
+    structs::{args::{AgregarProductoAVenta, GetProductosFiltrado}, Nav, Pos, ValuableSH, Venta, VentaSHC},
 };
-use serde::{Deserialize, Serialize};
-use serde_wasm_bindgen::{from_value, to_value};
+use serde_wasm_bindgen::from_value;
 use sycamore::{
     flow::Keyed,
     futures::spawn_local_scoped,
     prelude::{
-        component, create_effect, create_memo, create_selector, view, Html, Prop, RcSignal, Scope,
-        Signal, View,
+        component, create_memo, create_selector, view, Html, Prop, RcSignal, Scope, Signal, View,
     },
     reactive::create_signal,
 };
-use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
 
-#[derive(Serialize, Deserialize)]
-struct SearchArg<'a> {
-    filtro: &'a str,
-}
-#[derive(Serialize, Deserialize)]
-struct ProdArg {
-    prod: ValuableSH,
-    pos: bool,
-}
+
 
 #[derive(Prop)]
 pub struct SearchProps {
@@ -40,21 +24,25 @@ pub struct SearchProps {
 }
 
 async fn search(filtro: impl Into<String>) -> Vec<ValuableSH> {
-    let filtro = to_value(&SearchArg {
-        filtro: filtro.into().as_str(),
-    })
-    .unwrap();
-    let res = invoke("get_productos_filtrado", filtro).await;
+    let res = call(
+        "get_productos_filtrado",
+        GetProductosFiltrado {
+            filtro: filtro.into().as_str(),
+        },
+    )
+    .await;
     from_value::<Vec<ValuableSH>>(res).unwrap()
 }
 
 async fn add_to_sale(producto: ValuableSH, pos: bool) -> VentaSHC {
-    let value = to_value(&ProdArg {
-        prod: producto,
-        pos,
-    })
-    .unwrap();
-    let res = invoke("agregar_producto_a_venta", value).await;
+    let res = call(
+        "agregar_producto_a_venta",
+        AgregarProductoAVenta {
+            prod: producto,
+            pos,
+        },
+    )
+    .await;
     from_value::<VentaSHC>(res).unwrap()
 }
 
@@ -81,7 +69,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
             }
         });
     });
-    
+
     create_memo(cx, move || {
         match nav.get().as_ref() {
             Nav::Up => {
@@ -90,10 +78,10 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                     if *i > 0 {
                         actual.set(Some((
                             i - 1,
-                            match &busqueda.get().as_ref()[*i as usize - 1]{
-                                ValuableSH::Prod((_,p)) => ValuableSH::Prod((1,p.clone())),
-                                ValuableSH::Pes((_,p)) => ValuableSH::Pes((0.0,p.clone())),
-                                ValuableSH::Rub((_,r)) => ValuableSH::Rub((0,r.clone())),
+                            match &busqueda.get().as_ref()[*i as usize - 1] {
+                                ValuableSH::Prod((_, p)) => ValuableSH::Prod((1, p.clone())),
+                                ValuableSH::Pes((_, p)) => ValuableSH::Pes((0.0, p.clone())),
+                                ValuableSH::Rub((_, r)) => ValuableSH::Rub((0, r.clone())),
                             },
                         )));
                     }
@@ -106,17 +94,17 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                     if *i < busqueda.get().as_ref().len() as u8 - 1 {
                         actual.set(Some((
                             i + 1,
-                            match &busqueda.get().as_ref()[*i as usize + 1]{
-                                ValuableSH::Prod((_,p)) => ValuableSH::Prod((1,p.clone())),
-                                ValuableSH::Pes((_,p)) => ValuableSH::Pes((0.0,p.clone())),
-                                ValuableSH::Rub((_,r)) => ValuableSH::Rub((0,r.clone())),  
+                            match &busqueda.get().as_ref()[*i as usize + 1] {
+                                ValuableSH::Prod((_, p)) => ValuableSH::Prod((1, p.clone())),
+                                ValuableSH::Pes((_, p)) => ValuableSH::Pes((0.0, p.clone())),
+                                ValuableSH::Rub((_, r)) => ValuableSH::Rub((0, r.clone())),
                             },
                         )));
                     }
                 }
                 nav.set(Nav::None);
             }
-            Nav::Enter => {                
+            Nav::Enter => {
                 if let Some((_, act)) = actual.get().as_ref().clone() {
                     let pos = props.pos.clone();
                     let search = props.search.clone();
@@ -126,7 +114,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                         let sale;
                         //search.set("".to_string());
                         //------------------------------------
-                        debug(act.clone(),119,"busqueda");
+                        debug(act.clone(), 119, "busqueda");
                         let res = add_to_sale(
                             act,
                             match pos.get().as_ref() {
@@ -149,12 +137,12 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                             },
                         )
                         .await;
-                    sale.set(Venta::from_shared_complete(res.clone()));
-                    aux.set(true);
-                    debug(res, 143, "busqueda");
-                    nav.set(Nav::None);
-                });
-            }
+                        sale.set(Venta::from_shared_complete(res.clone()));
+                        aux.set(true);
+                        debug(res, 143, "busqueda");
+                        nav.set(Nav::None);
+                    });
+                }
             }
             Nav::Esc => {
                 debug("ESC", 87, "busqueda");
@@ -162,8 +150,8 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                     //actual.set(None);
                 }
                 nav.set(Nav::None);
-            },
-            Nav::None=>(),
+            }
+            Nav::None => (),
         }
     });
 
@@ -180,7 +168,6 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
     //     }).collect::<Vec<String>>(),61,"busqueda")
 
     // });
-   
 
     view!(cx,
         section(id="cuadro-principal"){

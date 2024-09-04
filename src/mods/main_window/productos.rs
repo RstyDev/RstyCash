@@ -1,36 +1,25 @@
 use crate::mods::{
-    main_window::{
-        pagos::Pagos, producto::Prod, resumen_pago::ResumenPago, resumen_pago::ResumenProps,
-    },
-    structs::{
-        Cliente, Config, Formato, Mayusculas, MedioPago, Pago, Pesable, Presentacion, Producto,
-        Proveedor, RelacionProdProv, Rubro, Valuable, Venta, Windows,
-    },
-    Login,
+    main_window::producto::Prod,
+    structs::{Config, Venta},
 };
-use chrono::Utc;
-use serde::{Deserialize, Serialize};
-use serde_wasm_bindgen::to_value;
-use std::{rc::Rc, sync::Arc};
-use sycamore::futures::spawn_local_scoped;
+use std::rc::Rc;
 use sycamore::prelude::*;
-use sycamore::rt::Event;
-use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
 #[derive(Prop)]
 pub struct ProdsProps {
-    venta: Rc<Venta>,
+    venta: RcSignal<Venta>,
     config: Rc<Config>,
+    pos: bool,
 }
 #[component]
 pub fn Productos<G: Html>(cx: Scope, props: ProdsProps) -> View<G> {
-    let prods = create_signal(cx, props.venta.productos.clone());
+    let venta = props.venta.clone();
+    let venta1 = props.venta.clone();
+    let prods = create_signal(cx, props.venta.get().productos.clone());
     let conf = create_signal_from_rc(cx, props.config);
+    create_memo(cx, move||{
+        prods.set(venta1.get().productos.clone());
+    });
 
     view! {cx,
         section(id="productos"){
@@ -51,7 +40,8 @@ pub fn Productos<G: Html>(cx: Scope, props: ProdsProps) -> View<G> {
             Keyed(
                 iterable = prods,
                 view = move |cx,x|{
-                    view!{cx,Prod(valuable = x, conf = conf.get())}
+                    let venta = venta.clone();
+                    view!{cx,Prod(valuable = x, conf = conf.get(), pos = props.pos, venta = venta.clone())}
                 },
                 key = |x|{x.id()}
             )

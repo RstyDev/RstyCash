@@ -681,7 +681,6 @@ impl<'a> Sistema {
         Ok(())
     }
     pub async fn agregar_producto_a_venta(&mut self, prod: Valuable, pos: bool) -> Res<()> {
-        
         let existe = match &prod {
             Valuable::Prod((_, prod)) => {
                 let qres: Option<IntDB> = sqlx::query_as!(
@@ -774,7 +773,7 @@ impl<'a> Sistema {
     }
     pub fn eliminar_producto_de_venta(
         &mut self,
-        index: usize,
+        code: i64,
         pos: bool,
     ) -> Result<Venta, AppError> {
         let result;
@@ -783,7 +782,7 @@ impl<'a> Sistema {
                 result = self
                     .ventas
                     .a
-                    .eliminar_producto(index, &self.configs().politica());
+                    .eliminar_producto(code, &self.configs().politica());
             } else {
                 self.ventas.a.empty();
                 result = Ok(self.ventas.a.clone());
@@ -793,7 +792,7 @@ impl<'a> Sistema {
                 result = self
                     .ventas
                     .b
-                    .eliminar_producto(index, &self.configs().politica());
+                    .eliminar_producto(code, &self.configs().politica());
             } else {
                 self.ventas.b.empty();
                 result = Ok(self.ventas.b.clone());

@@ -163,7 +163,7 @@ pub mod commands {
     ) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        let prod = block_on(async{ V::from_shared(prod, sis.db()).await })?;
+        let prod = block_on(async { V::from_shared(prod, sis.db()).await })?;
         match prod {
             V::Prod(_) => {
                 block_on(sis.agregar_producto_a_venta(prod, pos))?;
@@ -185,11 +185,7 @@ pub mod commands {
                 // ));
             }
             V::Rub(a) => {
-                spawn(open_select_amount_2(
-                    window.app_handle(),
-                    V::Rub(a),
-                    pos,
-                ));
+                spawn(open_select_amount_2(window.app_handle(), V::Rub(a), pos));
             }
         }
         Ok(sis.venta(pos))
@@ -232,7 +228,7 @@ pub mod commands {
     ) -> Res<()> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        let val= block_on(async{V::from_shared(val, sis.db()).await})?;
+        let val = block_on(async { V::from_shared(val, sis.db()).await })?;
         block_on(sis.agregar_producto_a_venta(val, pos))?;
         loop {
             if window
@@ -353,12 +349,12 @@ pub mod commands {
     pub fn eliminar_producto_de_venta_2(
         sistema: State<Mutex<Sistema>>,
         window: Window,
-        index: usize,
+        code: i64,
         pos: bool,
     ) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        let res = sis.eliminar_producto_de_venta(index, pos)?;
+        let res = sis.eliminar_producto_de_venta(code, pos)?;
         loop {
             if window
                 .menu_handle()

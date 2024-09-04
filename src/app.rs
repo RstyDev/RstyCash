@@ -1,5 +1,5 @@
 use crate::mods::{
-    lib::debug,
+    lib::{call, debug},
     main_window::main_page::{MainPage, StateProps},
     structs::{
         Caja, Cliente, Config, Pos, Proveedor, Rango, Rcs, SistemaSH, User, UserSHC, Valuable,
@@ -14,7 +14,6 @@ use std::sync::Arc;
 use sycamore::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 
-use wasm_bindgen::prelude::*;
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Payload {
     message: Option<String>,
@@ -22,19 +21,7 @@ pub struct Payload {
     val: Option<Valuable>,
 }
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "event"])]
-    async fn listen(event: &str, args: JsValue) -> JsValue;
-}
-
-#[derive(Serialize, Deserialize)]
-struct GreetArgs<'a> {
-    name: &'a str,
-}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct User2 {
     pub id: Arc<str>,
@@ -44,14 +31,15 @@ pub struct User2 {
 }
 
 async fn try_login(datos: Rcs) {
-    let args = to_value(&LoginAux {
-        user: datos.user.get().as_ref().clone().to_shared_complete(),
-    })
-    .unwrap();
-
-    let res: JsValue = invoke("try_login", args).await;
-    let res = from_value::<SistemaSH>(res);
-
+    let res = from_value::<SistemaSH>(
+        call(
+            "try_login",
+            LoginAux {
+                user: datos.user.get().as_ref().to_shared_complete(),
+            },
+        )
+        .await,
+    );
     match res {
         Ok(a) => {
             datos.user.set(User::from_shared_complete(UserSHC {

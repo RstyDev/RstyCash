@@ -5,7 +5,7 @@ mod mods;
 use commands::*;
 use mods::{
     cmd::*, db::db, Caja, Cli, Cliente, Config, MedioPago, Pago, Producto, Proveedor, Rango,
-    Result as Res, Rubro, Sistema, SistemaSH, User, UserSHC, Valuable as V, ValuableSH, Venta,
+    Result as Res, Rubro, Sistema, SistemaSH, User, UserSHC, Valuable as V, ValuableSH, Venta, VentaSHC,
 };
 use std::sync::Arc;
 use tauri::{
@@ -138,10 +138,11 @@ fn eliminar_producto(sistema: State<Mutex<Sistema>>, prod: V) -> Res<()> {
 fn eliminar_producto_de_venta(
     sistema: State<Mutex<Sistema>>,
     window: Window,
-    index: usize,
+    code: [u8;8],
     pos: bool,
-) -> Res<Venta> {
-    Ok(eliminar_producto_de_venta_2(sistema, window, index, pos)?)
+) -> Res<VentaSHC> {
+    let code = i64::from_be_bytes(code);
+    Ok(eliminar_producto_de_venta_2(sistema, window, code, pos)?.to_shared_complete())
 }
 #[tauri::command]
 fn eliminar_usuario(sistema: State<Mutex<Sistema>>, user: User) -> Res<()> {

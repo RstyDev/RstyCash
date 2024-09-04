@@ -348,16 +348,28 @@ impl<'a> Venta {
             }
         }
     }
-    pub fn eliminar_producto(&mut self, index: usize, politica: &f32) -> Result<Venta, AppError> {
-        if self.productos().len() > index {
-            self.productos.remove(index);
-            self.update_monto_total(politica);
-            Ok(self.clone())
-        } else {
-            Err(AppError::NotFound {
-                objeto: String::from("Indice"),
-                instancia: index.to_string(),
-            })
+    pub fn eliminar_producto(&mut self, code: i64, politica: &f32) -> Result<Venta, AppError> {
+        let existe = self
+            .productos
+            .iter()
+            .enumerate()
+            .find_map(|(i, p)| match p {
+                Valuable::Prod(prod) => {
+                    (prod.1.codigos_de_barras().iter().any(|cod| *cod == code)).then_some(i)
+                }
+                Valuable::Pes(pes) => (*pes.1.codigo() == code).then_some(i),
+                Valuable::Rub(rub) => (*rub.1.codigo() == code).then_some(i),
+            });
+        match existe {
+            Some(i) => {
+                self.productos.remove(i);
+                self.update_monto_total(politica);
+                Ok(self.clone())
+            }
+            None => Err(AppError::NotFound {
+                objeto: String::from("Código de barras"),
+                instancia: code.to_string(),
+            }),
         }
     }
     pub async fn guardar(&self, pos: bool, db: &Pool<Sqlite>) -> Res<()> {

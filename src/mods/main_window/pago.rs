@@ -5,15 +5,8 @@ use sycamore::{
     prelude::{component, view, Html, Keyed, Prop, Scope, View},
     reactive::RcSignal,
 };
-use wasm_bindgen::prelude::*;
 
 use crate::mods::structs::MedioPago;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
 
 #[derive(Prop)]
 pub struct PagoProps {
@@ -21,21 +14,6 @@ pub struct PagoProps {
     opciones: RcSignal<Vec<MedioPago>>,
     monto: f32,
     state: Option<RcSignal<String>>,
-}
-impl PagoProps {
-    pub fn new(
-        pagado: bool,
-        opciones: RcSignal<Vec<MedioPago>>,
-        monto: f32,
-        state: Option<RcSignal<String>>,
-    ) -> PagoProps {
-        PagoProps {
-            pagado,
-            opciones,
-            monto,
-            state,
-        }
-    }
 }
 
 #[component]

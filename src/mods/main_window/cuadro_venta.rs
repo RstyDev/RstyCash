@@ -4,26 +4,22 @@ use crate::mods::{
 };
 use std::rc::Rc;
 use sycamore::prelude::*;
-use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
 #[derive(Prop)]
 pub struct VentaProps {
-    pub venta: Rc<Venta>,
+    pub venta: RcSignal<Venta>,
     pub config: Rc<Config>,
+    pub pos: bool,
 }
 #[component]
 pub fn CuadroVenta<G: Html>(cx: Scope, props: VentaProps) -> View<G> {
-    let venta = create_signal_from_rc(cx, props.venta);
+    let venta = props.venta.clone();
+    let venta1 = props.venta.clone();
     let config = create_signal_from_rc(cx, props.config);
     view! {cx,
         section(id="cuadro-venta"){
-            Productos(venta=venta.get(),config=config.get())
-            section(id="monto-total"){"TOTAL "(venta.get().monto_total)}
+            Productos(venta=venta.clone(),config=config.get(), pos = props.pos)
+            section(id="monto-total"){(format!("TOTAL {:.2}",venta1.get().monto_total))}
         }
     }
 }

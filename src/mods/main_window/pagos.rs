@@ -1,21 +1,14 @@
 use crate::mods::{
-    lib::debug,
-    main_window::{pago::*, resumen_pago::*, *},
-    structs::{Cliente, Config, Cuenta, MedioPago, Venta},
+    main_window::*,
+    structs::{Cliente, Cuenta, MedioPago},
 };
+use pago::*;
 use sycamore::{
     prelude::*,
     reactive::{create_memo, create_rc_signal, RcSignal},
 };
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsValue;
 
 use super::resumen_pago::ResumenProps;
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
 
 #[component]
 pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
@@ -77,9 +70,9 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
         article(id="pagos"){
             Keyed(
                 iterable = pagos,
-                view=move |cx,x|{
-                    PagoComp(cx,PagoProps::new(true, create_rc_signal(vec![x.medio_pago]), x.monto, None))
-                },
+                view=move |cx,x|view!(cx,
+                    PagoComp(pagado = true, opciones = create_rc_signal(vec![x.medio_pago]), monto = x.monto, state = None)
+                ),
                 key=|x|x.int_id
             )
             PagoComp(pagado=false, opciones=medios.clone(), monto=venta1.get().monto_total - venta1.get().monto_pagado, state=Some(state))

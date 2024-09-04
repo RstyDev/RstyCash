@@ -15,17 +15,10 @@ use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen::JsValue;
 use web_sys::Event;
 
-use crate::mods::{
-    lib::debug,
-    structs::{get_hash, Rango},
-};
+use crate::mods::structs::{get_hash, Rango};
 
 use super::structs::{User, UserSHC};
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "tauri"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
+
 #[derive(Prop)]
 pub struct LoginProps {
     pub user: RcSignal<User>,
@@ -34,36 +27,11 @@ pub struct LoginProps {
 pub struct LoginAux {
     pub(crate) user: UserSHC,
 }
-#[derive(Default, Clone)]
-pub struct UserArg {
-    pub id: RcSignal<String>,
-    pub nombre: RcSignal<String>,
-    pub pass: RcSignal<i64>,
-    pub rango: RcSignal<Rango>,
-}
-impl UserArg {
-    pub fn new(
-        id: RcSignal<String>,
-        nombre: RcSignal<String>,
-        pass: RcSignal<i64>,
-        rango: RcSignal<Rango>,
-    ) -> UserArg {
-        UserArg {
-            id,
-            nombre,
-            pass,
-            rango,
-        }
-    }
-}
+
 #[component]
 pub fn Login<G: Html>(cx: Scope, props: LoginProps) -> View<G> {
-    //let us = create_signal(cx, props.args);
-    //let dato=Event::new("type").unwrap().target().unwrap();
-
-    // let us = create_rc_signal_from_rc(props.user);
-    let pass = create_signal(cx, String::from(""));
-    let user = create_signal(cx, String::from(""));
+    let pass = create_signal(cx, String::new());
+    let user = create_signal(cx, String::new());
     let input_ingresar: View<G> = input()
         .attr("type", "submit")
         .attr("value", "Ingresar")
@@ -73,7 +41,7 @@ pub fn Login<G: Html>(cx: Scope, props: LoginProps) -> View<G> {
             let pass = get_hash(pass.get().as_str());
             props.user.set(User {
                 id,
-                nombre: String::from("nada"),
+                nombre: String::new(),
                 pass,
                 rango: Rango::Cajero,
             });
@@ -85,15 +53,6 @@ pub fn Login<G: Html>(cx: Scope, props: LoginProps) -> View<G> {
             input(type="text",placeholder="Usuario",
             bind:value=user)
             input(type="password",placeholder="Contraseña",bind:value=pass)
-
-            // input(type="submit", value="Ingresar",on:click=move |d:Event|{
-            //     d.prevent_default();
-            //     props.id.set(user.get().to_string());
-            //     props.pass.set(get_hash(pass.get().as_str()));
-            //     //props.args.set(User { id: user.get().as_ref().to_string(), pass: get_hash(pass.get().as_str()),..props.args.get().as_ref().clone() });
-
-            // })
-
             (input_ingresar)
         }
     }
