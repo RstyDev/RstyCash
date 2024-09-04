@@ -42,7 +42,7 @@ impl Valuable {
     }
 }
 
-impl PartialEq for ValuableSH{
+impl PartialEq for ValuableSH {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Prod(l0), Self::Prod(r0)) => l0.1.id == r0.1.id,

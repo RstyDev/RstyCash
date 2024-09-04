@@ -8,8 +8,8 @@ use crate::mods::{
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, Pool, Sqlite};
-use tauri::async_runtime::block_on;
 use std::sync::Arc;
+use tauri::async_runtime::block_on;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Producto {
@@ -324,8 +324,10 @@ impl Producto {
             proveedores: self.proveedores.clone(),
         }
     }
-    pub async fn from_shared(producto: ProductoSH, db: &Pool<Sqlite>)->Res<Self>{
-        let qres = sqlx::query_as!(ProductoDB,r#"select id as "id:_",
+    pub async fn from_shared(producto: ProductoSH, db: &Pool<Sqlite>) -> Res<Self> {
+        let qres = sqlx::query_as!(
+            ProductoDB,
+            r#"select id as "id:_",
         precio_venta as "precio_venta:_",
         porcentaje as "porcentaje:_",
         precio_costo as "precio_costo:_",
@@ -334,7 +336,11 @@ impl Producto {
         variedad,
         presentacion,
         size as "size:_",
-        updated_at from productos where id = ?"#,producto.id).fetch_one(db).await?;
+        updated_at from productos where id = ?"#,
+            producto.id
+        )
+        .fetch_one(db)
+        .await?;
         Mapper::producto(db, qres).await
     }
     pub fn from_shared_complete(producto: ProductoSHC) -> Self {

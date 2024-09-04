@@ -15,7 +15,10 @@ impl Payload {
 }
 pub mod commands {
     use crate::mods::{
-        cmd::{Payload, DENEGADO, INDEX}, sistema::SistemaSH, AppError, Caja, Cli, Cliente, Config, MedioPago, Pago, Pesable, Producto, Proveedor, Rango, Res, Rubro, Sistema, User, Valuable as V, ValuableSH, Venta
+        cmd::{Payload, DENEGADO, INDEX},
+        sistema::SistemaSH,
+        AppError, Caja, Cli, Cliente, Config, MedioPago, Pago, Pesable, Producto, Proveedor, Rango,
+        Res, Rubro, Sistema, User, Valuable as V, ValuableSH, Venta,
     };
     use std::sync::Arc;
     use tauri::async_runtime::{block_on, spawn, Mutex};
@@ -160,8 +163,9 @@ pub mod commands {
     ) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
+        let prod = block_on(async{ V::from_shared(prod, sis.db()).await })?;
         match prod {
-            ValuableSH::Prod(_) => {
+            V::Prod(_) => {
                 block_on(sis.agregar_producto_a_venta(prod, pos))?;
                 loop {
                     if let Ok(_) = window
@@ -173,17 +177,17 @@ pub mod commands {
                     }
                 }
             }
-            ValuableSH::Pes(a) => {
+            V::Pes(a) => {
                 // spawn(open_select_amount_2(
                 //     window.app_handle(),
                 //     V::Pes((a.0,Pesable::from_shared(a.1))),
                 //     pos,
                 // ));
             }
-            ValuableSH::Rub(a) => {
+            V::Rub(a) => {
                 spawn(open_select_amount_2(
                     window.app_handle(),
-                    V::Rub((a.0,Rubro::from_shared_complete(a.1))),
+                    V::Rub(a),
                     pos,
                 ));
             }
@@ -227,6 +231,8 @@ pub mod commands {
         pos: bool,
     ) -> Res<()> {
         let mut sis = block_on(sistema.lock());
+        sis.access();
+        let val= block_on(async{V::from_shared(val, sis.db()).await})?;
         block_on(sis.agregar_producto_a_venta(val, pos))?;
         loop {
             if window

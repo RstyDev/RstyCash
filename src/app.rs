@@ -1,8 +1,11 @@
 use crate::mods::{
-    lib::debug, main_window::main_page::{MainPage, StateProps}, structs::{
+    lib::debug,
+    main_window::main_page::{MainPage, StateProps},
+    structs::{
         Caja, Cliente, Config, Pos, Proveedor, Rango, Rcs, SistemaSH, User, UserSHC, Valuable,
         Venta, Windows,
-    }, Login, LoginAux
+    },
+    Login, LoginAux,
 };
 
 use serde::{Deserialize, Serialize};
@@ -76,7 +79,7 @@ async fn try_login(datos: Rcs) {
             );
             datos.logged.set(true);
         }
-        Err(e) => debug(e, 79,"app"),
+        Err(e) => debug(e, 79, "app"),
     }
 }
 #[component]
@@ -112,7 +115,8 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
         rc_clientes.clone(),
     );
     let (rc_user1, rc_user2, rc_user3) = (rc_user.clone(), rc_user.clone(), rc_user.clone());
-    let (rc_logged1, rc_logged2, rc_logged3) = (rc_logged.clone(), rc_logged.clone(), rc_logged.clone());
+    let (rc_logged1, rc_logged2, rc_logged3) =
+        (rc_logged.clone(), rc_logged.clone(), rc_logged.clone());
     let rc_pos1 = rc_pos.clone();
 
     let rend = create_selector(cx, move || window.get().as_ref().clone());
@@ -143,7 +147,7 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
         let datos_3 = datos_2.clone();
         let rc_logged = rc_logged3.clone();
         spawn_local(async move {
-            if !rc_logged.get().as_ref(){
+            if !rc_logged.get().as_ref() {
                 try_login(datos_3).await;
             }
         });
@@ -154,7 +158,7 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
     });
 
     create_effect(cx, move || {
-        debug(rc_clientes.get(), 157,"app");
+        //debug(rc_clientes.get(), 157, "app");
     });
     view!(cx,
         div{

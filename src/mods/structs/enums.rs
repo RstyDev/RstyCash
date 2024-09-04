@@ -18,7 +18,7 @@ pub enum Pos {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Buscando{
+pub enum Buscando {
     False {
         venta: RcSignal<Venta>,
         config: RcSignal<Config>,
@@ -29,15 +29,15 @@ pub enum Buscando{
         nav: RcSignal<Nav>,
         search: RcSignal<String>,
         pos: RcSignal<Pos>,
+        aux: RcSignal<bool>,
     },
 }
 
-
-
 #[derive(Debug, PartialEq, Clone)]
-pub enum Nav{
+pub enum Nav {
     Up,
     Down,
     Enter,
     Esc,
+    None,
 }

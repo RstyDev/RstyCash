@@ -680,12 +680,8 @@ impl<'a> Sistema {
         async_runtime::block_on(async { Proveedor::new_to_db(proveedor, self.db()).await })?;
         Ok(())
     }
-    pub async fn agregar_producto_a_venta(&mut self, prod: ValuableSH, pos: bool) -> Res<()> {
-        let prod = match prod{
-            ValuableSH::Prod(p) => Valuable::Prod((p.0,Producto::from_shared(p.1, &self.db).await?)),
-            ValuableSH::Pes(p) => Valuable::Pes((p.0,Pesable::from_shared(p.1, &self.db).await?)),
-            ValuableSH::Rub(r) => Valuable::Rub((r.0,Rubro::from_shared_complete(r.1))),
-        };
+    pub async fn agregar_producto_a_venta(&mut self, prod: Valuable, pos: bool) -> Res<()> {
+        
         let existe = match &prod {
             Valuable::Prod((_, prod)) => {
                 let qres: Option<IntDB> = sqlx::query_as!(

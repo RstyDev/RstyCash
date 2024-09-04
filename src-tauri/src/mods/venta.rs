@@ -2,7 +2,7 @@ use crate::mods::db::map::{BigIntDB, ClienteDB, IntDB, VentaDB};
 use chrono::{NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as, Pool, Sqlite};
-use std::sync::Arc;
+use std::{mem::take, sync::Arc};
 
 use Valuable as V;
 const CUENTA: &str = "Cuenta Corriente";

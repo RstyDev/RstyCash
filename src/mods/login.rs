@@ -15,7 +15,10 @@ use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen::JsValue;
 use web_sys::Event;
 
-use crate::mods::{lib::debug, structs::{get_hash, Rango}};
+use crate::mods::{
+    lib::debug,
+    structs::{get_hash, Rango},
+};
 
 use super::structs::{User, UserSHC};
 #[wasm_bindgen]
@@ -80,10 +83,7 @@ pub fn Login<G: Html>(cx: Scope, props: LoginProps) -> View<G> {
     view! {cx,
         form(id="form-login"){
             input(type="text",placeholder="Usuario",
-            bind:value=user,
-            on:input=move |_|{
-                debug(user.get(),85,"login");
-            })
+            bind:value=user)
             input(type="password",placeholder="Contraseña",bind:value=pass)
 
             // input(type="submit", value="Ingresar",on:click=move |d:Event|{

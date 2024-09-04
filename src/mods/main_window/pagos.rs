@@ -1,5 +1,7 @@
 use crate::mods::{
-    lib::debug, main_window::{pago::*, resumen_pago::*, *}, structs::{Cliente, Config, Cuenta, MedioPago, Venta}
+    lib::debug,
+    main_window::{pago::*, resumen_pago::*, *},
+    structs::{Cliente, Config, Cuenta, MedioPago, Venta},
 };
 use sycamore::{
     prelude::*,
@@ -44,7 +46,7 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
     let medios2 = medios.clone();
     create_memo(cx, move || {
         venta.track();
-        debug(venta.get(),51,"pagos");
+        //debug(venta.get(), 51, "pagos");
         let filtrado = conf
             .get()
             .medios_pago
@@ -60,17 +62,17 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
             },
         })
     });
-    debug(conf1.get(),64,"pagos");
-    debug(medios.clone(),65,"pagos");
+    //debug(conf1.get(), 64, "pagos");
+    //debug(medios.clone(), 65, "pagos");
     let logg = pagos.get().len();
     let state = create_rc_signal(String::new());
     let s2 = RcSignal::clone(&state);
     let memo = create_memo(cx, move || {
         s2.track();
-        debug(s2.get(),71,"pagos");
+        //debug(s2.get(), 71, "pagos");
     });
     //let medios = create_signal(cx, props.config.get().medios_pago.clone());
-    debug(logg,74,"pagos");
+    //debug(logg, 74, "pagos");
     view!(cx,
         article(id="pagos"){
             Keyed(

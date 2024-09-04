@@ -8,6 +8,6 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
 }
-pub fn debug(s: impl std::fmt::Debug, line: u16, file: &str){
-    log(format!("*** Linea: {line} *** \n*** File: {file}*** \n{:#?}",s).as_str())
+pub fn debug(s: impl std::fmt::Debug, line: u16, file: &str) {
+    log(format!("*** Linea: {line} *** \n*** File: {file}*** \n{:#?}", s).as_str())
 }

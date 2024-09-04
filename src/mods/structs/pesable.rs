@@ -10,7 +10,7 @@ pub struct Pesable {
     pub costo_kilo: f32,
     pub descripcion: Arc<str>,
 }
-#[derive(Serialize, Deserialize, Clone,Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PesableSH {
     pub id: i32,
     pub codigo: [u8; 8],

@@ -94,6 +94,13 @@ impl Valuable {
             Valuable::Rub(r) => ValuableSH::Rub((r.0, r.1.to_shared_complete())),
         }
     }
+    pub async fn from_shared(val: ValuableSH, db:&Pool<Sqlite>)->Res<Self>{
+        Ok(match val{
+            ValuableSH::Prod(p) => Valuable::Prod((p.0,Producto::from_shared(p.1, db).await?)),
+            ValuableSH::Pes(p) => Valuable::Pes((p.0,Pesable::from_shared(p.1, db).await?)),
+            ValuableSH::Rub(r) => Valuable::Rub((r.0,Rubro::from_shared_complete(r.1))),
+        })
+    }
 }
 
 // impl Default for Valuable {

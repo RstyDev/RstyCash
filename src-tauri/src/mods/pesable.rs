@@ -182,15 +182,27 @@ impl Pesable {
             descripcion: self.descripcion.clone(),
         }
     }
-    pub async fn from_shared(pesable: PesableSH, db: &Pool<Sqlite>)->Res<Self>{
-        let qres= sqlx::query_as!(PesableDB,r#"select id as "id:i32",
+    pub async fn from_shared(pesable: PesableSH, db: &Pool<Sqlite>) -> Res<Self> {
+        let qres = sqlx::query_as!(
+            PesableDB,
+            r#"select id as "id:i32",
         precio_peso as "precio_peso:f32",
         porcentaje as "porcentaje:f32",
         costo_kilo as "costo_kilo:f32",
         descripcion,
-        updated_at from pesables where id = ?"#,pesable.id).fetch_one(db).await?;
-        let cod = sqlx::query_as!(BigIntDB, "select codigo as int from codigos where pesable = ?",pesable.id).fetch_one(db).await?;
-        let res=Mapper::pesable(qres, cod.int);
+        updated_at from pesables where id = ?"#,
+            pesable.id
+        )
+        .fetch_one(db)
+        .await?;
+        let cod = sqlx::query_as!(
+            BigIntDB,
+            "select codigo as int from codigos where pesable = ?",
+            pesable.id
+        )
+        .fetch_one(db)
+        .await?;
+        let res = Mapper::pesable(qres, cod.int);
         Ok(res)
     }
     pub fn to_shared_complete(&self) -> PesableSHC {

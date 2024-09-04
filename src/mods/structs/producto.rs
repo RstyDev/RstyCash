@@ -15,7 +15,7 @@ pub struct Producto {
     pub presentacion: Presentacion,
     pub proveedores: Vec<RelacionProdProv>,
 }
-#[derive(Serialize, Deserialize, Clone,Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ProductoSH {
     pub id: i32,
     pub codigo_de_barras: [u8; 8],

@@ -1,11 +1,12 @@
-
 use std::rc::Rc;
 
 use crate::mods::{
-    lib::debug, main_window::{
+    lib::debug,
+    main_window::{
         busqueda::Busqueda, cuadro_principal::CuadroPrincipal, resumen_pago::ResumenPago,
         select_clientes::*,
-    }, structs::{Buscando, Cliente, Config, Nav, Pos, Venta}
+    },
+    structs::{Buscando, Cliente, Config, Nav, Pos, Venta},
 };
 use serde_wasm_bindgen::from_value;
 use sycamore::{prelude::*, web::html::header};
@@ -18,7 +19,7 @@ extern "C" {
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 }
 #[derive(Prop, Clone, Debug, PartialEq)]
-pub struct StateProps{
+pub struct StateProps {
     pub venta_a: RcSignal<Venta>,
     pub venta_b: RcSignal<Venta>,
     pub config: RcSignal<Config>,
@@ -28,22 +29,25 @@ pub struct StateProps{
 
 #[component]
 pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
+    let search_aux = create_rc_signal(false);
+    let aux = search_aux.clone();
     let clientes = props.clientes.clone();
     let clientes1 = props.clientes.clone();
     let clientes2 = props.clientes.clone();
-    let clientes3=props.clientes.clone();
+    let clientes3 = props.clientes.clone();
     let nav = create_rc_signal(Nav::Esc);
     let nav2 = nav.clone();
-    let search = create_signal(cx,String::new());
+    let nav3 = nav.clone();
+    let search = create_signal(cx, String::new());
     let rc_search = create_rc_signal_from_rc(search.get());
     let rc_search1 = rc_search.clone();
     let rc_search2 = rc_search.clone();
     let venta_a1 = props.venta_a.clone();
     let venta_a2 = props.venta_a.clone();
-    let venta_b1 = props.venta_b.clone();
     let venta_a3 = props.venta_a.clone();
-    let venta_b2 = props.venta_b.clone();
     let venta_a4 = props.venta_a.clone();
+    let venta_b1 = props.venta_b.clone();
+    let venta_b2 = props.venta_b.clone();
     let venta_b3 = props.venta_b.clone();
     let config = props.config.clone();
     let config1 = props.config.clone();
@@ -58,24 +62,29 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let pos7 = props.pos.clone();
     let pos8 = props.pos.clone();
     let pos9 = props.pos.clone();
-  create_effect(cx, move ||{
-    rc_search.set(search.get().as_ref().to_owned());
-  });
-  // create_memo(cx,move ||{
-  //   let rc_s = rc_search2.clone();
-  //   let rc = rc_s.get().as_ref().clone();
-  //   if rc.eq("")&&!rc.eq(search.get().as_ref().into()){
-  //     search.set(rc);
-  //   }
-  // });
+    create_effect(cx, move || {
+      if !rc_search.get().as_ref().eq(search.get().as_ref()){
+        rc_search.set(search.get().as_ref().to_owned());
+      }
+    });
+    create_memo(cx,move||{
+      if *aux.get(){
+        search.set("".to_string());
+        aux.set(false);
+      }
+      debug(aux.get(),70, "main de rc_search");
+      // if rc.as_str() == ""{
+      //   search.set_rc(rc)
+      // }
+    });
     let pos_selector = create_selector(cx, move || pos2.get().as_ref().clone());
     let buscando = create_selector(cx, move || {
-
         if rc_search1.get().len() > 0 {
             Buscando::True {
                 nav: nav2.clone(),
                 search: rc_search1.clone(),
                 pos: pos9.clone(),
+                aux: search_aux.clone()
             }
         } else {
             Buscando::False {
@@ -97,7 +106,8 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
             }
         }
     });
-    create_memo(cx, move || debug(pos4.get(),109,"main page"));
+    
+    
     create_memo(cx, move || {
         venta_a4.track();
         venta_b3.track();
@@ -149,6 +159,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                   },
                   "Enter"=>{
                     e.prevent_default();
+
                     nav.set(Nav::Enter);
                     //search.set("".to_string());
                     //debug("enter",156)
@@ -184,8 +195,8 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
         (match pos_selector.get().as_ref().clone(){
             Pos::A { venta, config, clientes:_ , } => view!(cx,
               (match buscando.get().as_ref().clone(){
-                Buscando::True{search, nav, pos } => view!(cx,
-                  Busqueda(search = search.clone(), nav = nav.clone(), pos = pos.clone())
+                Buscando::True{search,nav,pos, aux } => view!(cx,
+                  Busqueda(search = search.clone(), nav = nav.clone(), pos = pos.clone(), search_aux = aux.clone())
                 ),
                 Buscando::False { venta,  config, clientes, pos } => view!(cx,
                   CuadroPrincipal(venta=venta.clone(), config=config.clone(), pos= pos.clone(),clientes=clientes.clone())
@@ -196,8 +207,8 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
             ),
             Pos::B { venta, config, clientes:_ , } => view!(cx,
               (match buscando.get().as_ref().clone(){
-                Buscando::True{search, nav, pos } => view!(cx,
-                  Busqueda(search = search.clone(), nav = nav.clone(),pos = pos.clone())
+                Buscando::True{search, nav, pos, aux } => view!(cx,
+                  Busqueda(search = search.clone(), nav = nav.clone(),pos = pos.clone(), search_aux = aux.clone())
                 ),
                 Buscando::False { venta, config, clientes, pos } => view!(cx,
                   CuadroPrincipal(venta=venta.clone(), config=config.clone(), pos= pos.clone(),clientes=clientes.clone())

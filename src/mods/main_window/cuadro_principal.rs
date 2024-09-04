@@ -6,7 +6,7 @@ use std::rc::Rc;
 use sycamore::prelude::*;
 use wasm_bindgen::prelude::*;
 #[derive(Prop)]
-pub struct PrincProps{
+pub struct PrincProps {
     pub venta: RcSignal<Venta>,
     pub config: RcSignal<Config>,
     pub clientes: RcSignal<Vec<Cliente>>,

@@ -11,4 +11,3 @@ pub struct Rcs {
     pub clientes: RcSignal<Vec<Cliente>>,
     pub logged: RcSignal<bool>,
 }
-
