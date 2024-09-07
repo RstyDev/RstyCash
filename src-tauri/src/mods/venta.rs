@@ -269,57 +269,82 @@ impl<'a> Venta {
         self.monto_pagado -= pago.monto();
         Ok(())
     }
-    pub fn restar_producto(&mut self, index: usize, politica: &f32) -> Result<Venta, AppError> {
-        if self.productos().len() > index {
-            let mut prod = self.productos.remove(index);
-            match &prod {
-                V::Pes(a) => {
-                    if a.0 > 1.0 {
-                        prod = V::Pes((a.0 - 1.0, a.1.clone()))
+    pub fn restar_producto(&mut self, code: i64, politica: &f32) -> Result<Venta, AppError> {
+        let existe = self
+            .productos
+            .iter()
+            .enumerate()
+            .find_map(|(i, p)| match p {
+                Valuable::Prod(prod) => {
+                    (prod.1.codigos_de_barras().iter().any(|cod| *cod == code)).then_some(i)
+                }
+                Valuable::Pes(pes) => (*pes.1.codigo() == code).then_some(i),
+                Valuable::Rub(rub) => (*rub.1.codigo() == code).then_some(i),
+            });
+        match existe {
+            Some(index) => {
+                let mut prod = self.productos.remove(index);
+                match &prod {
+                    V::Pes(a) => {
+                        if a.0 > 1.0 {
+                            prod = V::Pes((a.0 - 1.0, a.1.clone()))
+                        }
+                    }
+                    V::Prod(a) => {
+                        if a.0 > 1 {
+                            prod = V::Prod((a.0 - 1, a.1.clone()))
+                        }
+                    }
+                    V::Rub(a) => {
+                        if a.0 > 1 {
+                            prod = V::Rub((a.0 - 1, a.1.clone()))
+                        }
                     }
                 }
-                V::Prod(a) => {
-                    if a.0 > 1 {
-                        prod = V::Prod((a.0 - 1, a.1.clone()))
-                    }
-                }
-                V::Rub(a) => {
-                    if a.0 > 1 {
-                        prod = V::Rub((a.0 - 1, a.1.clone()))
-                    }
-                }
+                self.productos.insert(index, prod);
+                self.update_monto_total(politica);
+                Ok(self.clone())
             }
-            self.productos.insert(index, prod);
-            self.update_monto_total(politica);
-            Ok(self.clone())
-        } else {
-            Err(AppError::NotFound {
-                objeto: String::from("Indice"),
-                instancia: index.to_string(),
-            })
+            None => Err(AppError::NotFound {
+                objeto: String::from("Código de barras"),
+                instancia: code.to_string(),
+            }),
         }
     }
     pub fn incrementar_producto(
         &mut self,
-        index: usize,
+        code: i64,
         politica: &f32,
     ) -> Result<Venta, AppError> {
-        if self.productos().len() > index {
-            let mut prod = self.productos.remove(index);
-            match &prod {
-                V::Pes(a) => prod = V::Pes((a.0 + 1.0, a.1.clone())),
-                V::Prod(a) => prod = V::Prod((a.0 + 1, a.1.clone())),
-                V::Rub(a) => prod = V::Rub((a.0 + 1, a.1.clone())),
-            }
-            self.productos.insert(index, prod);
-            self.update_monto_total(politica);
-            Ok(self.clone())
-        } else {
-            Err(AppError::NotFound {
-                objeto: String::from("Indice"),
-                instancia: index.to_string(),
-            })
+        let existe = self
+            .productos
+            .iter()
+            .enumerate()
+            .find_map(|(i, p)| match p {
+                Valuable::Prod(prod) => {
+                    (prod.1.codigos_de_barras().iter().any(|cod| *cod == code)).then_some(i)
+                }
+                Valuable::Pes(pes) => (*pes.1.codigo() == code).then_some(i),
+                Valuable::Rub(rub) => (*rub.1.codigo() == code).then_some(i),
+            });
+        match existe{
+            Some(index) => {
+                let mut prod = self.productos.remove(index);
+                match &prod {
+                    V::Pes(a) => prod = V::Pes((a.0 + 1.0, a.1.clone())),
+                    V::Prod(a) => prod = V::Prod((a.0 + 1, a.1.clone())),
+                    V::Rub(a) => prod = V::Rub((a.0 + 1, a.1.clone())),
+                }
+                self.productos.insert(index, prod);
+                self.update_monto_total(politica);
+                Ok(self.clone())
+            },
+            None => Err(AppError::NotFound {
+                objeto: String::from("Código de barras"),
+                instancia: code.to_string(),
+            }),
         }
+        
     }
     pub async fn set_cliente(&mut self, id: i32, db: &Pool<Sqlite>) -> Res<()> {
         if id == 0 {

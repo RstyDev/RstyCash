@@ -84,13 +84,11 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                 venta: match pos1.get().as_ref() {
                     Pos::A {
                         venta,
-                        config: _,
-                        clientes: _,
+                        ..
                     } => venta.clone(),
                     Pos::B {
                         venta,
-                        config: _,
-                        clientes: _,
+                        ..
                     } => venta.clone(),
                 },
                 config: config1.clone(),
@@ -105,18 +103,18 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
         venta_b3.track();
         match pos3.get().as_ref() {
             Pos::A {
-                venta: _,
                 config,
                 clientes,
+                ..
             } => pos3.set(Pos::A {
                 venta: venta_a4.clone(),
                 config: config.clone(),
                 clientes: clientes.clone(),
             }),
             Pos::B {
-                venta: _,
                 config,
                 clientes,
+                ..
             } => pos3.set(Pos::B {
                 venta: venta_b3.clone(),
                 config: config.clone(),
@@ -164,19 +162,19 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
           article(class="ayb"){
             a(on:click=move|_|{
                 pos5.set(Pos::A { venta: venta_a1.clone(), config: config3.clone(), clientes:clientes3.clone(),  })
-            },id="v-a",class=format!("a-boton {}",match pos7.clone().get().as_ref(){Pos::A { venta:_, config:_, clientes:_,  }=>"v-actual",Pos::B { venta:_, config:_, clientes:_,  }=>""})){
+            },id="v-a",class=format!("a-boton {}",match pos7.clone().get().as_ref(){Pos::A { .. }=>"v-actual",Pos::B { .. }=>""})){
                 "Venta A"
             }
             a(on:click=move|_|{
                 pos6.set(Pos::B { venta: venta_b2.clone(), config: config2.clone(), clientes:clientes2.clone(),  })
-            },id="v-a",class=format!("a-boton {}",match props.pos.get().as_ref(){Pos::A { venta:_, config:_, clientes:_,  }=>"",Pos::B { venta:_, config:_, clientes:_,  }=>"v-actual"})){
+            },id="v-a",class=format!("a-boton {}",match props.pos.get().as_ref(){Pos::A { .. }=>"",Pos::B { ..  }=>"v-actual"})){
                 "Venta B"
             }
         }
           article(){
             (match pos_selector.get().as_ref(){
-                Pos::A { venta, config:_, clientes,  } => view!(cx,SelectClientes(clientes= clientes.clone(),venta= venta.clone())),
-                Pos::B { venta, config:_, clientes,  } => view!(cx,SelectClientes(clientes= clientes.clone(),venta= venta.clone())),
+                Pos::A { venta, clientes, ..  } => view!(cx,SelectClientes(clientes= clientes.clone(),venta= venta.clone())),
+                Pos::B { venta, clientes, ..  } => view!(cx,SelectClientes(clientes= clientes.clone(),venta= venta.clone())),
             })
           }
         }
@@ -185,7 +183,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
 
 
         (match pos_selector.get().as_ref().clone(){
-            Pos::A { venta, config, clientes:_ , } => view!(cx,
+            Pos::A { venta, config, .. } => view!(cx,
               (match buscando.get().as_ref().clone(){
                 Buscando::True{search,nav,pos, aux } => view!(cx,
                   Busqueda(search = search.clone(), nav = nav.clone(), pos = pos.clone(), search_aux = aux.clone())
@@ -197,7 +195,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
               ResumenPago(venta=venta.clone(),
               config=config.clone())
             ),
-            Pos::B { venta, config, clientes:_ , } => view!(cx,
+            Pos::B { venta, config, .. } => view!(cx,
               (match buscando.get().as_ref().clone(){
                 Buscando::True{search, nav, pos, aux } => view!(cx,
                   Busqueda(search = search.clone(), nav = nav.clone(),pos = pos.clone(), search_aux = aux.clone())

@@ -21,7 +21,6 @@ pub struct Payload {
     val: Option<Valuable>,
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct User2 {
     pub id: Arc<str>,

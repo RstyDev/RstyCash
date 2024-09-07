@@ -321,12 +321,12 @@ pub mod commands {
     }
     pub fn descontar_producto_de_venta_2(
         sistema: State<Mutex<Sistema>>,
-        index: usize,
+        code: i64,
         pos: bool,
     ) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        let res = sis.descontar_producto_de_venta(index, pos)?;
+        let res = sis.descontar_producto_de_venta(code, pos)?;
         Ok(res)
     }
     pub fn editar_producto_2(sistema: State<Mutex<Sistema>>, prod: V) -> Res<()> {
@@ -508,12 +508,12 @@ pub mod commands {
     }
     pub fn incrementar_producto_a_venta_2(
         sistema: State<Mutex<Sistema>>,
-        index: usize,
+        code: i64,
         pos: bool,
     ) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        let venta = sis.incrementar_producto_a_venta(index, pos)?;
+        let venta = sis.incrementar_producto_a_venta(code, pos)?;
         Ok(venta)
     }
     pub async fn open_add_prov_2(handle: AppHandle) -> Res<()> {

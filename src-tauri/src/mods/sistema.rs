@@ -738,22 +738,22 @@ impl<'a> Sistema {
     }
     pub fn descontar_producto_de_venta(
         &mut self,
-        index: usize,
+        code: i64,
         pos: bool,
     ) -> Result<Venta, AppError> {
         Ok(if pos {
             self.ventas
                 .a
-                .restar_producto(index, &self.configs().politica())?
+                .restar_producto(code, &self.configs().politica())?
         } else {
             self.ventas
                 .b
-                .restar_producto(index, &self.configs().politica())?
+                .restar_producto(code, &self.configs().politica())?
         })
     }
     pub fn incrementar_producto_a_venta(
         &mut self,
-        index: usize,
+        code: i64,
         pos: bool,
     ) -> Result<Venta, AppError> {
         let result;
@@ -761,21 +761,17 @@ impl<'a> Sistema {
             result = self
                 .ventas
                 .a
-                .incrementar_producto(index, &self.configs().politica());
+                .incrementar_producto(code, &self.configs().politica());
         } else {
             result = self
                 .ventas
                 .b
-                .incrementar_producto(index, &self.configs().politica());
+                .incrementar_producto(code, &self.configs().politica());
         }
 
         result
     }
-    pub fn eliminar_producto_de_venta(
-        &mut self,
-        code: i64,
-        pos: bool,
-    ) -> Result<Venta, AppError> {
+    pub fn eliminar_producto_de_venta(&mut self, code: i64, pos: bool) -> Result<Venta, AppError> {
         let result;
         if pos {
             if self.ventas.a.productos().len() > 1 {

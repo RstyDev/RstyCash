@@ -1,6 +1,9 @@
 use crate::mods::{
     lib::{call, debug},
-    structs::{args::{AgregarProductoAVenta, GetProductosFiltrado}, Nav, Pos, ValuableSH, Venta, VentaSHC},
+    structs::{
+        args::{AgregarProductoAVenta, GetProductosFiltrado},
+        Nav, Pos, ValuableSH, Venta, VentaSHC,
+    },
 };
 use serde_wasm_bindgen::from_value;
 use sycamore::{
@@ -11,9 +14,6 @@ use sycamore::{
     },
     reactive::create_signal,
 };
-
-
-
 
 #[derive(Prop)]
 pub struct SearchProps {
@@ -120,16 +120,14 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                             match pos.get().as_ref() {
                                 Pos::A {
                                     venta,
-                                    config: _,
-                                    clientes: _,
+                                    ..
                                 } => {
                                     sale = venta.clone();
                                     true
                                 }
                                 Pos::B {
                                     venta,
-                                    config: _,
-                                    clientes: _,
+                                    ..
                                 } => {
                                     sale = venta.clone();
                                     false
@@ -155,19 +153,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
         }
     });
 
-    // create_effect(cx, ||{
-    //     if busqueda.get().as_ref().len() == 0{
-    //         actual.set(None);
-    //     }else {
-    //         actual.set(Some((0,busqueda.get().as_ref()[0].clone())));
-    //     }
-    //     debug(busqueda.get().as_ref().iter().map(|v|match v{
-    //         ValuableSH::Prod(p) => format!("{} {} {}",p.1.tipo_producto,p.1.marca,p.1.variedad),
-    //         ValuableSH::Pes(p) => p.1.descripcion.as_ref().to_string(),
-    //         ValuableSH::Rub(r) => r.1.descripcion.as_ref().to_string(),
-    //     }).collect::<Vec<String>>(),61,"busqueda")
-
-    // });
+    
 
     view!(cx,
         section(id="cuadro-principal"){
@@ -199,33 +185,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                 None => view!(cx,div()),
 
 
-            })
-            // ul(class="no-bullets"){
-
-            //     Keyed(
-            //         iterable = busqueda,
-            //         view=move |cx,x|{
-            //             let mut class="";
-            //             if let Some(act) = actual.get().as_ref().clone(){
-            //                 if act == x{
-            //                     class = "actual";
-            //                 }
-            //             }
-            //             view!(cx,li(class = class){
-            //                 (match &x{
-            //                     ValuableSH::Prod(p) => format!("{} {} {}",p.1.tipo_producto,p.1.marca,p.1.variedad),
-            //                     ValuableSH::Pes(p) => p.1.descripcion.as_ref().to_string(),
-            //                     ValuableSH::Rub(r) => r.1.descripcion.as_ref().to_string(),
-            //                 })
-            //             })
-            //         },
-            //         key=|x|match x{
-            //             ValuableSH::Prod(p) => p.1.codigo_de_barras,
-            //             ValuableSH::Pes(p) => p.1.codigo,
-            //             ValuableSH::Rub(r) => r.1.codigo,
-            //         }
-            //     )
-            // }
+            })            
         }
     )
 }
