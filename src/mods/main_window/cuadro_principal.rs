@@ -1,14 +1,12 @@
 use crate::mods::{
     main_window::cuadro_venta::*,
-    structs::{Cliente, Config, Pos, Venta},
+    structs::{Config, Pos, Venta},
 };
-use std::rc::Rc;
 use sycamore::prelude::*;
 #[derive(Prop)]
 pub struct PrincProps {
     pub venta: RcSignal<Venta>,
     pub config: RcSignal<Config>,
-    pub clientes: RcSignal<Vec<Cliente>>,
     pub pos: RcSignal<Pos>,
 }
 

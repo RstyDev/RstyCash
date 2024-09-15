@@ -736,11 +736,7 @@ impl<'a> Sistema {
 
         result
     }
-    pub fn descontar_producto_de_venta(
-        &mut self,
-        code: i64,
-        pos: bool,
-    ) -> Result<Venta, AppError> {
+    pub fn descontar_producto_de_venta(&mut self, code: i64, pos: bool) -> Result<Venta, AppError> {
         Ok(if pos {
             self.ventas
                 .a

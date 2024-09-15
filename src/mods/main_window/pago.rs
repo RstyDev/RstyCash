@@ -1,4 +1,3 @@
-use js_sys::wasm_bindgen;
 use sycamore::prelude::{create_memo, create_signal_from_rc};
 use sycamore::rt::Event;
 use sycamore::{

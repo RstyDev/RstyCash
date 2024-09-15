@@ -1,3 +1,4 @@
+use super::resumen_pago::ResumenProps;
 use crate::mods::{
     main_window::*,
     structs::{Cliente, Cuenta, MedioPago},
@@ -5,20 +6,13 @@ use crate::mods::{
 use pago::*;
 use sycamore::{
     prelude::*,
-    reactive::{create_memo, create_rc_signal, RcSignal},
+    reactive::{create_memo, create_rc_signal},
 };
-
-use super::resumen_pago::ResumenProps;
 
 #[component]
 pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
-    let (venta, venta1, venta2) = (
-        props.venta.clone(),
-        props.venta.clone(),
-        props.venta.clone(),
-    );
+    let (venta, venta1) = (props.venta.clone(), props.venta.clone());
     let conf = props.config.clone();
-    let conf1 = props.config.clone();
     let pagos = create_signal(cx, venta.get().pagos.clone());
     let medios = create_rc_signal({
         let filtrado = conf
@@ -39,7 +33,6 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
     let medios2 = medios.clone();
     create_memo(cx, move || {
         venta.track();
-        //debug(venta.get(), 51, "pagos");
         let filtrado = conf
             .get()
             .medios_pago
@@ -55,17 +48,7 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
             },
         })
     });
-    //debug(conf1.get(), 64, "pagos");
-    //debug(medios.clone(), 65, "pagos");
-    let logg = pagos.get().len();
     let state = create_rc_signal(String::new());
-    let s2 = RcSignal::clone(&state);
-    let memo = create_memo(cx, move || {
-        s2.track();
-        //debug(s2.get(), 71, "pagos");
-    });
-    //let medios = create_signal(cx, props.config.get().medios_pago.clone());
-    //debug(logg, 74, "pagos");
     view!(cx,
         article(id="pagos"){
             Keyed(

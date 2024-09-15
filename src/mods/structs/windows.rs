@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use sycamore::prelude::RcSignal;
 
 use crate::mods::main_window::main_page::StateProps;

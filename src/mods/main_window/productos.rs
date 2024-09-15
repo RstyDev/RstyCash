@@ -1,6 +1,6 @@
 use crate::mods::{
     main_window::producto::Prod,
-    structs::{Config, Venta},
+    structs::{Config, Valuable, Venta},
 };
 use std::rc::Rc;
 use sycamore::prelude::*;
@@ -15,10 +15,27 @@ pub struct ProdsProps {
 pub fn Productos<G: Html>(cx: Scope, props: ProdsProps) -> View<G> {
     let venta = props.venta.clone();
     let venta1 = props.venta.clone();
-    let prods = create_signal(cx, props.venta.get().productos.clone());
+    let prods = create_signal(
+        cx,
+        props
+            .venta
+            .get()
+            .productos
+            .iter()
+            .map(|x| Rc::from(x.clone()))
+            .collect::<Vec<Rc<Valuable>>>(),
+    );
     let conf = create_signal_from_rc(cx, props.config);
     create_memo(cx, move || {
-        prods.set(venta1.get().productos.clone());
+        prods.set(Vec::new());
+        prods.set(
+            venta1
+                .get()
+                .productos
+                .iter()
+                .map(|x| Rc::from(x.clone()))
+                .collect::<Vec<Rc<Valuable>>>(),
+        );
     });
 
     view! {cx,
@@ -41,7 +58,7 @@ pub fn Productos<G: Html>(cx: Scope, props: ProdsProps) -> View<G> {
                 iterable = prods,
                 view = move |cx,x|{
                     let venta = venta.clone();
-                    view!{cx,Prod(valuable = Rc::from(x), conf = conf.get(), pos = props.pos, venta = venta.clone())}
+                    view!{cx,Prod(valuable = x.clone(), conf = conf.get(), pos = props.pos, venta = venta.clone())}
                 },
                 key = |x|{x.id()}
             )

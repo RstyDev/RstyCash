@@ -1,18 +1,12 @@
-use std::rc::Rc;
-
 use serde::{Deserialize, Serialize};
 use sycamore::{
-    prelude::{
-        component, create_rc_signal_from_rc, create_signal_from_rc, view, Html, Scope, Signal, View,
-    },
+    prelude::{component, view, Html, Scope, View},
     Prop,
 };
 use sycamore::{
     reactive::{create_signal, RcSignal},
     web::html::input,
 };
-use wasm_bindgen::prelude::wasm_bindgen;
-use wasm_bindgen::JsValue;
 use web_sys::Event;
 
 use crate::mods::structs::{get_hash, Rango};

@@ -9,7 +9,7 @@ use crate::mods::{
 };
 
 use serde::{Deserialize, Serialize};
-use serde_wasm_bindgen::{from_value, to_value};
+use serde_wasm_bindgen::from_value;
 use std::sync::Arc;
 use sycamore::prelude::*;
 use wasm_bindgen_futures::spawn_local;
@@ -55,9 +55,7 @@ async fn try_login(datos: Rcs) {
             datos
                 .venta_b
                 .set(Venta::from_shared_complete(a.ventas[1].clone()));
-            let mut clientes = a.clientes.clone();
-
-            datos.clientes.set(clientes);
+            datos.clientes.set(a.clientes.clone());
             datos.proveedores.set(
                 a.proveedores
                     .iter()
@@ -94,8 +92,8 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
         clientes: rc_clientes1,
     });
     let rc_conf1 = rc_conf.clone();
-    let (rc_a1, rc_a2, rc_a3) = (rc_a.clone(), rc_a.clone(), rc_a.clone());
-    let (rc_b1, rc_b2, rc_b3) = (rc_b.clone(), rc_b.clone(), rc_b.clone());
+    let (rc_a1, rc_a2) = (rc_a.clone(), rc_a.clone());
+    let (rc_b1, rc_b2) = (rc_b.clone(), rc_b.clone());
     let (rc_clientes1, rc_clientes2, rc_clientes3) = (
         rc_clientes.clone(),
         rc_clientes.clone(),
@@ -104,10 +102,7 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
     let (rc_user1, rc_user2, rc_user3) = (rc_user.clone(), rc_user.clone(), rc_user.clone());
     let (rc_logged1, rc_logged2, rc_logged3) =
         (rc_logged.clone(), rc_logged.clone(), rc_logged.clone());
-    let rc_pos1 = rc_pos.clone();
-
     let rend = create_selector(cx, move || window.get().as_ref().clone());
-
     let datos = Rcs {
         user: rc_user1,
         caja: rc_caja,
@@ -142,10 +137,6 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
         rc_a.set_rc_silent(datos_2.venta_a.get());
         rc_b.set_rc_silent(datos_2.venta_b.get());
         rc_clientes3.set_rc_silent(datos_2.clientes.get());
-    });
-
-    create_effect(cx, move || {
-        //debug(rc_clientes.get(), 157, "app");
     });
     view!(cx,
         div{

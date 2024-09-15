@@ -56,7 +56,6 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
     let aux = props.search_aux.clone();
     create_memo(cx, move || {
         filtro.track();
-        //debug(filtro.clone(), 52, "busqueda");
         let filtro = filtro.clone();
         spawn_local_scoped(cx, async move {
             let res = search(filtro.get().as_ref()).await;
@@ -107,28 +106,18 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
             Nav::Enter => {
                 if let Some((_, act)) = actual.get().as_ref().clone() {
                     let pos = props.pos.clone();
-                    let search = props.search.clone();
                     let aux = aux.clone();
                     let nav = nav.clone();
                     spawn_local_scoped(cx, async move {
                         let sale;
-                        //search.set("".to_string());
-                        //------------------------------------
-                        debug(act.clone(), 119, "busqueda");
                         let res = add_to_sale(
                             act,
                             match pos.get().as_ref() {
-                                Pos::A {
-                                    venta,
-                                    ..
-                                } => {
+                                Pos::A { venta, .. } => {
                                     sale = venta.clone();
                                     true
                                 }
-                                Pos::B {
-                                    venta,
-                                    ..
-                                } => {
+                                Pos::B { venta, .. } => {
                                     sale = venta.clone();
                                     false
                                 }
@@ -137,7 +126,6 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                         .await;
                         sale.set(Venta::from_shared_complete(res.clone()));
                         aux.set(true);
-                        debug(res, 143, "busqueda");
                         nav.set(Nav::None);
                     });
                 }
@@ -152,8 +140,6 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
             Nav::None => (),
         }
     });
-
-    
 
     view!(cx,
         section(id="cuadro-principal"){
@@ -185,7 +171,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                 None => view!(cx,div()),
 
 
-            })            
+            })
         }
     )
 }

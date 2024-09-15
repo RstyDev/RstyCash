@@ -311,11 +311,7 @@ impl<'a> Venta {
             }),
         }
     }
-    pub fn incrementar_producto(
-        &mut self,
-        code: i64,
-        politica: &f32,
-    ) -> Result<Venta, AppError> {
+    pub fn incrementar_producto(&mut self, code: i64, politica: &f32) -> Result<Venta, AppError> {
         let existe = self
             .productos
             .iter()
@@ -327,7 +323,7 @@ impl<'a> Venta {
                 Valuable::Pes(pes) => (*pes.1.codigo() == code).then_some(i),
                 Valuable::Rub(rub) => (*rub.1.codigo() == code).then_some(i),
             });
-        match existe{
+        match existe {
             Some(index) => {
                 let mut prod = self.productos.remove(index);
                 match &prod {
@@ -338,13 +334,12 @@ impl<'a> Venta {
                 self.productos.insert(index, prod);
                 self.update_monto_total(politica);
                 Ok(self.clone())
-            },
+            }
             None => Err(AppError::NotFound {
                 objeto: String::from("Código de barras"),
                 instancia: code.to_string(),
             }),
         }
-        
     }
     pub async fn set_cliente(&mut self, id: i32, db: &Pool<Sqlite>) -> Res<()> {
         if id == 0 {

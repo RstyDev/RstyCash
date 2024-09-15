@@ -8,6 +8,14 @@ pub enum Cliente {
     Regular(Cli),
 }
 
+impl Cliente {
+    pub fn get_nombre(&self) -> String {
+        match self {
+            Cliente::Final => String::from("Final"),
+            Cliente::Regular(c) => c.nombre.to_owned(),
+        }
+    }
+}
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Cli {
     pub dni: i32,
@@ -21,6 +29,7 @@ pub enum Cuenta {
     Auth(f32),
     Unauth,
 }
+
 impl Cli {
     pub fn new(
         dni: i32,

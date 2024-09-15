@@ -118,7 +118,7 @@ fn close_window(window: Window) -> Res<()> {
 #[tauri::command]
 fn descontar_producto_de_venta(
     sistema: State<Mutex<Sistema>>,
-    code: [u8;8],
+    code: [u8; 8],
     pos: bool,
 ) -> Res<Venta> {
     let code = i64::from_be_bytes(code);
@@ -232,7 +232,7 @@ fn hacer_ingreso(sistema: State<Mutex<Sistema>>, monto: f32, descripcion: Option
 #[tauri::command]
 fn incrementar_producto_a_venta(
     sistema: State<Mutex<Sistema>>,
-    code: [u8;8],
+    code: [u8; 8],
     pos: bool,
 ) -> Res<Venta> {
     let code = i64::from_be_bytes(code);

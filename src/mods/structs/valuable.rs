@@ -5,7 +5,7 @@ use super::{
     ProductoSHC, RubroSHC,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Valuable {
     Prod((u8, Producto)),
     Pes((f32, Pesable)),
@@ -28,9 +28,9 @@ pub enum ValuableSHC {
 impl Valuable {
     pub fn get_desc(&self, formato: Formato) -> String {
         match self {
-            Valuable::Prod((cant, prod)) => format!("{} {}", prod.get_desc(formato), cant),
-            Valuable::Pes((cant, pes)) => format!("{} {}", pes.get_desc(), cant),
-            Valuable::Rub((cant, rub)) => format!("{} {}", rub.get_desc(), cant),
+            Valuable::Prod((_, prod)) => format!("{}", prod.get_desc(formato)),
+            Valuable::Pes((_, pes)) => format!("{}", pes.get_desc()),
+            Valuable::Rub((_, rub)) => format!("{}", rub.get_desc()),
         }
     }
     pub fn id(&self) -> i64 {
@@ -38,6 +38,45 @@ impl Valuable {
             Valuable::Prod((_, prod)) => prod.codigos_de_barras[0],
             Valuable::Pes((_, pes)) => pes.codigo,
             Valuable::Rub((_, rub)) => rub.codigo,
+        }
+    }
+    pub fn get_f_cant(&self) -> f32 {
+        match self {
+            Valuable::Prod((c, _)) => *c as f32,
+            Valuable::Pes((c, _)) => *c,
+            Valuable::Rub((c, _)) => *c as f32,
+        }
+    }
+    pub fn get_shared_code(&self) -> [u8; 8] {
+        match self {
+            Valuable::Prod((_, p)) => p.codigos_de_barras[0].to_be_bytes(),
+            Valuable::Pes((_, p)) => p.codigo.to_be_bytes(),
+            Valuable::Rub((_, r)) => r.codigo.to_be_bytes(),
+        }
+    }
+    pub fn get_unit_price(&self) -> f32 {
+        match self {
+            Valuable::Prod((_, prod)) => prod.precio_venta,
+            Valuable::Pes((_, pes)) => pes.precio_peso,
+            Valuable::Rub((_, rub)) => rub.monto.unwrap_or_default(),
+        }
+    }
+    pub fn get_total_price(&self) -> f32 {
+        match self {
+            Valuable::Prod((c, p)) => *c as f32 * p.precio_venta,
+            Valuable::Pes((c, p)) => *c * p.precio_peso,
+            Valuable::Rub((c, r)) => *c as f32 * r.monto.unwrap_or_default(),
+        }
+    }
+}
+
+impl PartialEq for Valuable {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Prod(l0), Self::Prod(r0)) => l0.0 == r0.0 && l0.1.id == r0.1.id,
+            (Self::Pes(l0), Self::Pes(r0)) => l0.0 == r0.0 && l0.1.id == r0.1.id,
+            (Self::Rub(l0), Self::Rub(r0)) => l0.0 == r0.0 && l0.1.id == r0.1.id,
+            _ => false,
         }
     }
 }

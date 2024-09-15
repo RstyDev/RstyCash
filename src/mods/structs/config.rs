@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{fmt::Display, sync::Arc};
+use std::fmt::Display;
 
 use super::MedioPago;
 
