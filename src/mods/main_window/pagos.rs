@@ -1,7 +1,7 @@
 use super::resumen_pago::ResumenProps;
 use crate::mods::{
     main_window::*,
-    structs::{Cliente, Cuenta, MedioPago},
+    structs::{Cliente, Cuenta, MedioPago, Pago},
 };
 use pago::*;
 use sycamore::{
@@ -14,6 +14,7 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
     let (venta, venta1) = (props.venta.clone(), props.venta.clone());
     let conf = props.config.clone();
     let pagos = create_signal(cx, venta.get().pagos.clone());
+    let (pos,pos1) =(props.pos.clone(),props.pos.clone());
     let medios = create_rc_signal({
         let filtrado = conf
             .get()
@@ -53,12 +54,14 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
         article(id="pagos"){
             Keyed(
                 iterable = pagos,
-                view=move |cx,x|view!(cx,
-                    PagoComp(pagado = true, opciones = create_rc_signal(vec![x.medio_pago]), monto = x.monto, state = None)
-                ),
+                view=move |cx,x|{
+                    let pos = pos.clone();
+                    view!(cx,
+                    PagoComp(pagado = true, opciones = create_rc_signal(vec![x.medio_pago.clone()]), monto = x.monto, state = None, pos = pos.clone(), pago=x.clone())
+                )},
                 key=|x|x.int_id
             )
-            PagoComp(pagado=false, opciones=medios.clone(), monto=venta1.get().monto_total - venta1.get().monto_pagado, state=Some(state))
+            PagoComp(pagado=false, opciones=medios.clone(), monto=venta1.get().monto_total - venta1.get().monto_pagado, state=Some(state), pos = pos1.clone(), pago=Pago::default())
         }
     )
 }

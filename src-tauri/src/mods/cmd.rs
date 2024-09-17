@@ -321,12 +321,12 @@ pub mod commands {
     }
     pub fn descontar_producto_de_venta_2(
         sistema: State<Mutex<Sistema>>,
-        code: i64,
+        index: usize,
         pos: bool,
     ) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        let res = sis.descontar_producto_de_venta(code, pos)?;
+        let res = sis.descontar_producto_de_venta(index, pos)?;
         Ok(res)
     }
     pub fn editar_producto_2(sistema: State<Mutex<Sistema>>, prod: V) -> Res<()> {
@@ -349,12 +349,12 @@ pub mod commands {
     pub fn eliminar_producto_de_venta_2(
         sistema: State<Mutex<Sistema>>,
         window: Window,
-        code: i64,
+        index: usize,
         pos: bool,
     ) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        let res = sis.eliminar_producto_de_venta(code, pos)?;
+        let res = sis.eliminar_producto_de_venta(index, pos)?;
         loop {
             if window
                 .menu_handle()
@@ -508,12 +508,12 @@ pub mod commands {
     }
     pub fn incrementar_producto_a_venta_2(
         sistema: State<Mutex<Sistema>>,
-        code: i64,
+        index: usize,
         pos: bool,
     ) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        let venta = sis.incrementar_producto_a_venta(code, pos)?;
+        let venta = sis.incrementar_producto_a_venta(index, pos)?;
         Ok(venta)
     }
     pub async fn open_add_prov_2(handle: AppHandle) -> Res<()> {
@@ -891,13 +891,18 @@ pub mod commands {
     pub fn set_cantidad_producto_venta_2(
         sistema: State<Mutex<Sistema>>,
         index: usize,
-        cantidad: &str,
+        cantidad: f32,
         pos: bool,
     ) -> Res<Venta> {
-        let cantidad = cantidad.parse::<f32>()?;
         let mut sis = block_on(sistema.lock());
         sis.access();
-        Ok(sis.set_cantidad_producto_venta(index, cantidad, pos)?)
+        if cantidad == 0.0 {
+            Ok(sis.eliminar_producto_de_venta(index, pos)?)
+        }else if cantidad > 0.0 {
+            Ok(sis.set_cantidad_producto_venta(index, cantidad, pos)?)
+        }else{
+            Err(AppError::IncorrectError(String::from("Cantidad de producto incorrecta, debe ser mayor o igual a 0.0")))
+        }
     }
     pub fn set_cliente_2(sistema: State<Mutex<Sistema>>, id: i32, pos: bool) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());

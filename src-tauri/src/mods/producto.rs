@@ -9,7 +9,6 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, Pool, Sqlite};
 use std::sync::Arc;
-use tauri::async_runtime::block_on;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Producto {

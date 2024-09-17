@@ -2,7 +2,7 @@ use super::{MedioPago, Res};
 use crate::mods::db::map::{ConfigDB, MedioPagoDB};
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite};
-use std::{fmt::Display, sync::Arc};
+use std::fmt::Display;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {

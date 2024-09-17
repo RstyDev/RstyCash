@@ -1,18 +1,17 @@
+use crate::mods::main_window::pagos::Pagos;
+use crate::mods::structs::{Config, Pos, Valuable, Venta};
 use sycamore::flow::Keyed;
 use sycamore::prelude::{component, create_memo, view, Html, Prop, Scope, View};
 use sycamore::reactive::{create_rc_signal, create_signal, RcSignal};
-
-use crate::mods::lib::debug;
-use crate::mods::main_window::pagos::Pagos;
-use crate::mods::structs::{Config, Valuable, Venta};
 #[derive(Prop)]
 pub struct ResumenProps {
     pub venta: RcSignal<Venta>,
     pub config: RcSignal<Config>,
+    pub pos: RcSignal<Pos>,
 }
 impl ResumenProps {
-    pub fn new(venta: RcSignal<Venta>, config: RcSignal<Config>) -> ResumenProps {
-        ResumenProps { venta, config }
+    pub fn new(venta: RcSignal<Venta>, config: RcSignal<Config>, pos: RcSignal<Pos>) -> ResumenProps {
+        ResumenProps { venta, config, pos }
     }
 }
 
@@ -51,7 +50,7 @@ pub fn ResumenPago<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
             section(id="section-pagos"){
                 Pagos(props)
                 p(){
-                    "Total a pagar: " (a_pagar.get())
+                    (format!("Total a pagar:  {:.2}",a_pagar.get()))
                 }
             }
         }

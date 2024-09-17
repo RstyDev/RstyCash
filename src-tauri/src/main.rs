@@ -118,11 +118,10 @@ fn close_window(window: Window) -> Res<()> {
 #[tauri::command]
 fn descontar_producto_de_venta(
     sistema: State<Mutex<Sistema>>,
-    code: [u8; 8],
+    index: usize,
     pos: bool,
 ) -> Res<Venta> {
-    let code = i64::from_be_bytes(code);
-    Ok(descontar_producto_de_venta_2(sistema, code, pos)?)
+    Ok(descontar_producto_de_venta_2(sistema, index, pos)?)
 }
 #[tauri::command]
 fn editar_producto(sistema: State<Mutex<Sistema>>, prod: V) -> Res<()> {
@@ -140,11 +139,10 @@ fn eliminar_producto(sistema: State<Mutex<Sistema>>, prod: V) -> Res<()> {
 fn eliminar_producto_de_venta(
     sistema: State<Mutex<Sistema>>,
     window: Window,
-    code: [u8; 8],
+    index: usize,
     pos: bool,
 ) -> Res<VentaSHC> {
-    let code = i64::from_be_bytes(code);
-    Ok(eliminar_producto_de_venta_2(sistema, window, code, pos)?.to_shared_complete())
+    Ok(eliminar_producto_de_venta_2(sistema, window, index, pos)?.to_shared_complete())
 }
 #[tauri::command]
 fn eliminar_usuario(sistema: State<Mutex<Sistema>>, user: User) -> Res<()> {
@@ -232,11 +230,10 @@ fn hacer_ingreso(sistema: State<Mutex<Sistema>>, monto: f32, descripcion: Option
 #[tauri::command]
 fn incrementar_producto_a_venta(
     sistema: State<Mutex<Sistema>>,
-    code: [u8; 8],
+    index: usize,
     pos: bool,
 ) -> Res<Venta> {
-    let code = i64::from_be_bytes(code);
-    Ok(incrementar_producto_a_venta_2(sistema, code, pos)?)
+    Ok(incrementar_producto_a_venta_2(sistema, index, pos)?)
 }
 #[tauri::command]
 async fn open_add_prov(handle: tauri::AppHandle) -> Res<()> {
@@ -314,12 +311,10 @@ fn pagar_deuda_general(sistema: State<Mutex<Sistema>>, cliente: i64, monto: f32)
 fn set_cantidad_producto_venta(
     sistema: State<Mutex<Sistema>>,
     index: usize,
-    cantidad: &str,
+    cantidad: f32,
     pos: bool,
-) -> Res<Venta> {
-    Ok(set_cantidad_producto_venta_2(
-        sistema, index, cantidad, pos,
-    )?)
+) -> Res<VentaSHC> {
+    Ok(set_cantidad_producto_venta_2(sistema, index, cantidad, pos)?.to_shared_complete())
 }
 #[tauri::command]
 fn set_cliente(sistema: State<Mutex<Sistema>>, id: i32, pos: bool) -> Res<Venta> {

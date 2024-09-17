@@ -18,7 +18,7 @@ use std::{collections::HashSet, sync::Arc};
 use tauri::async_runtime::{self, block_on};
 use Valuable as V;
 
-use super::{proveedor::ProveedorSH, venta::VentaSH, Cliente, UserSH, ValuableSH};
+use super::{proveedor::ProveedorSH, venta::VentaSH, Cliente, UserSH};
 
 const CUENTA: &str = "Cuenta Corriente";
 #[derive(Clone)]
@@ -736,20 +736,24 @@ impl<'a> Sistema {
 
         result
     }
-    pub fn descontar_producto_de_venta(&mut self, code: i64, pos: bool) -> Result<Venta, AppError> {
+    pub fn descontar_producto_de_venta(
+        &mut self,
+        index: usize,
+        pos: bool,
+    ) -> Result<Venta, AppError> {
         Ok(if pos {
             self.ventas
                 .a
-                .restar_producto(code, &self.configs().politica())?
+                .restar_producto(index, &self.configs().politica())?
         } else {
             self.ventas
                 .b
-                .restar_producto(code, &self.configs().politica())?
+                .restar_producto(index, &self.configs().politica())?
         })
     }
     pub fn incrementar_producto_a_venta(
         &mut self,
-        code: i64,
+        index: usize,
         pos: bool,
     ) -> Result<Venta, AppError> {
         let result;
@@ -757,24 +761,28 @@ impl<'a> Sistema {
             result = self
                 .ventas
                 .a
-                .incrementar_producto(code, &self.configs().politica());
+                .incrementar_producto(index, &self.configs().politica());
         } else {
             result = self
                 .ventas
                 .b
-                .incrementar_producto(code, &self.configs().politica());
+                .incrementar_producto(index, &self.configs().politica());
         }
 
         result
     }
-    pub fn eliminar_producto_de_venta(&mut self, code: i64, pos: bool) -> Result<Venta, AppError> {
+    pub fn eliminar_producto_de_venta(
+        &mut self,
+        index: usize,
+        pos: bool,
+    ) -> Result<Venta, AppError> {
         let result;
         if pos {
             if self.ventas.a.productos().len() > 1 {
                 result = self
                     .ventas
                     .a
-                    .eliminar_producto(code, &self.configs().politica());
+                    .eliminar_producto(index, &self.configs().politica());
             } else {
                 self.ventas.a.empty();
                 result = Ok(self.ventas.a.clone());
@@ -784,7 +792,7 @@ impl<'a> Sistema {
                 result = self
                     .ventas
                     .b
-                    .eliminar_producto(code, &self.configs().politica());
+                    .eliminar_producto(index, &self.configs().politica());
             } else {
                 self.ventas.b.empty();
                 result = Ok(self.ventas.b.clone());

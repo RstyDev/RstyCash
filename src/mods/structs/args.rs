@@ -1,6 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use super::ValuableSH;
+use super::{Pago, ValuableSH};
+#[derive(Serialize, Deserialize)]
+pub struct AgregarPago {
+    pub pago: Pago,
+    pub pos: bool,
+}
 #[derive(Serialize, Deserialize)]
 pub struct AgregarProductoAVenta {
     pub prod: ValuableSH,
@@ -8,12 +13,12 @@ pub struct AgregarProductoAVenta {
 }
 #[derive(Serialize, Deserialize)]
 pub struct DecrementarProductoDeVenta {
-    pub code: [u8; 8],
+    pub index: usize,
     pub pos: bool,
 }
 #[derive(Serialize, Deserialize)]
 pub struct EliminarProductoDeVenta {
-    pub code: [u8; 8],
+    pub index: usize,
     pub pos: bool,
 }
 #[derive(Serialize, Deserialize)]
@@ -22,7 +27,13 @@ pub struct GetProductosFiltrado<'a> {
 }
 #[derive(Serialize, Deserialize)]
 pub struct IncrementarProductoAVenta {
-    pub code: [u8; 8],
+    pub index: usize,
+    pub pos: bool,
+}
+#[derive(Serialize, Deserialize)]
+pub struct SetCantidadProductoVenta {
+    pub index: usize,
+    pub cantidad: f32,
     pub pos: bool,
 }
 #[derive(Serialize, Deserialize)]

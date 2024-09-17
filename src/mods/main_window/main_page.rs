@@ -157,7 +157,10 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                   CuadroPrincipal(venta=venta.clone(), config=config.clone(), pos= pos.clone())
                 ),
             })
-              ResumenPago(venta=venta.clone(),
+              ResumenPago(venta=venta.clone(),pos=match buscando.get().as_ref().clone(){
+                Buscando::False { pos, .. } => pos.clone(),
+                Buscando::True { pos, .. } => pos.clone(),
+            },
               config=config.clone())
             ),
             Pos::B { venta, config, .. } => view!(cx,
@@ -169,7 +172,10 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                   CuadroPrincipal(venta=venta.clone(), config=config.clone(), pos= pos.clone())
                 ),
             })
-              ResumenPago(venta=venta.clone(),
+              ResumenPago(venta=venta.clone(),pos = match buscando.get().as_ref().clone(){
+                  Buscando::False { pos, .. } => pos.clone(),
+                  Buscando::True { pos, .. } => pos.clone(),
+              },
               config=config.clone())
             ),
         })

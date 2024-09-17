@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::medio_pago::MedioPago;
 
-#[derive(Clone, Serialize, Debug, Deserialize)]
+#[derive(Clone, Serialize, Debug, Deserialize, Default)]
 pub struct Pago {
     pub int_id: i32,
     pub medio_pago: MedioPago,
