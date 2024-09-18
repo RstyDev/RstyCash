@@ -34,7 +34,6 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let venta_a4 = props.venta_a.clone();
     let venta_b2 = props.venta_b.clone();
     let venta_b3 = props.venta_b.clone();
-    let config1 = props.config.clone();
     let config2 = props.config.clone();
     let config3 = props.config.clone();
     let pos1 = props.pos.clone();
@@ -45,35 +44,30 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let pos6 = props.pos.clone();
     let pos7 = props.pos.clone();
     let pos9 = props.pos.clone();
+    let pos_selector = create_selector(cx, move || pos2.get().as_ref().clone());
+    let buscando_aux = create_signal(cx, Buscando::False(pos1.clone()));
+
     create_effect(cx, move || {
         if !rc_search.get().as_ref().eq(search.get().as_ref()) {
             rc_search.set(search.get().as_ref().to_owned());
         }
-    });
-    create_memo(cx, move || {
-        if *aux.get() {
-            search.set("".to_string());
-            aux.set(false);
-        }
-    });
-    let pos_selector = create_selector(cx, move || pos2.get().as_ref().clone());
-    let buscando = create_selector(cx, move || {
-        if rc_search1.get().len() > 0 {
-            Buscando::True {
+        if rc_search.get().len() > 0 {
+            buscando_aux.set(Buscando::True {
                 nav: nav2.clone(),
                 search: rc_search1.clone(),
                 pos: pos9.clone(),
                 aux: search_aux.clone(),
-            }
+            })
         } else {
-            Buscando::False {
-                venta: match pos1.get().as_ref() {
-                    Pos::A { venta, .. } => venta.clone(),
-                    Pos::B { venta, .. } => venta.clone(),
-                },
-                config: config1.clone(),
-                pos: pos1.clone(),
-            }
+            buscando_aux.set(Buscando::False(pos1.clone()))
+        }
+    });
+    let buscando = create_selector(cx, move || buscando_aux.get().as_ref().clone());
+
+    create_memo(cx, move || {
+        if *aux.get() {
+            search.set("".to_string());
+            aux.set(false);
         }
     });
 
@@ -83,18 +77,24 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
         match pos3.get().as_ref() {
             Pos::A {
                 config, clientes, ..
-            } => pos3.set(Pos::A {
-                venta: venta_a4.clone(),
-                config: config.clone(),
-                clientes: clientes.clone(),
-            }),
+            } => {
+                //buscando_aux.set(Buscando::False { venta: venta_a4.clone(), config: config.clone(), pos: pos3.clone() });
+                pos3.set(Pos::A {
+                    venta: venta_a4.clone(),
+                    config: config.clone(),
+                    clientes: clientes.clone(),
+                })
+            }
             Pos::B {
                 config, clientes, ..
-            } => pos3.set(Pos::B {
-                venta: venta_b3.clone(),
-                config: config.clone(),
-                clientes: clientes.clone(),
-            }),
+            } => {
+                //buscando_aux.set(Buscando::False { venta: venta_b3.clone(), config: config.clone(), pos: pos3.clone() });
+                pos3.set(Pos::B {
+                    venta: venta_b3.clone(),
+                    config: config.clone(),
+                    clientes: clientes.clone(),
+                })
+            }
         }
     });
     view!(cx,
@@ -153,12 +153,12 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                 Buscando::True{search,nav,pos, aux } => view!(cx,
                   Busqueda(search = search.clone(), nav = nav.clone(), pos = pos.clone(), search_aux = aux.clone())
                 ),
-                Buscando::False { venta,  config, pos } => view!(cx,
-                  CuadroPrincipal(venta=venta.clone(), config=config.clone(), pos= pos.clone())
+                Buscando::False(pos) => view!(cx,
+                  CuadroPrincipal(pos= pos.clone())
                 ),
             })
               ResumenPago(venta=venta.clone(),pos=match buscando.get().as_ref().clone(){
-                Buscando::False { pos, .. } => pos.clone(),
+                Buscando::False(pos) => pos.clone(),
                 Buscando::True { pos, .. } => pos.clone(),
             },
               config=config.clone())
@@ -168,12 +168,12 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                 Buscando::True{search, nav, pos, aux } => view!(cx,
                   Busqueda(search = search.clone(), nav = nav.clone(),pos = pos.clone(), search_aux = aux.clone())
                 ),
-                Buscando::False { venta, config, pos } => view!(cx,
-                  CuadroPrincipal(venta=venta.clone(), config=config.clone(), pos= pos.clone())
+                Buscando::False(pos) => view!(cx,
+                  CuadroPrincipal(pos= pos.clone())
                 ),
             })
               ResumenPago(venta=venta.clone(),pos = match buscando.get().as_ref().clone(){
-                  Buscando::False { pos, .. } => pos.clone(),
+                  Buscando::False(pos) => pos.clone(),
                   Buscando::True { pos, .. } => pos.clone(),
               },
               config=config.clone())

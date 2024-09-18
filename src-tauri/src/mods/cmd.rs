@@ -18,7 +18,7 @@ pub mod commands {
         cmd::{Payload, DENEGADO, INDEX},
         sistema::SistemaSH,
         AppError, Caja, Cli, Cliente, Config, MedioPago, Pago, Pesable, Producto, Proveedor, Rango,
-        Res, Rubro, Sistema, User, Valuable as V, ValuableSH, Venta,
+        Res, Rubro, Sistema, User, Valuable as V, ValuableSH, Venta, VentaSHC,
     };
     use std::sync::Arc;
     use tauri::async_runtime::{block_on, spawn, Mutex};
@@ -101,28 +101,11 @@ pub mod commands {
         sistema: State<Mutex<Sistema>>,
         pago: Pago,
         pos: bool,
-    ) -> Res<Vec<Pago>> {
+    ) -> Res<VentaSHC> {
         let mut sis = block_on(sistema.lock());
         sis.access();
         sis.agregar_pago(pago, pos)?;
-        if sis.venta(pos).pagos().len() == 0 {
-            loop {
-                if window
-                    .emit(
-                        "main",
-                        Payload {
-                            message: Some(String::from("dibujar venta")),
-                            pos: None,
-                            val: None,
-                        },
-                    )
-                    .is_ok()
-                {
-                    break;
-                }
-            }
-        }
-        Ok(sis.venta(pos).pagos())
+        Ok(sis.venta(pos).to_shared_complete())
     }
     pub fn _agregar_pesable_2<'a>(
         window: Window,
@@ -898,10 +881,12 @@ pub mod commands {
         sis.access();
         if cantidad == 0.0 {
             Ok(sis.eliminar_producto_de_venta(index, pos)?)
-        }else if cantidad > 0.0 {
+        } else if cantidad > 0.0 {
             Ok(sis.set_cantidad_producto_venta(index, cantidad, pos)?)
-        }else{
-            Err(AppError::IncorrectError(String::from("Cantidad de producto incorrecta, debe ser mayor o igual a 0.0")))
+        } else {
+            Err(AppError::IncorrectError(String::from(
+                "Cantidad de producto incorrecta, debe ser mayor o igual a 0.0",
+            )))
         }
     }
     pub fn set_cliente_2(sistema: State<Mutex<Sistema>>, id: i32, pos: bool) -> Res<Venta> {

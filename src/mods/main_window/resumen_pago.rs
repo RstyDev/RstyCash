@@ -10,7 +10,11 @@ pub struct ResumenProps {
     pub pos: RcSignal<Pos>,
 }
 impl ResumenProps {
-    pub fn new(venta: RcSignal<Venta>, config: RcSignal<Config>, pos: RcSignal<Pos>) -> ResumenProps {
+    pub fn new(
+        venta: RcSignal<Venta>,
+        config: RcSignal<Config>,
+        pos: RcSignal<Pos>,
+    ) -> ResumenProps {
         ResumenProps { venta, config, pos }
     }
 }

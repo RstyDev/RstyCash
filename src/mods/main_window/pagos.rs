@@ -1,7 +1,7 @@
 use super::resumen_pago::ResumenProps;
 use crate::mods::{
     main_window::*,
-    structs::{Cliente, Cuenta, MedioPago, Pago},
+    structs::{Cliente, Cuenta, MedioPago, Restante},
 };
 use pago::*;
 use sycamore::{
@@ -11,10 +11,16 @@ use sycamore::{
 
 #[component]
 pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
-    let (venta, venta1) = (props.venta.clone(), props.venta.clone());
+    let (venta, venta2) = (props.venta.clone(), props.venta.clone());
     let conf = props.config.clone();
+    let restante = create_rc_signal(venta.get().monto_total - venta.get().monto_pagado);
+    let rest1 = restante.clone();
+    create_memo(cx, move || {
+        let venta = venta2.get();
+        rest1.set(venta.monto_total - venta.monto_pagado);
+    });
     let pagos = create_signal(cx, venta.get().pagos.clone());
-    let (pos,pos1) =(props.pos.clone(),props.pos.clone());
+    let (pos, pos1) = (props.pos.clone(), props.pos.clone());
     let medios = create_rc_signal({
         let filtrado = conf
             .get()
@@ -47,7 +53,8 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
                 Cuenta::Auth(_) => conf.get().medios_pago.clone(),
                 Cuenta::Unauth => filtrado,
             },
-        })
+        });
+        pagos.set(venta.get().pagos.clone());
     });
     let state = create_rc_signal(String::new());
     view!(cx,
@@ -57,11 +64,11 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
                 view=move |cx,x|{
                     let pos = pos.clone();
                     view!(cx,
-                    PagoComp(pagado = true, opciones = create_rc_signal(vec![x.medio_pago.clone()]), monto = x.monto, state = None, pos = pos.clone(), pago=x.clone())
+                    PagoComp(pagado = true, opciones = create_rc_signal(vec![x.medio_pago.clone()]), monto = Restante::Pagado(x.monto), state = None, pos = pos.clone())
                 )},
                 key=|x|x.int_id
             )
-            PagoComp(pagado=false, opciones=medios.clone(), monto=venta1.get().monto_total - venta1.get().monto_pagado, state=Some(state), pos = pos1.clone(), pago=Pago::default())
+            PagoComp(pagado=false, opciones=medios.clone(), monto=Restante::NoPagado(restante.clone()), state=Some(state), pos = pos1.clone())
         }
     )
 }

@@ -30,7 +30,7 @@ fn agregar_pago(
     sistema: State<Mutex<Sistema>>,
     pago: Pago,
     pos: bool,
-) -> Res<Vec<Pago>> {
+) -> Res<VentaSHC> {
     Ok(agregar_pago_2(window, sistema, pago, pos)?)
 }
 // #[tauri::command]
