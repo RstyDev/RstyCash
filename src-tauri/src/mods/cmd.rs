@@ -470,7 +470,6 @@ pub mod commands {
                 }
             }
         }
-        println!("{:#?}", venta);
         Ok(venta)
     }
     pub fn hacer_egreso_2(
@@ -928,7 +927,6 @@ pub mod commands {
                 break;
             }
         }
-        println!("{:#?}", sis.stash());
         Ok(close_window_2(window)?)
     }
     pub fn try_login_2(

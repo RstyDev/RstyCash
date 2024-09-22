@@ -80,7 +80,7 @@ pub fn PagoComp<G: Html>(cx: Scope, props: PagoProps) -> View<G> {
         form(id="form-pago"){
             input(type="number",placeholder=restante.to_string(),class="input-monto",disabled = props.pagado,bind:value=monto, on:keyup=|e:Event|{
                 let event: KeyboardEvent = e.clone().unchecked_into();
-                if event.key().eq("Enter"){
+                if event.key().eq("Enter")&&!monto.get().as_ref().eq("")&&monto.get().as_ref().parse::<f32>().unwrap()!=0.0{
                     e.prevent_default();
                     enter.set(true);
                     enter.set(false);

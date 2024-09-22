@@ -6,13 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 sycamore = { version = "0.8", features = ["suspense"] }
-wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4"
-js-sys = "0.3"
+wasm-bindgen = "0.2.93"
+wasm-bindgen-futures = "0.4.43"
+js-sys = "0.3.70"
 
 serde-wasm-bindgen = "0.6.5"
 chrono = {version= "0.4.38" ,features = ["serde"] }
-serde = { version = "1.0.204", features = ["derive","rc"] }
+serde = { version = "1.0.210", features = ["derive","rc"] }
 console_error_panic_hook = "0.1.7"
 getrandom = { version = "0.2", features = ["js"]}
 #tauri-interop = { version = "2.1.6", features = ["event"] }
@@ -21,4 +21,4 @@ members = ["src-tauri"]
 
 [dependencies.web-sys]
 features = ["Location", "Storage","KeyboardEvent"]
-version = "0.3.60"
+version = "0.3.70"

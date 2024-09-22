@@ -17,7 +17,10 @@ pub enum Pos {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Buscando {
-    False(RcSignal<Pos>),
+    False {
+        pos: RcSignal<Pos>,
+        focus: RcSignal<bool>,
+    },
     True {
         nav: RcSignal<Nav>,
         search: RcSignal<String>,

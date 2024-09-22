@@ -88,7 +88,6 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                 nav.set(Nav::None);
             }
             Nav::Down => {
-                debug("DWN", 73, "busqueda");
                 if let Some((i, _)) = actual.get().as_ref() {
                     if *i < busqueda.get().as_ref().len() as u8 - 1 {
                         actual.set(Some((
@@ -131,7 +130,6 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                 }
             }
             Nav::Esc => {
-                debug("ESC", 87, "busqueda");
                 if actual.get().as_ref().is_some() {
                     //actual.set(None);
                 }

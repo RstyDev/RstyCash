@@ -4,12 +4,11 @@ use crate::mods::db::{
     Mapper,
 };
 use chrono::{NaiveDateTime, Utc};
-use core::fmt;
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, Pool, Sqlite};
 use std::{collections::HashMap, sync::Arc};
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize,Debug)]
 pub struct Caja {
     id: i32,
     inicio: NaiveDateTime,
@@ -32,19 +31,21 @@ pub enum Movimiento {
         monto: f32,
     },
 }
-impl fmt::Debug for Caja {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Caja")
-            .field("id", &self.id)
-            .field("inicio", &self.inicio)
-            .field("cierre", &self.cierre)
-            .field("ventas_totales", &self.ventas_totales)
-            .field("monto_inicio", &self.monto_inicio)
-            .field("monto_cierre", &self.monto_cierre)
-            .field("cajero", &self.cajero)
-            .finish()
-    }
-}
+// impl fmt::Debug for Caja {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         f.debug_struct("Caja")
+//             .field("id", &self.id)
+//             .field("inicio", &self.inicio)
+//             .field("cierre", &self.cierre)
+//             .field("ventas_totales", &self.ventas_totales)
+//             .field("monto_inicio", &self.monto_inicio)
+//             .field("monto_cierre", &self.monto_cierre)
+//             .field("cajero", &self.cajero)
+
+//             .finish()
+//     }
+// }
+
 
 impl Caja {
     pub async fn new(
@@ -58,10 +59,10 @@ impl Caja {
             totales.insert(Arc::clone(&medio.desc()), 0.0);
         }
         let caja_mod: sqlx::Result<Option<CajaDB>> =
-            query_as!(CajaDB,
-                r#"select id as "id: _", inicio, cierre, monto_inicio as "monto_inicio: _", monto_cierre as "monto_cierre: _", ventas_totales as "ventas_totales: _", cajero from cajas order by id desc"#)
-                .fetch_optional(db)
-                .await;
+        query_as!(CajaDB,
+            r#"select id as "id: _", inicio, cierre, monto_inicio as "monto_inicio: _", monto_cierre as "monto_cierre: _", ventas_totales as "ventas_totales: _", cajero from cajas order by id desc"#)
+            .fetch_optional(db)
+            .await;
         caja = match caja_mod? {
             Some(caja) => match caja.cierre {
                 Some(_) => match monto_de_inicio {
@@ -100,7 +101,7 @@ impl Caja {
                             monto,
                             None,
                             None,
-                            HashMap::new(),
+                            totales,
                         ))
                     }
                     None => Err(AppError::InicializationError(
@@ -109,8 +110,8 @@ impl Caja {
                 }
             }
         };
-
-        Ok(caja?)
+        let caja = caja?;
+        Ok(caja)
     }
     pub fn build(
         id: i32,
@@ -204,6 +205,9 @@ impl Caja {
             .execute(db)
             .await?;
         Ok(())
+    }
+    pub fn totales(&self)->&HashMap<Arc<str>,f32>{
+        &self.totales
     }
     pub fn to_shared_complete(&self) -> Self {
         self.clone()

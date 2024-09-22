@@ -10,9 +10,7 @@ const CUENTA: &str = "Cuenta Corriente";
 use crate::mods::db::Mapper;
 
 use super::{
-    redondeo, AppError, Cli, Cliente,
-    Cuenta::{Auth, Unauth},
-    Pago, Res, User, UserSH, UserSHC, Valuable,
+    lib::debug, redondeo, AppError, Cli, Cliente, Cuenta::{Auth, Unauth}, Pago, Res, User, UserSH, UserSHC, Valuable
 };
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -171,7 +169,7 @@ impl<'a> Venta {
         self.update_monto_total(politica);
         Ok(self.clone())
     }
-    pub fn agregar_pago(&mut self, pago: Pago) -> Res<f32> {
+    pub fn agregar_pago(&mut self, pago: Pago) -> Res<Venta> {
         let mut es_cred: bool = false;
         match pago.medio_pago().desc().as_ref() {
             CUENTA => match &self.cliente {
@@ -200,8 +198,6 @@ impl<'a> Venta {
 
         self.monto_pagado += pago.monto();
         let res = self.monto_total - self.monto_pagado;
-
-        println!("Venta despues del pago {:#?}", self);
         if res <= 0.0 {
             self.cerrada = true;
         }
@@ -215,7 +211,7 @@ impl<'a> Venta {
         if self.cerrada && !es_cred {
             self.paga = true;
         }
-        Ok(res)
+        Ok(self.clone())
     }
     pub fn agregar_producto(&mut self, producto: Valuable, politica: &f32) {
         let mut esta = false;
@@ -354,11 +350,11 @@ impl<'a> Venta {
                 match &self.cliente {
                     Cliente::Final => {
                         paga = true;
-                        cliente = None;
+                        cliente = 1;
                     }
                     Cliente::Regular(cli) => {
                         paga = self.paga;
-                        cliente = Some(*cli.dni());
+                        cliente = *cli.dni();
                     }
                 }
                 sqlx::query("update ventas set time = ?, monto_total = ?, monto_pagado = ?, cliente = ?, cerrada = ?, paga = ?, pos = ? where id = ?")
@@ -371,37 +367,63 @@ impl<'a> Venta {
                 match &self.cliente {
                     Cliente::Final => {
                         paga = true;
-                        cliente = None;
+                        cliente = 1;
                     }
                     Cliente::Regular(cli) => {
                         paga = self.paga;
-                        cliente = Some(*cli.dni());
+                        cliente = *cli.dni();
                     }
                 }
                 sqlx::query("insert into ventas (time, monto_total, monto_pagado, cliente, cerrada, paga, pos)
                 values (?, ?, ?, ?, ?, ?, ?)").bind(Utc::now().naive_local()).bind(self.monto_total).bind(self.monto_pagado).bind(cliente).bind(self.cerrada)
                 .bind(paga).bind(pos).execute(db).await?;
-            }
+            }   
         }
         let mut pagos_sql = String::from(
             "INSERT INTO pagos (medio_pago, monto, pagado, venta) VALUES (?, ?, ?, ?)",
         );
-        let mut venta_prod_sql = String::from("INSERT INTO relacion_venta_prod (venta, producto, cantidad, precio) VALUES (?, ?, ?, ?)");
-        let mut venta_pes_sql = String::from("INSERT INTO relacion_venta_pes (venta, pesable, cantidad, precio_kilo) VALUES (?, ?, ?, ?)");
-        let mut venta_rub_sql = String::from(
-            "INSERT INTO relacion_venta_rub (venta, rubro, cantidad, precio) VALUES (?, ?, ?, ?)",
-        );
+        let mut estados=(false,false,false);
+        
+        let mut venta_prod_sql = String::from("INSERT INTO relacion_venta_prod (venta, producto, cantidad, precio, pos) VALUES (?, ?, ?, ?, ?)");
+        let mut venta_pes_sql = String::from("INSERT INTO relacion_venta_pes (venta, pesable, cantidad, precio_kilo) VALUES (?, ?, ?, ?, ?)");
+        let mut venta_rub_sql = String::from("INSERT INTO relacion_venta_rub (venta, rubro, cantidad, precio) VALUES (?, ?, ?, ?, ?)");
         let row = ", (?, ?, ?, ?)";
+        let row5 = ", (?, ?, ?, ?, ?)";
         for _ in 1..self.pagos.len() {
             pagos_sql.push_str(row);
         }
-        for prod in &self.productos {
+        self.productos.iter().enumerate().for_each(|(i,prod)|{
             match prod {
-                Valuable::Prod(_) => venta_prod_sql.push_str(row),
-                Valuable::Pes(_) => venta_pes_sql.push_str(row),
-                Valuable::Rub(_) => venta_rub_sql.push_str(row),
+                Valuable::Prod(_) => {
+                    estados = match estados{(_,b,c)=>(true,b,c)};
+                    if i>0{venta_prod_sql.push_str(row5)}
+                },
+                Valuable::Pes(_) => if i>0{
+                    estados = match estados{(a,_,c)=>(a,true,c)};
+                    if i>0{venta_pes_sql.push_str(row5)}
+                },
+                Valuable::Rub(_) => if i>0{
+                    estados = match estados{(a,b,_)=>(a,b,true)};
+                    if i>0{venta_rub_sql.push_str(row5)}
+                },
             }
-        }
+        });
+        // for prod in &self.productos {
+        //     match prod {
+        //         Valuable::Prod(_) => {
+        //             estados = match estados{(_,b,c)=>(true,b,c)};
+        //             venta_prod_sql.push_str(row5)
+        //         },
+        //         Valuable::Pes(_) => {
+        //             estados = match estados{(a,_,c)=>(a,true,c)};
+        //             venta_pes_sql.push_str(row5)
+        //         },
+        //         Valuable::Rub(_) => {
+        //             estados = match estados{(a,b,_)=>(a,b,true)};
+        //             venta_rub_sql.push_str(row5)
+        //         },
+        //     }
+        // }
         let mut pagos_query = sqlx::query(pagos_sql.as_str());
         let mut prod_query = sqlx::query(venta_prod_sql.as_str());
         let mut pes_query = sqlx::query(venta_pes_sql.as_str());
@@ -416,32 +438,37 @@ impl<'a> Venta {
         }
         for prod in &self.productos {
             match prod {
-                Valuable::Prod((c, p)) => {
+                Valuable::Prod((c, p)) if estados.0 => {
                     let aux = prod_query;
                     prod_query = aux
                         .bind(self.id)
                         .bind(*p.id())
                         .bind(*c)
-                        .bind(*p.precio_venta());
+                        .bind(*p.precio_venta())
+                        .bind(pos);
                 }
-                Valuable::Pes((c, p)) => {
+                Valuable::Pes((c, p)) if estados.1 => {
                     let aux = pes_query;
                     pes_query = aux
                         .bind(self.id)
                         .bind(*p.id())
                         .bind(*c)
-                        .bind(*p.precio_peso());
+                        .bind(*p.precio_peso())
+                        .bind(pos);
                 }
-                Valuable::Rub((c, r)) => {
+                Valuable::Rub((c, r)) if estados.2 => {
                     let aux = rub_query;
-                    rub_query = aux.bind(self.id).bind(*r.id()).bind(*c).bind(r.monto());
+                    rub_query = aux.bind(self.id).bind(*r.id()).bind(*c).bind(r.monto()).bind(pos);
                 }
+                _=>(),
             }
         }
         pagos_query.execute(db).await?;
-        prod_query.execute(db).await?;
-        pes_query.execute(db).await?;
-        rub_query.execute(db).await?;
+        if estados.0{if let Err(e)= prod_query.execute(db).await{
+            debug(&e,454,"venta");
+        }}
+        if estados.1{pes_query.execute(db).await?;}
+        if estados.2{rub_query.execute(db).await?;}
         Ok(())
     }
     pub fn to_shared(&self) -> VentaSH {

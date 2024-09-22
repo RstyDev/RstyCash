@@ -18,7 +18,7 @@ use std::{collections::HashSet, sync::Arc};
 use tauri::async_runtime::{self, block_on};
 use Valuable as V;
 
-use super::{proveedor::ProveedorSH, venta::VentaSH, Cliente, UserSH};
+use super::{lib::debug, proveedor::ProveedorSH, venta::VentaSH, Cliente, UserSH};
 
 const CUENTA: &str = "Cuenta Corriente";
 #[derive(Clone)]
@@ -58,7 +58,7 @@ impl<'a> Sistema {
     pub fn agregar_cliente(&self, cliente: Cli) -> Res<Cli> {
         async_runtime::block_on(async { Cli::new_to_db(self.db(), cliente).await })
     }
-    pub fn agregar_pago(&mut self, pago: Pago, pos: bool) -> Res<f32> {
+    pub fn agregar_pago(&mut self, pago: Pago, pos: bool) -> Res<Venta> {
         let res;
         if pos {
             if !pago.medio_pago().desc().as_ref().eq("Efectivo")
@@ -83,13 +83,11 @@ impl<'a> Sistema {
                 res = self.ventas.b.agregar_pago(pago);
             }
         }
-        println!("{:#?}", res);
-        if let Ok(a) = res {
-            if a <= 0.0 {
+        if let Ok(a) = &res {
+            if a.monto_total() - a.monto_pagado() <= 0.0 {
                 self.cerrar_venta(pos)?
             }
         }
-        println!("Aca esta la caja {:#?} -----****", self.caja);
         res
     }
     pub fn agregar_usuario(&self, user: User) -> Res<String> {
@@ -158,10 +156,9 @@ impl<'a> Sistema {
             async_runtime::block_on(async { Caja::new(aux.as_ref(), Some(0.0), &configs).await })?;
         let stash = Vec::new();
         let registro = Vec::new();
-        println!("{:#?}", caja);
         let w1 = Arc::clone(&db);
         if let Err(e) = block_on(Cliente::insert_final(db.as_ref())) {
-            println!("Error insertando final {e}");
+            debug(&e,161,"sistema")
         }
 
         let mut sis = Sistema {
@@ -202,6 +199,7 @@ impl<'a> Sistema {
         async_runtime::block_on(async {
             Sistema::procesar(Arc::clone(&sis.db), sis.proveedores.clone()).await
         })?;
+        
         Ok(sis)
     }
     fn generar_reporte_caja(&self) {
@@ -336,7 +334,6 @@ impl<'a> Sistema {
                 .bind(Rango::Admin.to_string())
                 .execute(write_db2.as_ref())
                 .await?;
-            //eprintln!("Aca esta el largo de valuables {}",valuables.len());
             Db::cargar_todos_los_provs(proveedores, write_db2.as_ref()).await?;
             Db::cargar_todos_los_valuables(valuables, write_db2.as_ref()).await?;
             //Db::cargar_todas_las_relaciones_prod_prov(relaciones, write_db2.as_ref()).await?;
@@ -392,7 +389,6 @@ impl<'a> Sistema {
     pub async fn try_login(&mut self, user: User) -> Res<Rango> {
         let id = user.id();
         let pass = user.pass();
-        //println!("{:#?}",user);
         let qres: Option<UserDB> = sqlx::query_as!(
             UserDB,
             r#"select user_id as "user_id:_",nombre as "nombre:_",pass as "pass:_",rango as "rango:_",id as "id:_" from users where user_id = ? and pass = ? limit 1"#,
@@ -861,9 +857,11 @@ impl<'a> Sistema {
         }
     }
     fn cerrar_venta(&mut self, pos: bool) -> Res<()> {
-        async_runtime::block_on(async { self.venta(pos).guardar(pos, self.db()).await })?;
+        if let Err(e)=async_runtime::block_on(async { self.venta(pos).guardar(pos, self.db()).await }){
+            debug(&e, 861, "sistema");
+        }
         self.registro.push(self.venta(pos).clone());
-        println!("{:#?}", self.venta(pos));
+
         async_runtime::block_on(async {
             self.update_total(self.venta(pos).monto_total(), &self.venta(pos).pagos())
                 .await
@@ -955,7 +953,10 @@ impl<'a> Sistema {
         &self.stash
     }
     pub async fn update_total(&mut self, monto: f32, pagos: &Vec<Pago>) -> Res<()> {
-        self.caja.update_total(&self.db, monto, pagos).await
+        match self.caja.update_total(&self.db, monto, pagos).await{
+            Ok(_)=>Ok(()),
+            Err(e)=>{debug(&e,958,"sistema");Err(e)}
+        }
     }
     pub fn to_shared(&self) -> SistemaSH {
         SistemaSH {

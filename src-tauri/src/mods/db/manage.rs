@@ -13,7 +13,6 @@ pub async fn db() -> Res<Pool<Sqlite>> {
         match Sqlite::create_database(url).await {
             Ok(_) => {
                 exists = false;
-                println!("Create db success")
             }
             Err(error) => panic!("error: {}", error),
         }

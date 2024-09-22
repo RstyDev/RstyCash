@@ -20,7 +20,6 @@ pub fn get_hash(pass: &str) -> i64 {
 
 pub fn crear_file<'a>(path: &str, escritura: &impl Serialize) -> std::io::Result<()> {
     let mut f = File::create(path)?;
-    println!("Path que se actualiza: {}", path);
     let buf = serde_json::to_string_pretty(escritura)?;
     write!(f, "{}", buf)?;
     Ok(())
@@ -47,6 +46,9 @@ pub fn leer_file<T: DeserializeOwned + Clone + Serialize>(
         Err(e) => panic!("No se pudo porque {}", e),
     }
     Ok(())
+}
+pub fn debug(s: &impl std::fmt::Debug, line: u16, file: &str) {
+    eprintln!("*** Linea: {line} *** \n*** File: {file}*** \n{:#?}", s);
 }
 pub fn redondeo(politica: &f32, numero: f32) -> f32 {
     let mut res = numero;

@@ -2,6 +2,7 @@ pub mod busqueda;
 pub mod cuadro_principal;
 pub mod cuadro_venta;
 pub mod main_page;
+pub mod main_section;
 pub mod pago;
 pub mod pagos;
 pub mod producto;

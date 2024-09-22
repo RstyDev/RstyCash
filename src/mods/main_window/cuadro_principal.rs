@@ -7,7 +7,6 @@ pub struct PrincProps {
 
 #[component]
 pub fn CuadroPrincipal<G: Html>(cx: Scope, props: PrincProps) -> View<G> {
-    debug(props.pos.get(), 14, "Principal");
     view! {cx,
         section(id="cuadro-principal"){
             (match props.pos.get().as_ref(){

@@ -17,17 +17,29 @@ use std::{collections::HashMap, sync::Arc};
 pub struct Mapper;
 impl Mapper {
     pub async fn caja(db: &Pool<Sqlite>, caja: CajaDB) -> Res<Caja> {
-        let totales_mod: sqlx::Result<Vec<TotalDB>> = query_as!(
+        let mut totales = HashMap::new();
+        let totales_mod: Vec<TotalDB> = query_as!(
             TotalDB,
             r#"select medio, monto as "monto: _" from totales where caja = ? "#,
             caja.id
         )
         .fetch_all(db)
-        .await;
-        let mut totales = HashMap::new();
-        for tot in totales_mod? {
-            totales.insert(Arc::from(tot.medio), tot.monto);
+        .await?;
+        if totales_mod.len()>0{
+            for tot in totales_mod {
+                totales.insert(Arc::from(tot.medio), tot.monto);
+            }
+        }else{
+            let medios_mod: Vec<MedioPagoDB> = query_as!(
+                MedioPagoDB,
+                r#"select id as "id:i32", medio from medios_pago"#
+            ).fetch_all(db).await?;
+
+            for medio in medios_mod{
+                totales.insert(Arc::from(medio.medio.as_str()),0.0);
+            }
         }
+        
         Ok(Caja::build(
             caja.id,
             caja.inicio,

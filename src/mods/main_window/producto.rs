@@ -49,7 +49,6 @@ pub fn Prod<G: Html>(cx: Scope, props: ProdProps) -> View<G> {
         if *cambio.get() {
             let rc_venta3 = rc_venta3.clone();
             let val3 = val3.clone();
-            debug(cantidad.get(), 48, "producto");
             spawn_local_scoped(cx, async move {
                 let res = call(
                     "set_cantidad_producto_venta",
