@@ -175,7 +175,6 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
         (match aux_buscando2.get().as_ref(){
             Buscando::False { pos, focus, .. } => {
               let buscando=aux_buscando2.clone();
-              let foc = focus.clone();
               match pos.get().as_ref(){
                   Pos::A { venta, config, .. } => view!{cx,MainSection(venta=venta.clone(),buscando=buscando.clone(),config=config.clone())},
                   Pos::B { venta, config, .. } => view!{cx,MainSection(venta=venta.clone(),buscando=buscando.clone(),config=config.clone())},
@@ -183,7 +182,6 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
             },
             Buscando::True { pos, focus, .. } => {
               let buscando = aux_buscando2.clone();
-              let foc = focus.clone();
               match pos.get().as_ref(){
                   Pos::A { venta, config, .. } => view!{cx,MainSection(venta=venta.clone(),buscando=buscando.clone(),config=config.clone())},
                   Pos::B { venta, config, .. } => view!{cx,MainSection(venta=venta.clone(),buscando=buscando.clone(),config=config.clone())},
