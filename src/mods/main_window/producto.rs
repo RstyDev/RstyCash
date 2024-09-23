@@ -79,7 +79,7 @@ pub fn Prod<G: Html>(cx: Scope, props: ProdProps) -> View<G> {
                 p(){(desc.get())}
             }
             section(class="cantidad"){
-                button(class=match disabled.get().as_ref(){
+                button(tabindex="-1",class=match disabled.get().as_ref(){
                     false => "button restar",
                     true => "button restar disabled",
                 },on:click = move |_|{
@@ -106,7 +106,7 @@ pub fn Prod<G: Html>(cx: Scope, props: ProdProps) -> View<G> {
                     cambio.set(true);
                     cambio.set(false);}
                 })
-                button(class="button sumar",on:click=move|_|{
+                button(tabindex="-1",class="button sumar",on:click=move|_|{
                     let val = val1.clone();
                     let pos = props.pos;
                     let rc_venta = rc_venta1.clone();
@@ -136,7 +136,7 @@ pub fn Prod<G: Html>(cx: Scope, props: ProdProps) -> View<G> {
                 }
             }
             section(id="borrar"){
-                button(class="button eliminar",on:click=move |_|{
+                button(tabindex="-1",class="button eliminar",on:click=move |_|{
                     let val = val2.clone();
                     let pos = props.pos;
                     let rc_venta = rc_venta.clone();

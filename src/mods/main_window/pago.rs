@@ -21,6 +21,7 @@ pub struct PagoProps {
     state: Option<RcSignal<String>>,
     pos: RcSignal<Pos>,
     other_sale: RcSignal<Venta>,
+    focus: Option<RcSignal<bool>>,
 }
 
 #[component]
@@ -31,7 +32,7 @@ pub fn PagoComp<G: Html>(cx: Scope, props: PagoProps) -> View<G> {
     let opcion = create_signal(cx, props.opciones.get().as_ref()[0].medio.to_string());
     let monto = create_signal(cx, String::new());
     let enter = create_signal(cx, false);
-
+    
     create_memo(cx, move || {
         props.opciones.track();
         opts.set(props.opciones.get().as_ref().clone())
@@ -113,8 +114,14 @@ pub fn PagoComp<G: Html>(cx: Scope, props: PagoProps) -> View<G> {
                     enter.set(true);
                     enter.set(false);
                 }
+            },on:focus=move |_|{
+                if let Some(a)=&props.focus{
+                    if !props.pagado && *a.get(){
+                        a.set(false)
+                    }
+                }
             })
-            select(class="opciones-pagos",disabled = props.pagado, bind:value=opcion){
+            select(class="opciones-pagos",disabled = props.pagado, bind:value=opcion, tabindex="-1"){
             Keyed(
                 iterable = opts,
                 view=|cx,x|view!{cx,
@@ -123,7 +130,7 @@ pub fn PagoComp<G: Html>(cx: Scope, props: PagoProps) -> View<G> {
                 key=|x|x.id,
             )
         }
-            input(type="submit", value=match props.pagado{true => "Borrar",false => "Pagar"}, on:click=move |a:Event|{
+            input(tabindex="-1",type="submit", value=match props.pagado{true => "Borrar",false => "Pagar"}, on:click=move |a:Event|{
                 a.prevent_default();
                 match &props.state{
                    Some(s) => s.set(String::from("Desde Pago")),

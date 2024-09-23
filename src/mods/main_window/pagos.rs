@@ -21,6 +21,7 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
         let venta = venta2.get();
         rest1.set(venta.monto_total - venta.monto_pagado);
     });
+    let foc1=props.focus.clone();
     let pagos = create_signal(cx, venta.get().pagos.clone());
     let (pos, pos1) = (props.pos.clone(), props.pos.clone());
     let medios = create_rc_signal({
@@ -67,12 +68,12 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
                     let pos = pos.clone();
                     let other_sale=other_sale.clone();
                     view!(cx,
-                        PagoComp(pagado = true, opciones = create_rc_signal(vec![x.medio_pago.clone()]), monto = Restante::Pagado(x.monto), state = None, pos = pos.clone(),other_sale=other_sale.clone())
+                        PagoComp(pagado = true, opciones = create_rc_signal(vec![x.medio_pago.clone()]), monto = Restante::Pagado(x.monto), state = None, pos = pos.clone(),other_sale=other_sale.clone(),focus=None)
                     )
                 },
                 key=|x|x.int_id
             )
-            PagoComp(pagado=false, opciones=medios.clone(), monto=Restante::NoPagado(restante.clone()), state=Some(state), pos = pos1.clone(),other_sale=other_sale2.clone())
+            PagoComp(pagado=false, opciones=medios.clone(), monto=Restante::NoPagado(restante.clone()), state=Some(state), pos = pos1.clone(),other_sale=other_sale2.clone(),focus=Some(foc1.clone()))
         }
     )
 }

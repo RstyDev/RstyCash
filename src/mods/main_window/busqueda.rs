@@ -112,29 +112,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                     spawn_local_scoped(cx, async move {
                         let sale;
                         let res = add_to_sale(
-                            match act {
-                                ValuableSH::Prod((cant, prod)) => {
-                                    if cant == 0 {
-                                        ValuableSH::Prod((1, prod))
-                                    } else {
-                                        ValuableSH::Prod((cant, prod))
-                                    }
-                                }
-                                ValuableSH::Pes((cant, pes)) => {
-                                    if cant == 0.0 {
-                                        ValuableSH::Pes((1.0, pes))
-                                    } else {
-                                        ValuableSH::Pes((cant, pes))
-                                    }
-                                }
-                                ValuableSH::Rub((cant, rub)) => {
-                                    if cant == 0 {
-                                        ValuableSH::Rub((1, rub))
-                                    } else {
-                                        ValuableSH::Rub((cant, rub))
-                                    }
-                                }
-                            },
+                            act,
                             match pos.get().as_ref() {
                                 Pos::A { venta, .. } => {
                                     sale = venta.clone();
@@ -191,8 +169,6 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                     )
                 }),
                 None => view!(cx,div()),
-
-
             })
         }
     )

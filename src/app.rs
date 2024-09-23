@@ -144,7 +144,7 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
                 match rend.get().as_ref() {
                 Windows::Main(state) => {
                     view! {cx,
-                    div(id="cuadro-venta"){
+                    div(){
                         MainPage(venta_a=state.venta_a.clone(),venta_b=state.venta_b.clone(),config=state.config.clone(),pos=state.pos.clone(),clientes=state.clientes.clone())
                     }
                 }}

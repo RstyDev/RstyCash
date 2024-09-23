@@ -447,11 +447,11 @@ impl<'a> Sistema {
                     None => return Ok(res),
                     Some(code) => {
                         if code.producto.is_some() {
-                            res.push(V::Prod((0, Producto::fetch_code(code, db).await?)))
+                            res.push(V::Prod((1, Producto::fetch_code(code, db).await?)))
                         } else if code.pesable.is_some() {
-                            res.push(V::Pes((0.0, Pesable::fetch_code(code, db).await?)))
+                            res.push(V::Pes((1.0, Pesable::fetch_code(code, db).await?)))
                         } else if code.rubro.is_some() {
-                            res.push(V::Rub((0, Rubro::fetch_code(code, db).await?)));
+                            res.push(V::Rub((1, Rubro::fetch_code(code, db).await?)));
                         }
                     }
                 }
@@ -510,7 +510,7 @@ impl<'a> Sistema {
                         .map(|r| Mapper::rel_prod_prov(r))
                         .collect::<Vec<RelacionProdProv>>();
                     res.push(V::Prod((
-                        0,
+                        1,
                         Producto::build(
                             prod.id,
                             codigos,
@@ -542,7 +542,7 @@ impl<'a> Sistema {
                         .iter()
                         .map(|pes| {
                             V::Pes((
-                                0.0,
+                                1.0,
                                 Pesable::build(
                                     pes.id,
                                     pes.codigo,
@@ -571,7 +571,7 @@ impl<'a> Sistema {
                         .iter()
                         .map(|rub| {
                             V::Rub((
-                                0,
+                                1,
                                 Rubro::build(rub.id, rub.codigo, None, rub.descripcion.as_str()),
                             ))
                         })

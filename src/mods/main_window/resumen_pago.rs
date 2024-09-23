@@ -9,12 +9,24 @@ pub struct ResumenProps {
     pub config: RcSignal<Config>,
     pub pos: RcSignal<Pos>,
     pub other_sale: RcSignal<Venta>,
+    pub focus: RcSignal<bool>
 }
 
 #[component]
 pub fn ResumenPago<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
     let venta = props.venta.clone();
     let venta1 = venta.clone();
+    let class = create_signal(cx, match *props.focus.get(){
+        true => "not-focused",
+        false => "",
+    });
+    let foc = props.focus.clone();
+    create_memo(cx, move ||{
+        class.set(match *foc.get(){
+            true => "not-focused",
+            false => "",
+        })
+    });
     let prods = create_signal(cx, venta.get().productos.clone());
     let a_pagar = create_rc_signal(venta.get().monto_total - venta.get().monto_pagado);
     let a_pagar1 = a_pagar.clone();
@@ -23,7 +35,7 @@ pub fn ResumenPago<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
         a_pagar1.set(venta1.get().monto_total - venta1.get().monto_pagado);
     });
     view!(cx,
-        aside(id="resumen-y-pago"){
+        aside(id="resumen-y-pago", class=format!("focuseable {}",class.get())){
             article(){
                 Keyed(
                     iterable = prods,

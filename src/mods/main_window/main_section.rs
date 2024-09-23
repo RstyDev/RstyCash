@@ -20,7 +20,7 @@ pub fn MainSection<G: Html>(cx: Scope, props: SectionProps) -> View<G> {
     let venta = props.venta.clone();
     let venta1 = props.venta.clone();
     let config = props.config.clone();
-    create_memo(cx, move || {});
+    // create_memo(cx, move || {});
     view!(
         cx,
         (match buscando.get().as_ref().clone() {
@@ -30,13 +30,15 @@ pub fn MainSection<G: Html>(cx: Scope, props: SectionProps) -> View<G> {
                 pos,
                 aux,
                 other_sale,
+                focus,
             } => {
+                let focus = focus.clone();
                 let venta = venta.clone();
                 let config = config.clone();
                 let pos1 = pos.clone();
                 view!(cx,
                   Busqueda(search = search.clone(), nav = nav.clone(), pos = pos.clone(), search_aux = aux.clone())
-                  ResumenPago(venta=venta.clone(),pos=pos1.clone(),config=config.clone(),other_sale=other_sale.clone())
+                  ResumenPago(venta=venta.clone(),pos=pos1.clone(),config=config.clone(),other_sale=other_sale.clone(), focus=focus.clone())
                 )
             }
             Buscando::False {
@@ -48,9 +50,10 @@ pub fn MainSection<G: Html>(cx: Scope, props: SectionProps) -> View<G> {
                 let config = config.clone();
                 let venta = venta1.clone();
                 let pos1 = pos.clone();
+                let foc1=focus.clone();
                 view!(cx,
-                  CuadroPrincipal(pos= pos.clone())
-                  ResumenPago(venta=venta.clone(),pos=pos1.clone(),config=config.clone(),other_sale=other_sale.clone())
+                  CuadroPrincipal(pos= pos.clone(),focus=foc1.clone())
+                  ResumenPago(venta=venta.clone(),pos=pos1.clone(),config=config.clone(),other_sale=other_sale.clone(), focus=focus.clone())
                 )
             }
         })

@@ -28,6 +28,7 @@ pub enum Buscando {
         pos: RcSignal<Pos>,
         other_sale: RcSignal<Venta>,
         aux: RcSignal<bool>,
+        focus: RcSignal<bool>
     },
 }
 
@@ -46,11 +47,13 @@ pub enum Restante {
     NoPagado(RcSignal<f32>),
 }
 
+
+
 impl ToString for Restante {
     fn to_string(&self) -> String {
         match self {
-            Restante::Pagado(monto) => monto.to_string(),
-            Restante::NoPagado(rc_signal) => rc_signal.get().to_string(),
+            Restante::Pagado(monto) => format!("{:.2}",monto),
+            Restante::NoPagado(rc_signal) => format!("{:.2}",rc_signal.get()),
         }
     }
 }

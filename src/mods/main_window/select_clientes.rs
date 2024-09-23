@@ -33,7 +33,7 @@ pub fn SelectClientes<G: Html>(cx: Scope, props: ClientesProps) -> View<G> {
             Cliente::Regular(c) => c.nombre.to_owned(),
         });
     });
-    view!(cx,select(id="cliente",bind:value=id_select,on:change=move |_|{
+    view!(cx,select(id="cliente",tabindex="-1",bind:value=id_select,on:change=move |_|{
         let cliente = clientes.get().iter().find(|c|{
             match (c,id_select.get().as_ref().as_str()){
                 (Cliente::Final,"Final")=>true,

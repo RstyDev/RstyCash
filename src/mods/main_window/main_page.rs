@@ -38,6 +38,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let config2 = props.config.clone();
     let config3 = props.config.clone();
     let focus = create_rc_signal(true);
+    let foc = focus.clone();
     let pos1 = props.pos.clone();
     let pos3 = props.pos.clone();
     let pos4 = props.pos.clone();
@@ -70,6 +71,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                     Pos::B { .. } => venta_a2.clone(),
                 },
                 aux: search_aux.clone(),
+                focus: focus.clone(),
             })
         } else {
             buscando_aux.set(Buscando::False {
@@ -144,7 +146,11 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                   },
                   _=>(),
                 }
-              }){}
+              },on:focus= move |_|{
+                if !*foc.get(){
+                    foc.set(true)
+                }
+              })
             }
           }
           article(class="ayb"){
@@ -169,13 +175,15 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
         (match aux_buscando2.get().as_ref(){
             Buscando::False { pos, focus, .. } => {
               let buscando=aux_buscando2.clone();
+              let foc = focus.clone();
               match pos.get().as_ref(){
                   Pos::A { venta, config, .. } => view!{cx,MainSection(venta=venta.clone(),buscando=buscando.clone(),config=config.clone())},
                   Pos::B { venta, config, .. } => view!{cx,MainSection(venta=venta.clone(),buscando=buscando.clone(),config=config.clone())},
               }
             },
-            Buscando::True { pos, .. } => {
+            Buscando::True { pos, focus, .. } => {
               let buscando = aux_buscando2.clone();
+              let foc = focus.clone();
               match pos.get().as_ref(){
                   Pos::A { venta, config, .. } => view!{cx,MainSection(venta=venta.clone(),buscando=buscando.clone(),config=config.clone())},
                   Pos::B { venta, config, .. } => view!{cx,MainSection(venta=venta.clone(),buscando=buscando.clone(),config=config.clone())},
