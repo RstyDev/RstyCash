@@ -14,6 +14,6 @@ pub async fn call(cmd: &str, args: impl serde::ser::Serialize + Sized) -> JsValu
     let value = to_value(&args).unwrap();
     invoke(cmd, value).await
 }
-pub fn debug(s: impl std::fmt::Debug, line: u16, file: &str) {
+pub fn debug(s: &impl std::fmt::Debug, line: u16, file: &str) {
     log(format!("*** Linea: {line} *** \n*** File: {file}*** \n{:#?}", s).as_str())
 }

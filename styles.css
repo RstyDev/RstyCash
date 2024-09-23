@@ -409,7 +409,7 @@ div#pagos section.pago {
   overflow-y: scroll;
   -ms-overflow-style: none;
   scrollbar-width: none;
-  margin-left: 5px;
+  margin: 0px 10px 0px 5px;
 
   &::-webkit-scrollbar {
     display: none;
@@ -523,11 +523,16 @@ select,
 }
 
 main {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 70% 30%;
 }
 
-
+#form-pago{
+  display: flex;
+  & .opciones-pagos{
+    flex-grow: 1;
+  }
+}
 
 .cantidad-producto {
   display: inline;

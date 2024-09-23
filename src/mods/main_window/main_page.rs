@@ -28,30 +28,33 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let rc_search = create_rc_signal_from_rc(search.get());
     let rc_search1 = rc_search.clone();
     let venta_a1 = props.venta_a.clone();
+    let venta_a2 = props.venta_a.clone();
+    let venta_a3 = props.venta_a.clone();
     let venta_a4 = props.venta_a.clone();
+    let venta_b1 = props.venta_b.clone();
     let venta_b2 = props.venta_b.clone();
     let venta_b3 = props.venta_b.clone();
+    let venta_b4 = props.venta_b.clone();
     let config2 = props.config.clone();
     let config3 = props.config.clone();
     let focus = create_rc_signal(true);
-
     let pos1 = props.pos.clone();
-    let pos2 = props.pos.clone();
     let pos3 = props.pos.clone();
     let pos4 = props.pos.clone();
     let pos5 = props.pos.clone();
     let pos6 = props.pos.clone();
     let pos7 = props.pos.clone();
     let pos9 = props.pos.clone();
-    let pos_selector = create_selector(cx, move || pos2.get().as_ref().clone());
     let buscando_aux = create_rc_signal(Buscando::False {
         pos: pos1.clone(),
+        other_sale: match pos1.get().as_ref() {
+            Pos::A { .. } => venta_b4.clone(),
+            Pos::B { .. } => venta_a3.clone(),
+        },
         focus: focus.clone(),
     });
-    let aux_buscando1 = buscando_aux.clone();
+
     let aux_buscando2 = buscando_aux.clone();
-    let aux_buscando3 = buscando_aux.clone();
-    let aux_buscando4 = buscando_aux.clone();
 
     create_effect(cx, move || {
         if !rc_search.get().as_ref().eq(search.get().as_ref()) {
@@ -62,11 +65,19 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
                 nav: nav2.clone(),
                 search: rc_search1.clone(),
                 pos: pos9.clone(),
+                other_sale: match pos9.get().as_ref() {
+                    Pos::A { .. } => venta_b1.clone(),
+                    Pos::B { .. } => venta_a2.clone(),
+                },
                 aux: search_aux.clone(),
             })
         } else {
             buscando_aux.set(Buscando::False {
                 pos: pos1.clone(),
+                other_sale: match pos1.get().as_ref() {
+                    Pos::A { .. } => venta_b1.clone(),
+                    Pos::B { .. } => venta_a2.clone(),
+                },
                 focus: focus.clone(),
             })
         }
@@ -156,7 +167,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
       }
       main(class="main-screen"){
         (match aux_buscando2.get().as_ref(){
-            Buscando::False { pos, focus } => {
+            Buscando::False { pos, focus, .. } => {
               let buscando=aux_buscando2.clone();
               match pos.get().as_ref(){
                   Pos::A { venta, config, .. } => view!{cx,MainSection(venta=venta.clone(),buscando=buscando.clone(),config=config.clone())},

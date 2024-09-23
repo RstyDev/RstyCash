@@ -64,7 +64,7 @@ async fn try_login(datos: Rcs) {
             );
             datos.logged.set(true);
         }
-        Err(e) => debug(e, 79, "app"),
+        Err(e) => debug(&e, 79, "app"),
     }
 }
 #[component]

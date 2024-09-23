@@ -25,21 +25,23 @@ impl Mapper {
         )
         .fetch_all(db)
         .await?;
-        if totales_mod.len()>0{
+        if totales_mod.len() > 0 {
             for tot in totales_mod {
                 totales.insert(Arc::from(tot.medio), tot.monto);
             }
-        }else{
+        } else {
             let medios_mod: Vec<MedioPagoDB> = query_as!(
                 MedioPagoDB,
                 r#"select id as "id:i32", medio from medios_pago"#
-            ).fetch_all(db).await?;
+            )
+            .fetch_all(db)
+            .await?;
 
-            for medio in medios_mod{
-                totales.insert(Arc::from(medio.medio.as_str()),0.0);
+            for medio in medios_mod {
+                totales.insert(Arc::from(medio.medio.as_str()), 0.0);
             }
         }
-        
+
         Ok(Caja::build(
             caja.id,
             caja.inicio,

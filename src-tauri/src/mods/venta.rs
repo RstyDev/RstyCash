@@ -10,7 +10,10 @@ const CUENTA: &str = "Cuenta Corriente";
 use crate::mods::db::Mapper;
 
 use super::{
-    lib::debug, redondeo, AppError, Cli, Cliente, Cuenta::{Auth, Unauth}, Pago, Res, User, UserSH, UserSHC, Valuable
+    lib::debug,
+    redondeo, AppError, Cli, Cliente,
+    Cuenta::{Auth, Unauth},
+    Pago, Res, User, UserSH, UserSHC, Valuable,
 };
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -377,13 +380,13 @@ impl<'a> Venta {
                 sqlx::query("insert into ventas (time, monto_total, monto_pagado, cliente, cerrada, paga, pos)
                 values (?, ?, ?, ?, ?, ?, ?)").bind(Utc::now().naive_local()).bind(self.monto_total).bind(self.monto_pagado).bind(cliente).bind(self.cerrada)
                 .bind(paga).bind(pos).execute(db).await?;
-            }   
+            }
         }
         let mut pagos_sql = String::from(
             "INSERT INTO pagos (medio_pago, monto, pagado, venta) VALUES (?, ?, ?, ?)",
         );
-        let mut estados=(false,false,false);
-        
+        let mut estados = (false, false, false);
+
         let mut venta_prod_sql = String::from("INSERT INTO relacion_venta_prod (venta, producto, cantidad, precio, pos) VALUES (?, ?, ?, ?, ?)");
         let mut venta_pes_sql = String::from("INSERT INTO relacion_venta_pes (venta, pesable, cantidad, precio_kilo) VALUES (?, ?, ?, ?, ?)");
         let mut venta_rub_sql = String::from("INSERT INTO relacion_venta_rub (venta, rubro, cantidad, precio) VALUES (?, ?, ?, ?, ?)");
@@ -392,22 +395,39 @@ impl<'a> Venta {
         for _ in 1..self.pagos.len() {
             pagos_sql.push_str(row);
         }
-        self.productos.iter().enumerate().for_each(|(i,prod)|{
-            match prod {
+        self.productos
+            .iter()
+            .enumerate()
+            .for_each(|(i, prod)| match prod {
                 Valuable::Prod(_) => {
-                    estados = match estados{(_,b,c)=>(true,b,c)};
-                    if i>0{venta_prod_sql.push_str(row5)}
-                },
-                Valuable::Pes(_) => if i>0{
-                    estados = match estados{(a,_,c)=>(a,true,c)};
-                    if i>0{venta_pes_sql.push_str(row5)}
-                },
-                Valuable::Rub(_) => if i>0{
-                    estados = match estados{(a,b,_)=>(a,b,true)};
-                    if i>0{venta_rub_sql.push_str(row5)}
-                },
-            }
-        });
+                    estados = match estados {
+                        (_, b, c) => (true, b, c),
+                    };
+                    if i > 0 {
+                        venta_prod_sql.push_str(row5)
+                    }
+                }
+                Valuable::Pes(_) => {
+                    if i > 0 {
+                        estados = match estados {
+                            (a, _, c) => (a, true, c),
+                        };
+                        if i > 0 {
+                            venta_pes_sql.push_str(row5)
+                        }
+                    }
+                }
+                Valuable::Rub(_) => {
+                    if i > 0 {
+                        estados = match estados {
+                            (a, b, _) => (a, b, true),
+                        };
+                        if i > 0 {
+                            venta_rub_sql.push_str(row5)
+                        }
+                    }
+                }
+            });
         // for prod in &self.productos {
         //     match prod {
         //         Valuable::Prod(_) => {
@@ -458,17 +478,28 @@ impl<'a> Venta {
                 }
                 Valuable::Rub((c, r)) if estados.2 => {
                     let aux = rub_query;
-                    rub_query = aux.bind(self.id).bind(*r.id()).bind(*c).bind(r.monto()).bind(pos);
+                    rub_query = aux
+                        .bind(self.id)
+                        .bind(*r.id())
+                        .bind(*c)
+                        .bind(r.monto())
+                        .bind(pos);
                 }
-                _=>(),
+                _ => (),
             }
         }
         pagos_query.execute(db).await?;
-        if estados.0{if let Err(e)= prod_query.execute(db).await{
-            debug(&e,454,"venta");
-        }}
-        if estados.1{pes_query.execute(db).await?;}
-        if estados.2{rub_query.execute(db).await?;}
+        if estados.0 {
+            if let Err(e) = prod_query.execute(db).await {
+                debug(&e, 454, "venta");
+            }
+        }
+        if estados.1 {
+            pes_query.execute(db).await?;
+        }
+        if estados.2 {
+            rub_query.execute(db).await?;
+        }
         Ok(())
     }
     pub fn to_shared(&self) -> VentaSH {

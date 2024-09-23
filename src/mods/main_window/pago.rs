@@ -9,7 +9,7 @@ use sycamore::{
 use wasm_bindgen::JsCast;
 use web_sys::KeyboardEvent;
 
-use crate::mods::lib::call;
+use crate::mods::lib::{call, debug};
 use crate::mods::structs::args::AgregarPago;
 use crate::mods::structs::{MedioPago, Pago, Pos, Restante, Venta, VentaSHC};
 
@@ -20,6 +20,7 @@ pub struct PagoProps {
     monto: Restante,
     state: Option<RcSignal<String>>,
     pos: RcSignal<Pos>,
+    other_sale: RcSignal<Venta>,
 }
 
 #[component]
@@ -50,6 +51,7 @@ pub fn PagoComp<G: Html>(cx: Scope, props: PagoProps) -> View<G> {
                 Pos::A { venta, .. } => (true, venta.clone()),
                 Pos::B { venta, .. } => (false, venta.clone()),
             };
+
             let monto = monto.get().parse::<f32>().unwrap();
             let medio_pago = opts
                 .get()
@@ -67,12 +69,38 @@ pub fn PagoComp<G: Html>(cx: Scope, props: PagoProps) -> View<G> {
                     monto
                 },
             };
-
+            let prop_pos = props.pos.clone();
+            let other_sale = props.other_sale.clone();
             spawn_local_scoped(cx, async move {
+                let len_anterior = venta.get().as_ref().productos.len();
                 let res = call("agregar_pago", AgregarPago { pago, pos }).await;
-                venta.set(Venta::from_shared_complete(
-                    from_value::<VentaSHC>(res.clone()).unwrap(),
-                ));
+                let venta_nueva =
+                    Venta::from_shared_complete(from_value::<VentaSHC>(res.clone()).unwrap());
+                let len = venta_nueva.productos.len();
+                if len == 0 && len_anterior > 0 {
+                    debug(prop_pos.get().as_ref(), 80, "Pago");
+                    prop_pos.set(match prop_pos.get().as_ref() {
+                        Pos::A {
+                            venta: _,
+                            config,
+                            clientes,
+                        } => Pos::B {
+                            venta: other_sale.clone(),
+                            config: config.to_owned(),
+                            clientes: clientes.to_owned(),
+                        },
+                        Pos::B {
+                            venta: _,
+                            config,
+                            clientes,
+                        } => Pos::A {
+                            venta: other_sale.clone(),
+                            config: config.to_owned(),
+                            clientes: clientes.to_owned(),
+                        },
+                    });
+                }
+                venta.set(venta_nueva);
             });
         }
     });

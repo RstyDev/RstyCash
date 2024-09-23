@@ -8,15 +8,7 @@ pub struct ResumenProps {
     pub venta: RcSignal<Venta>,
     pub config: RcSignal<Config>,
     pub pos: RcSignal<Pos>,
-}
-impl ResumenProps {
-    pub fn new(
-        venta: RcSignal<Venta>,
-        config: RcSignal<Config>,
-        pos: RcSignal<Pos>,
-    ) -> ResumenProps {
-        ResumenProps { venta, config, pos }
-    }
+    pub other_sale: RcSignal<Venta>,
 }
 
 #[component]

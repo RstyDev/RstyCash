@@ -158,7 +158,7 @@ impl<'a> Sistema {
         let registro = Vec::new();
         let w1 = Arc::clone(&db);
         if let Err(e) = block_on(Cliente::insert_final(db.as_ref())) {
-            debug(&e,161,"sistema")
+            debug(&e, 161, "sistema")
         }
 
         let mut sis = Sistema {
@@ -199,7 +199,7 @@ impl<'a> Sistema {
         async_runtime::block_on(async {
             Sistema::procesar(Arc::clone(&sis.db), sis.proveedores.clone()).await
         })?;
-        
+
         Ok(sis)
     }
     fn generar_reporte_caja(&self) {
@@ -857,7 +857,9 @@ impl<'a> Sistema {
         }
     }
     fn cerrar_venta(&mut self, pos: bool) -> Res<()> {
-        if let Err(e)=async_runtime::block_on(async { self.venta(pos).guardar(pos, self.db()).await }){
+        if let Err(e) =
+            async_runtime::block_on(async { self.venta(pos).guardar(pos, self.db()).await })
+        {
             debug(&e, 861, "sistema");
         }
         self.registro.push(self.venta(pos).clone());
@@ -953,9 +955,12 @@ impl<'a> Sistema {
         &self.stash
     }
     pub async fn update_total(&mut self, monto: f32, pagos: &Vec<Pago>) -> Res<()> {
-        match self.caja.update_total(&self.db, monto, pagos).await{
-            Ok(_)=>Ok(()),
-            Err(e)=>{debug(&e,958,"sistema");Err(e)}
+        match self.caja.update_total(&self.db, monto, pagos).await {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                debug(&e, 958, "sistema");
+                Err(e)
+            }
         }
     }
     pub fn to_shared(&self) -> SistemaSH {

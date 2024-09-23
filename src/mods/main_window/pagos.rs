@@ -11,6 +11,8 @@ use sycamore::{
 
 #[component]
 pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
+    let other_sale = props.other_sale.clone();
+    let other_sale2 = props.other_sale.clone();
     let (venta, venta2) = (props.venta.clone(), props.venta.clone());
     let conf = props.config.clone();
     let restante = create_rc_signal(venta.get().monto_total - venta.get().monto_pagado);
@@ -63,12 +65,14 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
                 iterable = pagos,
                 view=move |cx,x|{
                     let pos = pos.clone();
+                    let other_sale=other_sale.clone();
                     view!(cx,
-                    PagoComp(pagado = true, opciones = create_rc_signal(vec![x.medio_pago.clone()]), monto = Restante::Pagado(x.monto), state = None, pos = pos.clone())
-                )},
+                        PagoComp(pagado = true, opciones = create_rc_signal(vec![x.medio_pago.clone()]), monto = Restante::Pagado(x.monto), state = None, pos = pos.clone(),other_sale=other_sale.clone())
+                    )
+                },
                 key=|x|x.int_id
             )
-            PagoComp(pagado=false, opciones=medios.clone(), monto=Restante::NoPagado(restante.clone()), state=Some(state), pos = pos1.clone())
+            PagoComp(pagado=false, opciones=medios.clone(), monto=Restante::NoPagado(restante.clone()), state=Some(state), pos = pos1.clone(),other_sale=other_sale2.clone())
         }
     )
 }

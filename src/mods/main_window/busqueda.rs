@@ -35,6 +35,7 @@ async fn search(filtro: impl Into<String>) -> Vec<ValuableSH> {
 }
 
 async fn add_to_sale(producto: ValuableSH, pos: bool) -> VentaSHC {
+    debug(&producto, 38, "busqueda");
     let res = call(
         "agregar_producto_a_venta",
         AgregarProductoAVenta {
@@ -72,7 +73,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
     create_memo(cx, move || {
         match nav.get().as_ref() {
             Nav::Up => {
-                debug("UPUP", 65, "busqueda");
+                debug(actual.get().as_ref(), 76, "busqueda");
                 if let Some((i, _)) = actual.get().as_ref() {
                     if *i > 0 {
                         actual.set(Some((
@@ -88,6 +89,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                 nav.set(Nav::None);
             }
             Nav::Down => {
+                debug(actual.get().as_ref(), 92, "busqueda");
                 if let Some((i, _)) = actual.get().as_ref() {
                     if *i < busqueda.get().as_ref().len() as u8 - 1 {
                         actual.set(Some((
@@ -110,7 +112,29 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                     spawn_local_scoped(cx, async move {
                         let sale;
                         let res = add_to_sale(
-                            act,
+                            match act {
+                                ValuableSH::Prod((cant, prod)) => {
+                                    if cant == 0 {
+                                        ValuableSH::Prod((1, prod))
+                                    } else {
+                                        ValuableSH::Prod((cant, prod))
+                                    }
+                                }
+                                ValuableSH::Pes((cant, pes)) => {
+                                    if cant == 0.0 {
+                                        ValuableSH::Pes((1.0, pes))
+                                    } else {
+                                        ValuableSH::Pes((cant, pes))
+                                    }
+                                }
+                                ValuableSH::Rub((cant, rub)) => {
+                                    if cant == 0 {
+                                        ValuableSH::Rub((1, rub))
+                                    } else {
+                                        ValuableSH::Rub((cant, rub))
+                                    }
+                                }
+                            },
                             match pos.get().as_ref() {
                                 Pos::A { venta, .. } => {
                                     sale = venta.clone();

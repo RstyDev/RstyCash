@@ -20,11 +20,13 @@ pub enum Buscando {
     False {
         pos: RcSignal<Pos>,
         focus: RcSignal<bool>,
+        other_sale: RcSignal<Venta>,
     },
     True {
         nav: RcSignal<Nav>,
         search: RcSignal<String>,
         pos: RcSignal<Pos>,
+        other_sale: RcSignal<Venta>,
         aux: RcSignal<bool>,
     },
 }

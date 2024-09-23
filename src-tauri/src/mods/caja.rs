@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{query_as, Pool, Sqlite};
 use std::{collections::HashMap, sync::Arc};
 
-#[derive(Clone, Serialize, Deserialize,Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Caja {
     id: i32,
     inicio: NaiveDateTime,
@@ -45,7 +45,6 @@ pub enum Movimiento {
 //             .finish()
 //     }
 // }
-
 
 impl Caja {
     pub async fn new(
@@ -206,7 +205,7 @@ impl Caja {
             .await?;
         Ok(())
     }
-    pub fn totales(&self)->&HashMap<Arc<str>,f32>{
+    pub fn totales(&self) -> &HashMap<Arc<str>, f32> {
         &self.totales
     }
     pub fn to_shared_complete(&self) -> Self {

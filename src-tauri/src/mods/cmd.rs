@@ -16,6 +16,7 @@ impl Payload {
 pub mod commands {
     use crate::mods::{
         cmd::{Payload, DENEGADO, INDEX},
+        lib::debug,
         sistema::SistemaSH,
         AppError, Caja, Cli, Cliente, Config, MedioPago, Pago, Pesable, Producto, Proveedor, Rango,
         Res, Rubro, Sistema, User, Valuable as V, ValuableSH, Venta, VentaSHC,
