@@ -619,14 +619,14 @@ impl<'a> Sistema {
         &self.configs
     }
 
-    pub fn eliminar_pago(&mut self, pos: bool, id: i32) -> Res<Vec<Pago>> {
+    pub fn eliminar_pago(&mut self, pos: bool, pago: Pago) -> Res<Venta> {
         let res;
         if pos {
-            self.ventas.a.eliminar_pago(id, &self.db)?;
-            res = self.venta(pos).pagos()
+            self.ventas.a.eliminar_pago(pago)?;
+            res = self.venta(pos)
         } else {
-            self.ventas.b.eliminar_pago(id, &self.db)?;
-            res = self.venta(pos).pagos()
+            self.ventas.b.eliminar_pago(pago)?;
+            res = self.venta(pos)
         }
 
         Ok(res)

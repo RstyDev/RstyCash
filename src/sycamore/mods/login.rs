@@ -21,7 +21,7 @@ pub struct LoginProps {
 pub struct LoginAux {
     pub(crate) user: UserSHC,
 }
-
+#[allow(non_snake_case)]
 #[component]
 pub fn Login<G: Html>(cx: Scope, props: LoginProps) -> View<G> {
     let pass = create_signal(cx, String::new());

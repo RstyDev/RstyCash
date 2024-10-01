@@ -9,6 +9,7 @@ use wasm_bindgen_futures::spawn_local;
 pub struct ClientesProps {
     pos: RcSignal<Pos>,
 }
+#[allow(non_snake_case)]
 #[component]
 pub fn SelectClientes<G: Html>(cx: Scope, props: ClientesProps) -> View<G> {
     let pos = props.pos.clone();
@@ -47,10 +48,7 @@ pub fn SelectClientes<G: Html>(cx: Scope, props: ClientesProps) -> View<G> {
         spawn_local(async move{call("set_cliente",SetCliente{ id: match cliente1{
             Cliente::Final => 0,
             Cliente::Regular(cli) => cli.dni,
-        }, pos: match pos.get().as_ref(){
-            Pos::A { .. } => true,
-            Pos::B { .. } => false,
-        } }).await;});
+        }, pos: pos.get().is_a() }).await;});
         match pos1.get().as_ref(){
             Pos::A { venta, .. } => venta.set(Venta{ cliente: cliente, ..venta.get().as_ref().clone()}),
             Pos::B { venta, .. } => venta.set(Venta{ cliente: cliente, ..venta.get().as_ref().clone()}),

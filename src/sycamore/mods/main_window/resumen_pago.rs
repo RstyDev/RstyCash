@@ -9,20 +9,23 @@ pub struct ResumenProps {
     pub config: RcSignal<Config>,
     pub pos: RcSignal<Pos>,
     pub other_sale: RcSignal<Venta>,
-    pub focus: RcSignal<bool>
+    pub focus: RcSignal<bool>,
 }
-
+#[allow(non_snake_case)]
 #[component]
 pub fn ResumenPago<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
     let venta = props.venta.clone();
     let venta1 = venta.clone();
-    let class = create_signal(cx, match *props.focus.get(){
-        true => "not-focused",
-        false => "",
-    });
+    let class = create_signal(
+        cx,
+        match *props.focus.get() {
+            true => "not-focused",
+            false => "",
+        },
+    );
     let foc = props.focus.clone();
-    create_memo(cx, move ||{
-        class.set(match *foc.get(){
+    create_memo(cx, move || {
+        class.set(match *foc.get() {
             true => "not-focused",
             false => "",
         })

@@ -3,7 +3,7 @@ mod cliente;
 mod config;
 pub mod db;
 mod error;
-mod lib;
+pub mod lib;
 mod pago;
 mod pesable;
 mod producto;

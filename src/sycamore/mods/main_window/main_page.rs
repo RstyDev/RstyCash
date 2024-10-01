@@ -15,7 +15,7 @@ pub struct StateProps {
     pub clientes: RcSignal<Vec<Cliente>>,
     pub pos: RcSignal<Pos>,
 }
-
+#[allow(non_snake_case)]
 #[component]
 pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let search_aux = create_rc_signal(false);
@@ -27,6 +27,7 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
     let search = create_signal(cx, String::new());
     let rc_search = create_rc_signal_from_rc(search.get());
     let rc_search1 = rc_search.clone();
+    
     let venta_a1 = props.venta_a.clone();
     let venta_a2 = props.venta_a.clone();
     let venta_a3 = props.venta_a.clone();
@@ -188,11 +189,6 @@ pub fn MainPage<G: Html>(cx: Scope, props: StateProps) -> View<G> {
               }
             },
         })
-        // (match pos_selector.get().as_ref().clone(){
-        //     Pos::A { venta, config, .. } => view!{cx,MainSection(venta=venta.clone(),buscando=buscando.unwrap().clone(),config=config.clone())},
-        //     Pos::B { venta, config, .. } => view!(cx,MainSection(venta=venta.clone(),buscando=buscando.unwrap().clone(),config=config.clone())),
-        // })
-
       }
     )
 }

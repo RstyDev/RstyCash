@@ -25,13 +25,8 @@ use tauri::{
 //     agregar_cliente_2(sistema, window, nombre, dni, limite)
 // }
 #[tauri::command]
-fn agregar_pago(
-    window: Window,
-    sistema: State<Mutex<Sistema>>,
-    pago: Pago,
-    pos: bool,
-) -> Res<VentaSHC> {
-    Ok(agregar_pago_2(window, sistema, pago, pos)?)
+fn agregar_pago(sistema: State<Mutex<Sistema>>, pago: Pago, pos: bool) -> Res<VentaSHC> {
+    Ok(agregar_pago_2(sistema, pago, pos)?)
 }
 // #[tauri::command]
 // fn agregar_pesable(
@@ -97,10 +92,9 @@ fn agregar_usuario(window: Window, sistema: State<Mutex<Sistema>>, user: User) -
 }
 #[tauri::command]
 async fn cerrar_sesion<'a>(
-    sistema: State<'a, Mutex<Sistema>>,
-    handle: tauri::AppHandle,
+    sistema: State<'a, Mutex<Sistema>>,window: Window
 ) -> Res<()> {
-    Ok(cerrar_sesion_2(sistema, handle).await?)
+    Ok(cerrar_sesion_2(sistema,window).await?)
 }
 #[tauri::command]
 fn cancelar_venta(sistema: State<Mutex<Sistema>>, pos: bool) -> Res<()> {
@@ -128,8 +122,8 @@ fn editar_producto(sistema: State<Mutex<Sistema>>, prod: V) -> Res<()> {
     Ok(editar_producto_2(sistema, prod)?)
 }
 #[tauri::command]
-fn eliminar_pago(sistema: State<Mutex<Sistema>>, pos: bool, id: i32) -> Res<Vec<Pago>> {
-    Ok(eliminar_pago_2(sistema, pos, id)?)
+fn eliminar_pago(sistema: State<Mutex<Sistema>>, pos: bool, pago: Pago) -> Res<Venta> {
+    Ok(eliminar_pago_2(sistema, pos, pago)?)
 }
 #[tauri::command]
 fn eliminar_producto(sistema: State<Mutex<Sistema>>, prod: V) -> Res<()> {
@@ -342,7 +336,14 @@ fn unstash_sale(sistema: State<Mutex<Sistema>>, window: Window, pos: bool, index
 }
 
 fn main() {
-    let menu = get_menu();
+    // let menu = get_menu();
+
+    #[cfg(feature="ssr")]
+    use mods::lib::debug;
+    #[cfg(feature="ssr")]
+    debug(&"Desde ssr",341,"main");
+
+    
     let db = Arc::from(block_on(db()).unwrap());
     let app = tauri::Builder::default()
         .manage(Mutex::new(Sistema::new(db).unwrap()))
@@ -406,7 +407,7 @@ fn main() {
             stash_n_close,
             unstash_sale,
         ])
-        .menu(menu)
+        // .menu(menu)
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
     let window = app.get_window("main").unwrap();

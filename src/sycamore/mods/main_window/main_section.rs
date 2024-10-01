@@ -12,7 +12,7 @@ pub struct SectionProps {
     venta: RcSignal<Venta>,
     config: RcSignal<Config>,
 }
-
+#[allow(non_snake_case)]
 #[component]
 pub fn MainSection<G: Html>(cx: Scope, props: SectionProps) -> View<G> {
     let buscando_aux = props.buscando.clone();
@@ -50,7 +50,7 @@ pub fn MainSection<G: Html>(cx: Scope, props: SectionProps) -> View<G> {
                 let config = config.clone();
                 let venta = venta1.clone();
                 let pos1 = pos.clone();
-                let foc1=focus.clone();
+                let foc1 = focus.clone();
                 view!(cx,
                   CuadroPrincipal(pos= pos.clone(),focus=foc1.clone())
                   ResumenPago(venta=venta.clone(),pos=pos1.clone(),config=config.clone(),other_sale=other_sale.clone(), focus=focus.clone())

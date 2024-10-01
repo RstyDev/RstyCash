@@ -15,6 +15,15 @@ pub enum Pos {
     },
 }
 
+impl Pos{
+    pub fn is_a(&self)->bool{
+        match self{
+            Pos::A { .. } => true,
+            Pos::B { .. } => false,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Buscando {
     False {
@@ -28,7 +37,7 @@ pub enum Buscando {
         pos: RcSignal<Pos>,
         other_sale: RcSignal<Venta>,
         aux: RcSignal<bool>,
-        focus: RcSignal<bool>
+        focus: RcSignal<bool>,
     },
 }
 
@@ -47,13 +56,26 @@ pub enum Restante {
     NoPagado(RcSignal<f32>),
 }
 
-
+impl Restante {
+    pub fn pagado(&self) -> bool {
+        match self {
+            Restante::Pagado(_) => true,
+            Restante::NoPagado(_) => false,
+        }
+    }
+    pub fn monto(&self)->f32{
+        match self{
+            Restante::Pagado(monto) => *monto,
+            Restante::NoPagado(rc_signal) => *rc_signal.get(),
+        }
+    }
+}
 
 impl ToString for Restante {
     fn to_string(&self) -> String {
         match self {
-            Restante::Pagado(monto) => format!("{:.2}",monto),
-            Restante::NoPagado(rc_signal) => format!("{:.2}",rc_signal.get()),
+            Restante::Pagado(monto) => format!("{:.2}", monto),
+            Restante::NoPagado(rc_signal) => format!("{:.2}", rc_signal.get()),
         }
     }
 }

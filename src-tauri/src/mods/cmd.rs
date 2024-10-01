@@ -16,60 +16,61 @@ impl Payload {
 pub mod commands {
     use crate::mods::{
         cmd::{Payload, DENEGADO, INDEX},
-        lib::debug,
         sistema::SistemaSH,
         AppError, Caja, Cli, Cliente, Config, MedioPago, Pago, Pesable, Producto, Proveedor, Rango,
         Res, Rubro, Sistema, User, Valuable as V, ValuableSH, Venta, VentaSHC,
     };
     use std::sync::Arc;
-    use tauri::async_runtime::{block_on, spawn, Mutex};
+    use tauri::{async_runtime::{block_on, spawn, Mutex}, LogicalSize, PhysicalSize, Size};
     use tauri::window::MenuHandle;
     use tauri::{
         AppHandle, CustomMenuItem, Manager, Menu, State, Submenu, Window, WindowBuilder, WindowUrl,
     };
 
-    pub fn get_menu() -> Menu {
-        let cerrar_caja_menu = CustomMenuItem::new(String::from("cerrar caja"), "Cerrar caja");
-        let add_product_menu = CustomMenuItem::new(String::from("add product"), "Agregar producto");
-        let add_prov_menu = CustomMenuItem::new(String::from("add prov"), "Agregar proveedor");
-        let add_user_menu = CustomMenuItem::new(String::from("add user"), "Agregar usuario");
-        let add_cliente_menu = CustomMenuItem::new(String::from("add cliente"), "Agregar cliente");
-        let cerrar_sesion_menu =
-            CustomMenuItem::new(String::from("cerrar sesion"), "Cerrar sesión");
-        let edit_settings_menu =
-            CustomMenuItem::new(String::from("edit settings"), "Cambiar configuraciones");
-        let confirm_stash_menu =
-            CustomMenuItem::new(String::from("confirm stash"), "Guardar venta");
-        let open_stash_menu =
-            CustomMenuItem::new(String::from("open stash"), "Ver ventas guardadas");
-        let opciones = Submenu::new(
-            "Opciones",
-            Menu::new()
-                .add_item(add_cliente_menu)
-                .add_item(add_product_menu)
-                .add_item(add_prov_menu)
-                .add_item(add_user_menu)
-                .add_item(edit_settings_menu)
-                .add_item(cerrar_sesion_menu),
-        );
-        let venta = Submenu::new(
-            "Venta",
-            Menu::new()
-                .add_item(confirm_stash_menu)
-                .add_item(open_stash_menu),
-        );
-        let caja = Submenu::new("Caja", Menu::new().add_item(cerrar_caja_menu));
-        Menu::new()
-            .add_submenu(opciones)
-            .add_submenu(venta)
-            .add_submenu(caja)
-    }
-    fn set_menus(menu: MenuHandle, state: bool) -> Res<()> {
-        menu.get_item("add product").set_enabled(state)?;
-        menu.get_item("add prov").set_enabled(state)?;
-        menu.get_item("add user").set_enabled(state)?;
-        Ok(menu.get_item("edit settings").set_enabled(state)?)
-    }
+    // pub fn get_menu() -> Menu {
+    //     let cerrar_caja_menu = CustomMenuItem::new(String::from("cerrar caja"), "Cerrar caja");
+    //     let add_product_menu = CustomMenuItem::new(String::from("add product"), "Agregar producto");
+    //     let add_prov_menu = CustomMenuItem::new(String::from("add prov"), "Agregar proveedor");
+    //     let add_user_menu = CustomMenuItem::new(String::from("add user"), "Agregar usuario");
+    //     let add_cliente_menu = CustomMenuItem::new(String::from("add cliente"), "Agregar cliente");
+    //     let cerrar_sesion_menu =
+    //         CustomMenuItem::new(String::from("cerrar sesion"), "Cerrar sesión");
+    //     let edit_settings_menu =
+    //         CustomMenuItem::new(String::from("edit settings"), "Cambiar configuraciones");
+    //     let confirm_stash_menu =
+    //         CustomMenuItem::new(String::from("confirm stash"), "Guardar venta");
+    //     let open_stash_menu =
+    //         CustomMenuItem::new(String::from("open stash"), "Ver ventas guardadas");
+    //     let opciones = Submenu::new(
+    //         "Opciones",
+    //         Menu::new()
+    //             .add_item(add_cliente_menu)
+    //             .add_item(add_product_menu)
+    //             .add_item(add_prov_menu)
+    //             .add_item(add_user_menu)
+    //             .add_item(edit_settings_menu)
+    //             .add_item(cerrar_sesion_menu),
+    //     );
+    //     let venta = Submenu::new(
+    //         "Venta",
+    //         Menu::new()
+    //             .add_item(confirm_stash_menu)
+    //             .add_item(open_stash_menu),
+    //     );
+    //     let caja = Submenu::new("Caja", Menu::new().add_item(cerrar_caja_menu));
+    //     Menu::new()
+    //         .add_submenu(opciones)
+    //         .add_submenu(venta)
+    //         .add_submenu(caja)
+    // }
+
+    // fn set_menus(menu: MenuHandle, state: bool) -> Res<()> {
+    //     menu.get_item("add product").set_enabled(state)?;
+    //     menu.get_item("add prov").set_enabled(state)?;
+    //     menu.get_item("add user").set_enabled(state)?;
+    //     Ok(menu.get_item("edit settings").set_enabled(state)?)
+    // }
+
     pub fn _agregar_cliente_2(
         sistema: State<Mutex<Sistema>>,
         window: Window,
@@ -97,12 +98,7 @@ pub mod commands {
         Ok(cli)
     }
 
-    pub fn agregar_pago_2(
-        window: Window,
-        sistema: State<Mutex<Sistema>>,
-        pago: Pago,
-        pos: bool,
-    ) -> Res<VentaSHC> {
+    pub fn agregar_pago_2(sistema: State<Mutex<Sistema>>, pago: Pago, pos: bool) -> Res<VentaSHC> {
         let mut sis = block_on(sistema.lock());
         sis.access();
         sis.agregar_pago(pago, pos)?;
@@ -151,15 +147,15 @@ pub mod commands {
         match prod {
             V::Prod(_) => {
                 block_on(sis.agregar_producto_a_venta(prod, pos))?;
-                loop {
-                    if let Ok(_) = window
-                        .menu_handle()
-                        .get_item("confirm stash")
-                        .set_enabled(true)
-                    {
-                        break;
-                    }
-                }
+                // loop {
+                //     if let Ok(_) = window
+                //         .menu_handle()
+                //         .get_item("confirm stash")
+                //         .set_enabled(true)
+                //     {
+                //         break;
+                //     }
+                // }
             }
             V::Pes(a) => {
                 // spawn(open_select_amount_2(
@@ -247,38 +243,12 @@ pub mod commands {
         }
     }
     pub async fn cerrar_sesion_2<'a>(
-        sistema: State<'a, Mutex<Sistema>>,
-        handle: AppHandle,
+        sistema: State<'a, Mutex<Sistema>>,window: Window
     ) -> Res<()> {
         let mut sis = sistema.lock().await;
-        match handle.get_window("login") {
-            Some(window) => {
-                loop {
-                    if window.show().is_ok() {
-                        break;
-                    }
-                }
-
-                Ok(sis.cerrar_sesion())
-            }
-            None => {
-                WindowBuilder::new(
-                    &handle,
-                    "login", /* the unique window label */
-                    WindowUrl::App("/pages/login.html".parse().unwrap()),
-                )
-                .inner_size(400.0, 300.0)
-                .resizable(false)
-                .minimizable(false)
-                .closable(false)
-                .always_on_top(true)
-                .decorations(false)
-                .center()
-                .menu(Menu::new())
-                .build()?;
-                Ok(sis.cerrar_sesion())
-            }
-        }
+        window.set_decorations(false)?;
+        window.set_size(Size::Logical(LogicalSize { width: 400.0, height: 300.0 }))?;
+        Ok(sis.cerrar_sesion())
     }
     pub fn cancelar_venta_2(sistema: State<Mutex<Sistema>>, pos: bool) -> Res<()> {
         let mut sis = block_on(sistema.lock());
@@ -319,10 +289,10 @@ pub mod commands {
         sis.editar_valuable(prod);
         Ok(())
     }
-    pub fn eliminar_pago_2(sistema: State<Mutex<Sistema>>, pos: bool, id: i32) -> Res<Vec<Pago>> {
+    pub fn eliminar_pago_2(sistema: State<Mutex<Sistema>>, pos: bool, pago: Pago) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        sis.eliminar_pago(pos, id)
+        sis.eliminar_pago(pos, pago)
     }
     pub fn eliminar_producto_2(sistema: State<Mutex<Sistema>>, prod: V) -> Res<()> {
         let sis = block_on(sistema.lock());
@@ -339,16 +309,16 @@ pub mod commands {
         let mut sis = block_on(sistema.lock());
         sis.access();
         let res = sis.eliminar_producto_de_venta(index, pos)?;
-        loop {
-            if window
-                .menu_handle()
-                .get_item("confirm stash")
-                .set_enabled(false)
-                .is_ok()
-            {
-                break;
-            }
-        }
+        // loop {
+        //     if window
+        //         .menu_handle()
+        //         .get_item("confirm stash")
+        //         .set_enabled(false)
+        //         .is_ok()
+        //     {
+        //         break;
+        //     }
+        // }
         Ok(res)
     }
     pub fn eliminar_usuario_2(sistema: State<Mutex<Sistema>>, user: User) -> Res<()> {
@@ -448,29 +418,29 @@ pub mod commands {
         let sis = block_on(sistema.lock());
         sis.access();
         let venta = sis.venta(pos);
-        if venta.productos().len() == 0 {
-            loop {
-                if window
-                    .menu_handle()
-                    .get_item("confirm stash")
-                    .set_enabled(false)
-                    .is_ok()
-                {
-                    break;
-                }
-            }
-        } else {
-            loop {
-                if window
-                    .menu_handle()
-                    .get_item("confirm stash")
-                    .set_enabled(true)
-                    .is_ok()
-                {
-                    break;
-                }
-            }
-        }
+        // if venta.productos().len() == 0 {
+        //     loop {
+        //         if window
+        //             .menu_handle()
+        //             .get_item("confirm stash")
+        //             .set_enabled(false)
+        //             .is_ok()
+        //         {
+        //             break;
+        //         }
+        //     }
+        // } else {
+        //     loop {
+        //         if window
+        //             .menu_handle()
+        //             .get_item("confirm stash")
+        //             .set_enabled(true)
+        //             .is_ok()
+        //         {
+        //             break;
+        //         }
+        //     }
+        // }
         Ok(venta)
     }
     pub fn hacer_egreso_2(
@@ -946,23 +916,25 @@ pub mod commands {
         // )?;
         // println!("desde try_login {:#?}", user);
         let rango = block_on(sis.try_login(user))?;
-        let menu = window
-            .app_handle()
-            .get_window("main")
-            .unwrap()
-            .menu_handle();
-        match rango {
-            Rango::Cajero => loop {
-                if set_menus(menu.clone(), false).is_ok() {
-                    break;
-                }
-            },
-            Rango::Admin => loop {
-                if set_menus(menu.clone(), true).is_ok() {
-                    break;
-                }
-            },
-        }
+        // let menu = window
+        //     .app_handle()
+        //     .get_window("main")
+        //     .unwrap()
+        //     .menu_handle();
+
+        // match rango {
+        //     Rango::Cajero => loop {
+        //         if set_menus(menu.clone(), false).is_ok() {
+        //             break;
+        //         }
+        //     },
+        //     Rango::Admin => loop {
+        //         if set_menus(menu.clone(), true).is_ok() {
+        //             break;
+        //         }
+        //     },
+        // }
+
         // window.emit(
         //     "main",
         //     Payload {

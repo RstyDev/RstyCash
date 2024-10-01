@@ -17,10 +17,17 @@ pub struct DecrementarProductoDeVenta {
     pub pos: bool,
 }
 #[derive(Serialize, Deserialize)]
+pub struct EliminarPago {
+    pub pago: Pago,
+    pub pos: bool,
+}
+#[derive(Serialize, Deserialize)]
 pub struct EliminarProductoDeVenta {
     pub index: usize,
     pub pos: bool,
 }
+#[derive(Serialize,Deserialize)]
+pub struct EmptyArgs{}
 #[derive(Serialize, Deserialize)]
 pub struct GetProductosFiltrado<'a> {
     pub filtro: &'a str,

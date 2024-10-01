@@ -250,11 +250,10 @@ impl<'a> Venta {
             }
         }
     }
-    pub fn eliminar_pago(&mut self, id: i32, db: &Pool<Sqlite>) -> Res<()> {
-        let mut pago = Pago::def(db);
+    pub fn eliminar_pago(&mut self, mut pago: Pago) -> Res<()> {
         let mut esta = false;
         for i in 0..self.pagos.len() {
-            if self.pagos[i].id() == id {
+            if self.pagos[i] == pago {
                 pago = self.pagos.remove(i);
                 esta = true;
                 break;

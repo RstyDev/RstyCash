@@ -5,20 +5,54 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-sycamore = { version = "0.8", features = ["suspense"] }
-wasm-bindgen = "0.2.93"
-wasm-bindgen-futures = "0.4.43"
-js-sys = "0.3.70"
 
-serde-wasm-bindgen = "0.6.5"
+# *************  SYC  *************
+sycamore = { version = "0.8", features = ["suspense"],optional=true}
+wasm-bindgen = { version="0.2.93", optional = true}
+wasm-bindgen-futures = { version= "0.4.43", optional = true}
+js-sys = { version="0.3.70", optional = true }
+serde-wasm-bindgen = {version="0.6.5", optional = true}
+getrandom = { version = "0.2", features = ["js"], optional = true }
+
+# *************  SSR  *************
+actix-web = { version = "4.9.0", optional = true}
+sqlx = { version = "0.8.2", features = ["sqlite", "runtime-tokio", "tls-rustls", "sqlx-macros", "chrono"], optional = true}
+actix-web-httpauth = { version = "0.8.2", optional = true }
+actix-multipart = { version = "0.7.2", optional = true}
+thiserror = { version = "1.0.64", optional = true }
+dotenv = { version = "0.15.0", optional = true }
+
+# *************  CSR  *************
+
+
+# ************* COMMON *************
+console_error_panic_hook = { version="0.1.7",optional = true }
 chrono = {version= "0.4.38" ,features = ["serde"] }
 serde = { version = "1.0.210", features = ["derive","rc"] }
-console_error_panic_hook = "0.1.7"
-getrandom = { version = "0.2", features = ["js"]}
-#tauri-interop = { version = "2.1.6", features = ["event"] }
 [workspace]
 members = ["src-tauri"]
 
 [dependencies.web-sys]
 features = ["Location", "Storage","KeyboardEvent"]
 version = "0.3.70"
+
+
+[features]
+ssr = [
+    "dep:actix-web",
+    "dep:sqlx",
+    "dep:actix-web-httpauth",
+    "dep:actix-multipart",
+    "dep:thiserror",
+    "dep:dotenv"
+]
+syc = [
+    "dep:sycamore",
+    "dep:wasm-bindgen",
+    "dep:wasm-bindgen-futures",
+    "dep:js-sys",
+    "dep:serde-wasm-bindgen",
+    "dep:console_error_panic_hook",
+    "dep:getrandom"
+    ]
+csr = []

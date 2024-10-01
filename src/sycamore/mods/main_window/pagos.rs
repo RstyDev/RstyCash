@@ -1,14 +1,14 @@
 use super::resumen_pago::ResumenProps;
 use crate::mods::{
     main_window::*,
-    structs::{Cliente, Cuenta, MedioPago, Restante},
+    structs::{Cliente, Cuenta, MedioPago, Pago, Restante},
 };
 use pago::*;
 use sycamore::{
     prelude::*,
     reactive::{create_memo, create_rc_signal},
 };
-
+#[allow(non_snake_case)]
 #[component]
 pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
     let other_sale = props.other_sale.clone();
@@ -21,7 +21,8 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
         let venta = venta2.get();
         rest1.set(venta.monto_total - venta.monto_pagado);
     });
-    let foc1=props.focus.clone();
+    let foc1 = props.focus.clone();
+    let foc2 = props.focus.clone();
     let pagos = create_signal(cx, venta.get().pagos.clone());
     let (pos, pos1) = (props.pos.clone(), props.pos.clone());
     let medios = create_rc_signal({
@@ -59,7 +60,7 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
         });
         pagos.set(venta.get().pagos.clone());
     });
-    let state = create_rc_signal(String::new());
+
     view!(cx,
         article(id="pagos"){
             Keyed(
@@ -67,13 +68,14 @@ pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
                 view=move |cx,x|{
                     let pos = pos.clone();
                     let other_sale=other_sale.clone();
+                    let foc=foc2.clone();
                     view!(cx,
-                        PagoComp(pagado = true, opciones = create_rc_signal(vec![x.medio_pago.clone()]), monto = Restante::Pagado(x.monto), state = None, pos = pos.clone(),other_sale=other_sale.clone(),focus=None)
+                        PagoComp(pago=x.clone(),opciones = create_rc_signal(vec![x.medio_pago.clone()]), monto = Restante::Pagado(x.monto), pos = pos.clone(),other_sale=other_sale.clone(),focus=foc.clone())
                     )
                 },
                 key=|x|x.int_id
             )
-            PagoComp(pagado=false, opciones=medios.clone(), monto=Restante::NoPagado(restante.clone()), state=Some(state), pos = pos1.clone(),other_sale=other_sale2.clone(),focus=Some(foc1.clone()))
+            PagoComp(pago=Pago::default(),opciones=medios.clone(), monto=Restante::NoPagado(restante.clone()), pos = pos1.clone(),other_sale=other_sale2.clone(),focus=foc1.clone())
         }
     )
 }

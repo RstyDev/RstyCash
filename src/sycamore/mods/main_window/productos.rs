@@ -10,7 +10,9 @@ pub struct ProdsProps {
     venta: RcSignal<Venta>,
     config: Rc<Config>,
     pos: bool,
+    focus: RcSignal<bool>,
 }
+#[allow(non_snake_case)]
 #[component]
 pub fn Productos<G: Html>(cx: Scope, props: ProdsProps) -> View<G> {
     let venta = props.venta.clone();
@@ -58,7 +60,8 @@ pub fn Productos<G: Html>(cx: Scope, props: ProdsProps) -> View<G> {
                 iterable = prods,
                 view = move |cx,x|{
                     let venta = venta.clone();
-                    view!{cx,Prod(valuable = x.clone(), conf = conf.get(), pos = props.pos, venta = venta.clone())}
+                    let focus = props.focus.clone();
+                    view!{cx,Prod(valuable = x.clone(), conf = conf.get(), pos = props.pos, venta = venta.clone(), focus=focus)}
                 },
                 key = |x|{x.id()}
             )

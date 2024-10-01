@@ -54,7 +54,6 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
     let actual: &Signal<Option<(u8, ValuableSH)>> = create_signal(cx, None);
     let actual_selector = create_selector(cx, || actual.get().as_ref().clone().map(|o| o.1));
     let nav = props.nav.clone();
-    let aux = props.search_aux.clone();
     create_memo(cx, move || {
         filtro.track();
         let filtro = filtro.clone();
@@ -107,7 +106,7 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
             Nav::Enter => {
                 if let Some((_, act)) = actual.get().as_ref().clone() {
                     let pos = props.pos.clone();
-                    let aux = aux.clone();
+                    let aux = props.search_aux.clone();
                     let nav = nav.clone();
                     spawn_local_scoped(cx, async move {
                         let sale;

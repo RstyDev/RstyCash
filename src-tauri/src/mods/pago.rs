@@ -1,14 +1,20 @@
-use crate::mods::db::map::MedioPagoDB;
 use rand::random;
 use serde::{Deserialize, Serialize};
-use sqlx::{Pool, Sqlite};
 use std::sync::Arc;
-use tauri::async_runtime;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MedioPago {
     medio: Arc<str>,
     id: i32,
+}
+
+impl Default for MedioPago {
+    fn default() -> Self {
+        Self {
+            medio: Arc::from("Efectivo"),
+            id: 1,
+        }
+    }
 }
 
 impl MedioPago {
@@ -31,6 +37,23 @@ pub struct Pago {
     medio_pago: MedioPago,
     monto: f32,
     pagado: f32,
+}
+
+impl PartialEq for Pago {
+    fn eq(&self, other: &Self) -> bool {
+        self.int_id == other.int_id
+    }
+}
+
+impl Default for Pago {
+    fn default() -> Self {
+        Self {
+            int_id: random(),
+            medio_pago: Default::default(),
+            monto: 0.0,
+            pagado: 0.0,
+        }
+    }
 }
 
 impl Pago {
@@ -69,33 +92,8 @@ impl Pago {
     pub fn set_pagado(&mut self, pagado: f32) {
         self.pagado = pagado;
     }
-    pub fn def(db: &Pool<Sqlite>) -> Self {
-        let medio = async_runtime::block_on(async { medio_from_db("Efectivo", db).await });
 
-        let medio_pago = MedioPago {
-            medio: Arc::from(medio.medio),
-            id: medio.id,
-        };
-        let int_id = random();
-        Pago {
-            medio_pago,
-            monto: 0.0,
-            int_id,
-            pagado: 0.0,
-        }
-    }
     pub fn to_shared_complete(&self) -> Self {
         self.clone()
     }
-}
-
-pub async fn medio_from_db(medio: &str, db: &Pool<Sqlite>) -> MedioPagoDB {
-    let model: sqlx::Result<Option<MedioPagoDB>> = sqlx::query_as!(
-        MedioPagoDB,
-        r#"select id as "id:_", medio from medios_pago where medio = ? "#,
-        medio
-    )
-    .fetch_optional(db)
-    .await;
-    model.unwrap().unwrap()
 }

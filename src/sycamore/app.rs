@@ -1,4 +1,4 @@
-use crate::mods::{
+use crate::{menu::Menu, mods::{
     lib::{call, debug},
     main_window::main_page::{MainPage, StateProps},
     structs::{
@@ -6,7 +6,7 @@ use crate::mods::{
         Venta, Windows,
     },
     Login, LoginAux,
-};
+}};
 
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::from_value;
@@ -50,15 +50,15 @@ async fn try_login(datos: Rcs) {
             datos.caja.set(Caja::from(a.caja));
             datos.config.set(Config::from(a.configs));
             datos
-                .venta_a
-                .set(Venta::from_shared_complete(a.ventas[0].clone()));
-            datos
-                .venta_b
-                .set(Venta::from_shared_complete(a.ventas[1].clone()));
-            datos.clientes.set(a.clientes.clone());
+            .venta_a
+            .set(Venta::from_shared_complete(a.ventas[0].clone()));
+        datos
+        .venta_b
+        .set(Venta::from_shared_complete(a.ventas[1].clone()));
+    datos.clientes.set(a.clientes.clone());
             datos.proveedores.set(
                 a.proveedores
-                    .iter()
+                .iter()
                     .map(|p| Proveedor::from_shared_complete(p.clone()))
                     .collect::<Vec<Proveedor>>(),
             );
@@ -67,6 +67,7 @@ async fn try_login(datos: Rcs) {
         Err(e) => debug(&e, 79, "app"),
     }
 }
+#[allow(non_snake_case)]
 #[component]
 pub fn App<G: Html>(cx: Scope) -> View<G> {
     let rc_caja = create_rc_signal(Caja::default());
@@ -82,7 +83,8 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
         rango: Rango::Cajero,
     });
     let rc_logged = create_rc_signal(false);
-    let window = create_signal(cx, Windows::Login(rc_user.clone()));
+    let rc_logged4 = rc_logged.clone();
+    let window = create_signal(cx,Windows::Login(rc_user.clone()));
     let rc_a1 = rc_a.clone();
     let rc_conf1 = rc_conf.clone();
     let rc_clientes1 = rc_clientes.clone();
@@ -102,6 +104,7 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
     let (rc_user1, rc_user2, rc_user3) = (rc_user.clone(), rc_user.clone(), rc_user.clone());
     let (rc_logged1, rc_logged2, rc_logged3) =
         (rc_logged.clone(), rc_logged.clone(), rc_logged.clone());
+    
     let rend = create_selector(cx, move || window.get().as_ref().clone());
     let datos = Rcs {
         user: rc_user1,
@@ -113,8 +116,10 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
         clientes: rc_clientes1,
         logged: rc_logged1,
     };
+    #[cfg(feature="ssr")]
+    debug(&"Desde SSR",119,"app");
 
-    create_effect(cx, move || match rc_logged2.get().as_ref() {
+    create_memo(cx, move || match rc_logged2.get().as_ref() {
         false => window.set(Windows::Login(rc_user2.clone())),
         true => window.set(Windows::Main(StateProps {
             venta_a: rc_a2.clone(),
@@ -139,6 +144,7 @@ pub fn App<G: Html>(cx: Scope) -> View<G> {
         rc_clientes3.set_rc_silent(datos_2.clientes.get());
     });
     view!(cx,
+        Menu(logged=rc_logged4.clone())
         div{
             (
                 match rend.get().as_ref() {
