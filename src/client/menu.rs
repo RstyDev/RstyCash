@@ -1,5 +1,6 @@
 use sycamore::{futures::spawn_local_scoped, prelude::*};
-use crate::mods::{lib::{call, debug}, structs::{args::EmptyArgs, Windows}};
+use crate::client::mods::{lib::{call, debug}, structs::{args::EmptyArgs, Windows}};
+
 
 #[derive(Prop)]
 pub struct MenuProps{

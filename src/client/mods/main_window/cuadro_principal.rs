@@ -1,4 +1,4 @@
-use crate::mods::{main_window::cuadro_venta::*, structs::Pos};
+use crate::client::mods::{main_window::cuadro_venta::*, structs::Pos};
 use sycamore::prelude::*;
 #[derive(Prop)]
 pub struct PrincProps {

@@ -1,5 +1,5 @@
-use crate::mods::main_window::pagos::Pagos;
-use crate::mods::structs::{Config, Pos, Valuable, Venta};
+use crate::client::mods::main_window::pagos::Pagos;
+use crate::client::mods::structs::{Config, Pos, Valuable, Venta};
 use sycamore::flow::Keyed;
 use sycamore::prelude::{component, create_memo, view, Html, Prop, Scope, View};
 use sycamore::reactive::{create_rc_signal, create_signal, RcSignal};

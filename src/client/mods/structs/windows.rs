@@ -1,6 +1,6 @@
 use sycamore::prelude::RcSignal;
 
-use crate::mods::main_window::main_page::StateProps;
+use crate::client::mods::main_window::main_page::StateProps;
 
 use super::User;
 

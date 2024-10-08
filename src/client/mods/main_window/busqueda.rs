@@ -1,4 +1,4 @@
-use crate::mods::{
+use crate::client::mods::{
     lib::{call, debug},
     structs::{
         args::{AgregarProductoAVenta, GetProductosFiltrado},

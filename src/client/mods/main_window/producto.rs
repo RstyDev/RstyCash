@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::mods::{
+use crate::client::mods::{
     lib::{call, debug},
     structs::{
         args::{

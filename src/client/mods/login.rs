@@ -9,7 +9,7 @@ use sycamore::{
 };
 use web_sys::Event;
 
-use crate::mods::structs::{get_hash, Rango};
+use crate::client::mods::structs::{get_hash, Rango};
 
 use super::structs::{User, UserSHC};
 

@@ -1,4 +1,4 @@
-use crate::mods::{
+use crate::client::mods::{
     main_window::producto::Prod,
     structs::{Config, Valuable, Venta},
 };

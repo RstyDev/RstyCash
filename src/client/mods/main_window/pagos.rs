@@ -1,5 +1,5 @@
 use super::resumen_pago::ResumenProps;
-use crate::mods::{
+use crate::client::mods::{
     main_window::*,
     structs::{Cliente, Cuenta, MedioPago, Pago, Restante},
 };

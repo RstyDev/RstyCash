@@ -1,4 +1,4 @@
-use crate::mods::structs::Formato;
+use crate::client::mods::structs::Formato;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 

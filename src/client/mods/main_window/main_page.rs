@@ -1,4 +1,4 @@
-use crate::mods::{
+use crate::client::mods::{
     main_window::{main_section::*, select_clientes::*},
     structs::{Buscando, Cliente, Config, Nav, Pos, Venta},
 };

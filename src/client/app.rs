@@ -1,4 +1,4 @@
-use crate::{menu::Menu, mods::{
+use crate::client::{menu::Menu, mods::{
     lib::{call, debug},
     main_window::main_page::{MainPage, StateProps},
     structs::{

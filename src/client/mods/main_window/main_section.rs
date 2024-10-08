@@ -1,6 +1,6 @@
 use sycamore::prelude::*;
 
-use crate::mods::{
+use crate::client::mods::{
     main_window::{
         busqueda::Busqueda, cuadro_principal::CuadroPrincipal, resumen_pago::ResumenPago,
     },

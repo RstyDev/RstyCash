@@ -8,10 +8,7 @@ use sycamore::{
 };
 use wasm_bindgen::JsCast;
 use web_sys::KeyboardEvent;
-
-use crate::mods::lib::{call, debug};
-use crate::mods::structs::args::{AgregarPago, EliminarPago};
-use crate::mods::structs::{MedioPago, Pago, Pos, Restante, Venta, VentaSHC};
+use crate::client::mods::{lib::{call,debug},structs::{MedioPago,Pago,Pos,Restante,Venta,VentaSHC,args::{AgregarPago,EliminarPago}}};
 
 #[derive(Prop)]
 pub struct PagoProps {
