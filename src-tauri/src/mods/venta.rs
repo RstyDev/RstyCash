@@ -13,7 +13,7 @@ use super::{
     lib::debug,
     redondeo, AppError, Cli, Cliente,
     Cuenta::{Auth, Unauth},
-    Pago, Res, User, UserSH, UserSHC, Valuable,
+    Pago, Res, User, UserSH, Valuable,
 };
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -23,7 +23,7 @@ pub struct Venta {
     productos: Vec<Valuable>,
     pagos: Vec<Pago>,
     monto_pagado: f32,
-    vendedor: Option<Arc<User>>,
+    vendedor: Option<Arc<UserSH>>,
     cliente: Cliente,
     paga: bool,
     cerrada: bool,
@@ -42,21 +42,8 @@ pub struct VentaSH {
     cerrada: bool,
     time: NaiveDateTime,
 }
-#[derive(Serialize, Deserialize)]
-pub struct VentaSHC {
-    id: i32,
-    monto_total: f32,
-    productos: Vec<Valuable>,
-    pagos: Vec<Pago>,
-    monto_pagado: f32,
-    vendedor: Option<Arc<UserSHC>>,
-    cliente: Cliente,
-    paga: bool,
-    cerrada: bool,
-    time: NaiveDateTime,
-}
 impl<'a> Venta {
-    pub async fn new(vendedor: Option<Arc<User>>, db: &Pool<Sqlite>, pos: bool) -> Res<Venta> {
+    pub async fn new(vendedor: Option<Arc<UserSH>>, db: &Pool<Sqlite>, pos: bool) -> Res<Venta> {
         let time = Utc::now().naive_local();
         let qres = query_as!(
             IntDB,
@@ -87,7 +74,7 @@ impl<'a> Venta {
         })
     }
     pub async fn get_or_new(
-        vendedor: Option<Arc<User>>,
+        vendedor: Option<Arc<UserSH>>,
         db: &Pool<Sqlite>,
         pos: bool,
     ) -> Res<Venta> {
@@ -113,7 +100,7 @@ impl<'a> Venta {
         productos: Vec<Valuable>,
         pagos: Vec<Pago>,
         monto_pagado: f32,
-        vendedor: Option<Arc<User>>,
+        vendedor: Option<Arc<UserSH>>,
         cliente: Cliente,
         paga: bool,
         cerrada: bool,
@@ -508,43 +495,22 @@ impl<'a> Venta {
             productos: self.productos.clone(),
             pagos: self.pagos.clone(),
             monto_pagado: self.monto_pagado,
-            vendedor: self
-                .vendedor
-                .clone()
-                .map(|v| Arc::from(v.as_ref().to_shared())),
+            vendedor: self.vendedor.clone(),
             cliente: self.cliente.clone(),
             paga: self.paga,
             cerrada: self.cerrada,
             time: self.time,
         }
     }
-    pub fn to_shared_complete(&self) -> VentaSHC {
-        VentaSHC {
-            id: self.id,
-            monto_total: self.monto_total,
-            productos: self.productos.clone(),
-            pagos: self.pagos.clone(),
-            monto_pagado: self.monto_pagado,
-            vendedor: self
-                .vendedor
-                .clone()
-                .map(|v| Arc::from(v.as_ref().to_shared_complete())),
-            cliente: self.cliente.clone(),
-            paga: self.paga,
-            cerrada: self.cerrada,
-            time: self.time,
-        }
-    }
-    pub fn from_shared_complete(venta: VentaSHC) -> Self {
+
+    pub fn from_shared(venta: VentaSH) -> Self {
         Venta {
             id: venta.id,
             monto_total: venta.monto_total,
             productos: venta.productos,
             pagos: venta.pagos,
             monto_pagado: venta.monto_pagado,
-            vendedor: venta
-                .vendedor
-                .map(|u| Arc::from(User::from_shared_complete(u.as_ref().clone()))),
+            vendedor: venta.vendedor.map(|u| Arc::from(u)),
             cliente: venta.cliente,
             paga: venta.paga,
             cerrada: venta.cerrada,

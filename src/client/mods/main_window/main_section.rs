@@ -1,29 +1,24 @@
-use sycamore::prelude::*;
-
 use crate::client::mods::{
     main_window::{
         busqueda::Busqueda, cuadro_principal::CuadroPrincipal, resumen_pago::ResumenPago,
     },
     structs::{Buscando, Config, Venta},
 };
-#[derive(Prop, Clone, Debug, PartialEq)]
+use sycamore::prelude::*;
+#[derive(Props, Clone, Debug, PartialEq)]
 pub struct SectionProps {
-    buscando: RcSignal<Buscando>,
-    venta: RcSignal<Venta>,
-    config: RcSignal<Config>,
+    buscando: Signal<Buscando>,
+    venta: Signal<Venta>,
+    config: Signal<Config>,
 }
 #[allow(non_snake_case)]
 #[component]
-pub fn MainSection<G: Html>(cx: Scope, props: SectionProps) -> View<G> {
-    let buscando_aux = props.buscando.clone();
-    let buscando = create_selector(cx, move || buscando_aux.get().as_ref().clone());
-    let venta = props.venta.clone();
-    let venta1 = props.venta.clone();
-    let config = props.config.clone();
+pub fn MainSection(props: SectionProps) -> View {
+    let buscando = create_selector(move || props.buscando.get_clone());
+
     // create_memo(cx, move || {});
     view!(
-        cx,
-        (match buscando.get().as_ref().clone() {
+        (match buscando.get_clone() {
             Buscando::True {
                 search,
                 nav,
@@ -32,13 +27,9 @@ pub fn MainSection<G: Html>(cx: Scope, props: SectionProps) -> View<G> {
                 other_sale,
                 focus,
             } => {
-                let focus = focus.clone();
-                let venta = venta.clone();
-                let config = config.clone();
-                let pos1 = pos.clone();
-                view!(cx,
+                view!(
                   Busqueda(search = search.clone(), nav = nav.clone(), pos = pos.clone(), search_aux = aux.clone())
-                  ResumenPago(venta=venta.clone(),pos=pos1.clone(),config=config.clone(),other_sale=other_sale.clone(), focus=focus.clone())
+                  ResumenPago(venta=props.venta.clone(),pos=pos.clone(),config=props.config.clone(),other_sale=other_sale.clone(), focus=focus.clone())
                 )
             }
             Buscando::False {
@@ -47,13 +38,9 @@ pub fn MainSection<G: Html>(cx: Scope, props: SectionProps) -> View<G> {
                 other_sale,
                 ..
             } => {
-                let config = config.clone();
-                let venta = venta1.clone();
-                let pos1 = pos.clone();
-                let foc1 = focus.clone();
-                view!(cx,
-                  CuadroPrincipal(pos= pos.clone(),focus=foc1.clone())
-                  ResumenPago(venta=venta.clone(),pos=pos1.clone(),config=config.clone(),other_sale=other_sale.clone(), focus=focus.clone())
+                view!(
+                  CuadroPrincipal(pos= pos,focus=focus)
+                  ResumenPago(venta=props.venta,pos=pos.clone(),config=props.config.clone(),other_sale=other_sale.clone(), focus=focus.clone())
                 )
             }
         })

@@ -18,7 +18,7 @@ pub struct UserSHC {
     pub pass: [u8; 8],
     pub rango: Rango,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct UserSH {
     pub id: Arc<str>,
     pub nombre: Arc<str>,

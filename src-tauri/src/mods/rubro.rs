@@ -20,13 +20,17 @@ pub struct Rubro {
     descripcion: Arc<str>,
 }
 #[derive(Serialize, Deserialize)]
-pub struct RubroSHC {
+pub struct RubroSH {
     id: i32,
     codigo: [u8; 8],
     monto: Option<f32>,
     descripcion: Arc<str>,
 }
-
+impl RubroSH {
+    pub fn id(&self) -> i32 {
+        self.id
+    }
+}
 impl Rubro {
     pub fn build(id: i32, codigo: i64, monto: Option<f32>, descripcion: &str) -> Rubro {
         Rubro {
@@ -126,15 +130,15 @@ impl Rubro {
             }),
         }
     }
-    pub fn to_shared_complete(&self) -> RubroSHC {
-        RubroSHC {
+    pub fn to_shared(&self) -> RubroSH {
+        RubroSH {
             id: self.id,
             codigo: self.codigo.to_be_bytes(),
             monto: self.monto,
             descripcion: self.descripcion.clone(),
         }
     }
-    pub fn from_shared_complete(rubro: RubroSHC) -> Self {
+    pub fn from_shared(rubro: RubroSH) -> Self {
         Rubro {
             id: rubro.id,
             codigo: i64::from_be_bytes(rubro.codigo),

@@ -48,9 +48,8 @@
 // }
 // #[cfg(feature="syc")]
 // mod syc{
-    
-// }
 
+// }
 
 // use std::{future::Future, time::Duration};
 mod client;
@@ -60,10 +59,10 @@ use client::app::App;
 fn main() {
     // #[cfg(feature="ssr")]
     // {
-        
+
     //     tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async{ssr::main_fn().await}).unwrap();
     // }
-    
+
     console_error_panic_hook::set_once();
     sycamore::render(App);
 }
@@ -108,8 +107,7 @@ fn main() {
 // #[cfg(all(feature="ssr",not(feature="syc")))]
 // #[actix_web::main]
 // async fn main()->std::io::Result<()>{
-    
+
 //     let db = db().await.expect("No DB");
 //     HttpServer::new(move ||App::new().app_data(Data::new(db.clone())).service(get_productos)).bind(("127.0.0.1",8080))?.run().await
 // }
-

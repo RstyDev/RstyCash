@@ -1,21 +1,19 @@
 use serde::{Deserialize, Serialize};
 use sycamore::{
-    prelude::{component, view, Html, Scope, View},
-    Prop,
+    prelude::*,
+    reactive::{create_signal, Signal},
+    web::GlobalProps,
+    Props,
 };
-use sycamore::{
-    reactive::{create_signal, RcSignal},
-    web::html::input,
-};
-use web_sys::Event;
+use web_sys::SubmitEvent;
+use crate::client::mods::lib::debug;
+use crate::client::mods::structs::{get_hash, Rango, UserSHC};
 
-use crate::client::mods::structs::{get_hash, Rango};
+use super::structs::User;
 
-use super::structs::{User, UserSHC};
-
-#[derive(Prop)]
+#[derive(Props)]
 pub struct LoginProps {
-    pub user: RcSignal<User>,
+    pub user: Signal<User>,
 }
 #[derive(Serialize, Deserialize)]
 pub struct LoginAux {
@@ -23,31 +21,31 @@ pub struct LoginAux {
 }
 #[allow(non_snake_case)]
 #[component]
-pub fn Login<G: Html>(cx: Scope, props: LoginProps) -> View<G> {
-    let pass = create_signal(cx, String::new());
-    let user = create_signal(cx, String::new());
-    let input_ingresar: View<G> = input()
-        .attr("type", "submit")
-        .attr("value", "Ingresar")
-        .on("click", move |e: Event| {
-            e.prevent_default();
-            let id = user.get().to_string();
-            let pass = get_hash(pass.get().as_str());
+pub fn Login(props: LoginProps) -> View {
+    let pass = create_signal(String::new());
+    let user = create_signal(String::new());
+    view! {
+        form(id="form-login",on:submit=move|ev:SubmitEvent|{
+            ev.prevent_default();
+            //ev.stop_propagation();
+
+            let id = user.get_clone();
+            let pass = get_hash(&pass.get_clone());
+            let print = format!("id: {}, pass: {}", id, pass);
+            println!("{}",print);
+            debug(&print, 34, "Login");
+            debug(&user.get_clone(),32,"Login");
             props.user.set(User {
                 id,
                 nombre: String::new(),
                 pass,
                 rango: Rango::Cajero,
             });
-        })
-        .view(cx);
-
-    view! {cx,
-        form(id="form-login"){
-            input(type="text",placeholder="Usuario",
+        }){
+            input(r#type="text",placeholder="Usuario",
             bind:value=user)
-            input(type="password",placeholder="Contraseña",bind:value=pass)
-            (input_ingresar)
+            input(r#type="password",placeholder="Contraseña",bind:value=pass)
+            input(r#type="submit",value="Ingresar")
         }
     }
 }

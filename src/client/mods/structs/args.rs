@@ -26,8 +26,8 @@ pub struct EliminarProductoDeVenta {
     pub index: usize,
     pub pos: bool,
 }
-#[derive(Serialize,Deserialize)]
-pub struct EmptyArgs{}
+#[derive(Serialize, Deserialize)]
+pub struct EmptyArgs {}
 #[derive(Serialize, Deserialize)]
 pub struct GetProductosFiltrado<'a> {
     pub filtro: &'a str,

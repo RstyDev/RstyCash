@@ -9,16 +9,17 @@ edition = "2021"
 
 
 [build-dependencies]
-tauri-build = { version = "1", features = [] }
+tauri-build = { version = "2.0.2", features = [] }
 
 [dependencies]
-tauri = { version = "1", features = ["shell-open"] }
+tauri = { version = "2.0.6", features = [] }
 serde = { version = "1.0.204", features = ["derive", "rc"] }
 sqlx = { version= "0.8.2", features = ["sqlite", "runtime-tokio", "tls-rustls", "sqlx-macros", "chrono"] }
 chrono = {version= "0.4.38" ,features = ["serde"] }
 thiserror = "1.0.64"
 rand = "0.8.5"
 serde_json = "1"
+dotenv = "0.15.0"
 
 
 [features]

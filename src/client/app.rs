@@ -1,13 +1,17 @@
-use crate::client::{menu::Menu, mods::{
-    lib::{call, debug},
-    main_window::main_page::{MainPage, StateProps},
-    structs::{
-        Caja, Cliente, Config, Pos, Proveedor, Rango, Rcs, SistemaSH, User, UserSHC, Valuable,
-        Venta, Windows,
+use crate::client::{
+    menu::Menu,
+    mods::{
+        lib::{call, debug},
+        main_window::main_page::{MainPage, StateProps},
+        structs::{
+            Caja, Cliente, Config, Pos, Proveedor, Rango, Rcs, SistemaSH, User, UserSH, Valuable,
+            Venta, Windows,
+        },
+        Login, LoginAux,
     },
-    Login, LoginAux,
-}};
+};
 
+use crate::client::mods::add_valuable::AddValuable;
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::from_value;
 use std::sync::Arc;
@@ -34,32 +38,27 @@ async fn try_login(datos: Rcs) {
         call(
             "try_login",
             LoginAux {
-                user: datos.user.get().as_ref().to_shared_complete(),
+                user: datos.user.with(|u| u.to_shared_complete()),
             },
         )
         .await,
     );
     match res {
         Ok(a) => {
-            datos.user.set(User::from_shared_complete(UserSHC {
+            datos.user.set(User::from_shared(UserSH {
                 id: a.user.id,
                 nombre: a.user.nombre,
-                pass: [0, 0, 0, 0, 0, 0, 0, 0],
                 rango: a.user.rango,
             }));
             datos.caja.set(Caja::from(a.caja));
             datos.config.set(Config::from(a.configs));
-            datos
-            .venta_a
-            .set(Venta::from_shared_complete(a.ventas[0].clone()));
-        datos
-        .venta_b
-        .set(Venta::from_shared_complete(a.ventas[1].clone()));
-    datos.clientes.set(a.clientes.clone());
+            datos.venta_a.set(Venta::from_shared(a.ventas[0].clone()));
+            datos.venta_b.set(Venta::from_shared(a.ventas[1].clone()));
+            datos.clientes.set(a.clientes.clone());
             datos.proveedores.set(
                 a.proveedores
-                .iter()
-                    .map(|p| Proveedor::from_shared_complete(p.clone()))
+                    .into_iter()
+                    .map(|p| Proveedor::from_shared(p))
                     .collect::<Vec<Proveedor>>(),
             );
             datos.logged.set(true);
@@ -69,94 +68,79 @@ async fn try_login(datos: Rcs) {
 }
 #[allow(non_snake_case)]
 #[component]
-pub fn App<G: Html>(cx: Scope) -> View<G> {
-    let rc_caja = create_rc_signal(Caja::default());
-    let rc_conf = create_rc_signal(Config::default());
-    let rc_a = create_rc_signal(Venta::default());
-    let rc_b = create_rc_signal(Venta::default());
-    let rc_provs: RcSignal<Vec<Proveedor>> = create_rc_signal(Vec::new());
-    let rc_clientes = create_rc_signal(vec![Cliente::Final]);
-    let rc_user = create_rc_signal(User {
+pub fn App() -> View {
+    let caja = create_signal(Caja::default());
+    let conf = create_signal(Config::default());
+    let v_a = create_signal(Venta::default());
+    let v_b = create_signal(Venta::default());
+    let proveedores: Signal<Vec<Proveedor>> = create_signal(Vec::new());
+    let clientes = create_signal(vec![Cliente::Final]);
+    let user = create_signal(User {
         id: "".to_string(),
         nombre: "".to_string(),
         pass: 1,
         rango: Rango::Cajero,
     });
-    let rc_logged = create_rc_signal(false);
-    let rc_logged4 = rc_logged.clone();
-    let window = create_signal(cx,Windows::Login(rc_user.clone()));
-    let rc_a1 = rc_a.clone();
-    let rc_conf1 = rc_conf.clone();
-    let rc_clientes1 = rc_clientes.clone();
-    let rc_pos = create_rc_signal(Pos::A {
-        venta: rc_a1,
-        config: rc_conf1,
-        clientes: rc_clientes1,
-    });
-    let rc_conf1 = rc_conf.clone();
-    let (rc_a1, rc_a2) = (rc_a.clone(), rc_a.clone());
-    let (rc_b1, rc_b2) = (rc_b.clone(), rc_b.clone());
-    let (rc_clientes1, rc_clientes2, rc_clientes3) = (
-        rc_clientes.clone(),
-        rc_clientes.clone(),
-        rc_clientes.clone(),
-    );
-    let (rc_user1, rc_user2, rc_user3) = (rc_user.clone(), rc_user.clone(), rc_user.clone());
-    let (rc_logged1, rc_logged2, rc_logged3) =
-        (rc_logged.clone(), rc_logged.clone(), rc_logged.clone());
-    
-    let rend = create_selector(cx, move || window.get().as_ref().clone());
-    let datos = Rcs {
-        user: rc_user1,
-        caja: rc_caja,
-        config: rc_conf1,
-        venta_a: rc_a1,
-        venta_b: rc_b1,
-        proveedores: rc_provs,
-        clientes: rc_clientes1,
-        logged: rc_logged1,
-    };
-    #[cfg(feature="ssr")]
-    debug(&"Desde SSR",119,"app");
+    let logged = create_signal(false);
 
-    create_memo(cx, move || match rc_logged2.get().as_ref() {
-        false => window.set(Windows::Login(rc_user2.clone())),
+    let window = create_signal(Windows::Login(user.clone()));
+
+    let pos = create_signal(Pos::A {
+        venta: v_a.clone(),
+        config: conf.clone(),
+        clientes: clientes.clone(),
+    });
+
+    let rend = create_selector(move || window.get_clone());
+    let datos = Rcs {
+        user: user.clone(),
+        caja,
+        config: conf.clone(),
+        venta_a: v_a.clone(),
+        venta_b: v_b.clone(),
+        proveedores,
+        clientes: clientes.clone(),
+        logged: logged.clone(),
+    };
+
+    create_memo(move || match logged.get() {
+        false => window.set(Windows::Login(user.clone())),
         true => window.set(Windows::Main(StateProps {
-            venta_a: rc_a2.clone(),
-            venta_b: rc_b2.clone(),
-            config: rc_conf.clone(),
-            clientes: rc_clientes2.clone(),
-            pos: rc_pos.clone(),
+            venta_a: v_a.clone(),
+            venta_b: v_b.clone(),
+            config: conf,
+            clientes: clientes.clone(),
+            pos: pos.clone(),
         })),
     });
-    let datos_2 = datos.clone();
-    let _res = create_memo(cx, move || {
-        let datos_3 = datos_2.clone();
-        let rc_logged = rc_logged3.clone();
+    create_memo(move || {
+        let rc_logged = logged.clone();
+        let value = datos.clone();
         spawn_local(async move {
-            if !rc_logged.get().as_ref() {
-                try_login(datos_3).await;
+            if !rc_logged.get() {
+                try_login(value).await;
             }
         });
-        rc_user3.set_rc_silent(datos_2.user.get());
-        rc_a.set_rc_silent(datos_2.venta_a.get());
-        rc_b.set_rc_silent(datos_2.venta_b.get());
-        rc_clientes3.set_rc_silent(datos_2.clientes.get());
+        user.set_silent(datos.user.get_clone());
+        v_a.set_silent(datos.venta_a.get_clone());
+        v_b.set_silent(datos.venta_b.get_clone());
+        clientes.set_silent(datos.clientes.get_clone());
     });
-    view!(cx,
-        Menu(logged=rc_logged4.clone())
+    view!(
+        Menu(logged=logged)
         div{
             (
-                match rend.get().as_ref() {
+                match rend.get_clone() {
                 Windows::Main(state) => {
-                    view! {cx,
+                    view! {
                     div(){
                         MainPage(venta_a=state.venta_a.clone(),venta_b=state.venta_b.clone(),config=state.config.clone(),pos=state.pos.clone(),clientes=state.clientes.clone())
                     }
                 }}
                 Windows::Login(user) => {
-                    view! {cx,
-                    Login(user=user.clone())
+                    view! {
+                    Login(user=user)
+                    AddValuable()
                 }}
             })
         }

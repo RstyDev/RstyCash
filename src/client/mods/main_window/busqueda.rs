@@ -2,25 +2,24 @@ use crate::client::mods::{
     lib::{call, debug},
     structs::{
         args::{AgregarProductoAVenta, GetProductosFiltrado},
-        Nav, Pos, ValuableSH, Venta, VentaSHC,
+        Nav, Pos, ValuableSH, VentaSH,
     },
 };
 use serde_wasm_bindgen::from_value;
+use std::ops::Deref;
 use sycamore::{
-    flow::Keyed,
-    futures::spawn_local_scoped,
-    prelude::{
-        component, create_memo, create_selector, view, Html, Prop, RcSignal, Scope, Signal, View,
-    },
+    futures::{spawn_local_scoped, spawn_local},
+    prelude::*,
     reactive::create_signal,
+    Props,
 };
 
-#[derive(Prop)]
+#[derive(Props)]
 pub struct SearchProps {
-    search: RcSignal<String>,
-    nav: RcSignal<Nav>,
-    pos: RcSignal<Pos>,
-    search_aux: RcSignal<bool>,
+    search: Signal<String>,
+    nav: Signal<Nav>,
+    pos: Signal<Pos>,
+    search_aux: Signal<bool>,
 }
 
 async fn search(filtro: impl Into<String>) -> Vec<ValuableSH> {
@@ -34,7 +33,7 @@ async fn search(filtro: impl Into<String>) -> Vec<ValuableSH> {
     from_value::<Vec<ValuableSH>>(res).unwrap()
 }
 
-async fn add_to_sale(producto: ValuableSH, pos: bool) -> VentaSHC {
+async fn add_to_sale(producto: ValuableSH, pos: bool) -> VentaSH {
     debug(&producto, 38, "busqueda");
     let res = call(
         "agregar_producto_a_venta",
@@ -44,21 +43,18 @@ async fn add_to_sale(producto: ValuableSH, pos: bool) -> VentaSHC {
         },
     )
     .await;
-    from_value::<VentaSHC>(res).unwrap()
+    from_value::<VentaSH>(res).unwrap()
 }
 
 #[component]
-pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
-    let filtro = props.search.clone();
-    let busqueda: &Signal<Vec<ValuableSH>> = create_signal(cx, Vec::new());
-    let actual: &Signal<Option<(u8, ValuableSH)>> = create_signal(cx, None);
-    let actual_selector = create_selector(cx, || actual.get().as_ref().clone().map(|o| o.1));
-    let nav = props.nav.clone();
-    create_memo(cx, move || {
-        filtro.track();
-        let filtro = filtro.clone();
-        spawn_local_scoped(cx, async move {
-            let res = search(filtro.get().as_ref()).await;
+pub fn Busqueda(props: SearchProps) -> View {
+    let busqueda: Signal<Vec<ValuableSH>> = create_signal(Vec::new());
+    let actual: Signal<Option<(u8, ValuableSH)>> = create_signal(None);
+    let actual_selector = create_selector(move || actual.get_clone().map(|o| o.1));
+    create_memo(move || {
+        props.search.track();
+        spawn_local(async move {
+            let res = search(props.search.get_clone()).await;
             if res.len() > 0 {
                 actual.set(Some((0, res[0].clone())));
                 busqueda.set(res);
@@ -69,90 +65,87 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
         });
     });
 
-    create_memo(cx, move || {
-        match nav.get().as_ref() {
+    create_memo(move || {
+        props.nav.with(|n| match n {
             Nav::Up => {
-                debug(actual.get().as_ref(), 76, "busqueda");
-                if let Some((i, _)) = actual.get().as_ref() {
-                    if *i > 0 {
+                debug(&actual.deref(), 76, "busqueda");
+                if let Some((i, _)) = actual.get_clone() {
+                    if i > 0 {
                         actual.set(Some((
                             i - 1,
-                            match &busqueda.get().as_ref()[*i as usize - 1] {
+                            busqueda.with(|b| match &b[i as usize - 1] {
                                 ValuableSH::Prod((_, p)) => ValuableSH::Prod((1, p.clone())),
                                 ValuableSH::Pes((_, p)) => ValuableSH::Pes((0.0, p.clone())),
                                 ValuableSH::Rub((_, r)) => ValuableSH::Rub((0, r.clone())),
-                            },
+                            }),
                         )));
                     }
                 }
-                nav.set(Nav::None);
+                props.nav.set(Nav::None);
             }
             Nav::Down => {
-                debug(actual.get().as_ref(), 92, "busqueda");
-                if let Some((i, _)) = actual.get().as_ref() {
-                    if *i < busqueda.get().as_ref().len() as u8 - 1 {
+                debug(&actual.get_clone(), 92, "busqueda");
+                if let Some((i, _)) = actual.get_clone() {
+                    if i < busqueda.with(|b| b.len() as u8) - 1 {
                         actual.set(Some((
                             i + 1,
-                            match &busqueda.get().as_ref()[*i as usize + 1] {
+                            busqueda.with(|b| match &b[i as usize + 1] {
                                 ValuableSH::Prod((_, p)) => ValuableSH::Prod((1, p.clone())),
                                 ValuableSH::Pes((_, p)) => ValuableSH::Pes((0.0, p.clone())),
                                 ValuableSH::Rub((_, r)) => ValuableSH::Rub((0, r.clone())),
-                            },
+                            }),
                         )));
                     }
                 }
-                nav.set(Nav::None);
+                props.nav.set(Nav::None);
             }
             Nav::Enter => {
-                if let Some((_, act)) = actual.get().as_ref().clone() {
-                    let pos = props.pos.clone();
-                    let aux = props.search_aux.clone();
-                    let nav = nav.clone();
-                    spawn_local_scoped(cx, async move {
-                        let sale;
+                if let Some((_, act)) = actual.get_clone() {
+                    spawn_local_scoped(async move {
+                        // let sale ;
                         let res = add_to_sale(
-                            act,
-                            match pos.get().as_ref() {
+                            act.clone(),
+                            props.pos.with(|p| match p {
                                 Pos::A { venta, .. } => {
-                                    sale = venta.clone();
+                                    // sale = venta.clone();
                                     true
                                 }
                                 Pos::B { venta, .. } => {
-                                    sale = venta.clone();
+                                    // sale = venta.clone();
                                     false
                                 }
-                            },
+                            }),
                         )
                         .await;
-                        sale.set(Venta::from_shared_complete(res.clone()));
-                        aux.set(true);
-                        nav.set(Nav::None);
+                        // sale.set(Venta::from_shared(res.clone()));
+                        props.search_aux.set(true);
+                        props.nav.set(Nav::None);
                     });
                 }
             }
             Nav::Esc => {
-                if actual.get().as_ref().is_some() {
+                if actual.with(|a| a.is_some()) {
                     //actual.set(None);
                 }
-                nav.set(Nav::None);
+                props.nav.set(Nav::None);
             }
             Nav::None => (),
-        }
+        })
     });
 
-    view!(cx,
+    view!(
         section(id="cuadro-principal"){
-            (match actual_selector.get().as_ref().clone(){
-                Some(act) => view!(cx,ul(class="no-bullets"){
+            (match actual_selector.get_clone(){
+                Some(act) => view!(ul(class="no-bullets"){
                     Keyed(
-                        iterable = busqueda,
-                        view=move |cx,x|{
+                        list = busqueda,
+                        view=move |x|{
                             let mut class="";
                             if act == x{
                                 class = "actual";
                             }
 
-                            view!(cx,li(class = class){
+                            view!(li(class = class){
                                 (match &x{
                                     ValuableSH::Prod(p) => format!("{} {} {} {} {}",p.1.tipo_producto,p.1.marca,p.1.variedad,p.1.presentacion.get_cantidad(),p.1.presentacion.get_string()),
                                     ValuableSH::Pes(p) => p.1.descripcion.as_ref().to_string(),
@@ -161,13 +154,13 @@ pub fn Busqueda<G: Html>(cx: Scope, props: SearchProps) -> View<G> {
                             })
                         },
                         key=|x|match &x{
-                            ValuableSH::Prod(p) => p.1.codigo_de_barras,
+                            ValuableSH::Prod(p) => p.1.codigos_de_barras[0],
                             ValuableSH::Pes(p) => p.1.codigo,
                             ValuableSH::Rub(r) => r.1.codigo,
                         }
                     )
                 }),
-                None => view!(cx,div()),
+                None => view!(),
             })
         }
     )

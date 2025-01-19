@@ -1,14 +1,13 @@
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct MedioPago {
-    pub medio: Arc<str>,
+    pub medio: String,
     pub id: i32,
 }
 
 impl MedioPago {
-    pub fn new(medio: Arc<str>, id: i32) -> MedioPago {
+    pub fn new(medio: String, id: i32) -> MedioPago {
         MedioPago { medio, id }
     }
 }

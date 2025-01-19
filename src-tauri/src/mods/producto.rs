@@ -23,18 +23,9 @@ pub struct Producto {
     presentacion: Presentacion,
     proveedores: Vec<RelacionProdProv>,
 }
+
 #[derive(Serialize, Deserialize)]
 pub struct ProductoSH {
-    id: i32,
-    codigo_de_barras: [u8; 8],
-    precio_venta: f32,
-    tipo_producto: Arc<str>,
-    marca: Arc<str>,
-    variedad: Arc<str>,
-    presentacion: Presentacion,
-}
-#[derive(Serialize, Deserialize)]
-pub struct ProductoSHC {
     id: i32,
     codigos_de_barras: [[u8; 8]; 3],
     precio_venta: f32,
@@ -45,6 +36,11 @@ pub struct ProductoSHC {
     variedad: Arc<str>,
     presentacion: Presentacion,
     proveedores: Vec<RelacionProdProv>,
+}
+impl ProductoSH {
+    pub fn id(&self) -> i32 {
+        self.id
+    }
 }
 impl Producto {
     pub async fn new_to_db(&mut self, db: &Pool<Sqlite>) -> Res<()> {
@@ -122,19 +118,17 @@ impl Producto {
                 self.id = prod_qres.last_insert_rowid() as i32;
                 Ok(())
             }
-            Some(_) => {
-                return Err(AppError::ExistingError {
-                    objeto: String::from("Producto"),
-                    instancia: format!(
-                        "{} {} {} {} {}",
-                        self.tipo_producto,
-                        self.marca,
-                        self.variedad,
-                        self.presentacion.get_cantidad(),
-                        self.presentacion.get_string()
-                    ),
-                })
-            }
+            Some(_) => Err(AppError::ExistingError {
+                objeto: String::from("Producto"),
+                instancia: format!(
+                    "{} {} {} {} {}",
+                    self.tipo_producto,
+                    self.marca,
+                    self.variedad,
+                    self.presentacion.get_cantidad(),
+                    self.presentacion.get_string()
+                ),
+            }),
         }
     }
     pub fn build(
@@ -287,32 +281,9 @@ impl Producto {
             }),
         }
     }
-    pub fn to_shared(&self, codigo: i64) -> Res<ProductoSH> {
-        Ok(ProductoSH {
+    pub fn to_shared(&self) -> ProductoSH {
+        ProductoSH {
             id: self.id,
-            codigo_de_barras: match self.codigos_de_barras.iter().find(|cod| **cod == codigo) {
-                Some(&a) => a.to_be_bytes(),
-                None => {
-                    return Err(AppError::IncorrectError(String::from(
-                        "Codigo no encontrado",
-                    )))
-                }
-            },
-            precio_venta: self.precio_venta,
-            tipo_producto: self.tipo_producto.clone(),
-            marca: self.marca.clone(),
-            variedad: self.variedad.clone(),
-            presentacion: self.presentacion.clone(),
-        })
-    }
-    pub fn to_shared_complete(&self) -> ProductoSHC {
-        ProductoSHC {
-            id: self.id,
-            codigos_de_barras: [
-                self.codigos_de_barras[0].to_be_bytes(),
-                self.codigos_de_barras[1].to_be_bytes(),
-                self.codigos_de_barras[2].to_be_bytes(),
-            ],
             precio_venta: self.precio_venta,
             porcentaje: self.porcentaje,
             precio_costo: self.precio_costo,
@@ -320,29 +291,52 @@ impl Producto {
             marca: self.marca.clone(),
             variedad: self.variedad.clone(),
             presentacion: self.presentacion.clone(),
+            codigos_de_barras: [
+                self.codigos_de_barras[0].to_be_bytes(),
+                self.codigos_de_barras[1].to_be_bytes(),
+                self.codigos_de_barras[2].to_be_bytes(),
+            ],
             proveedores: self.proveedores.clone(),
         }
     }
-    pub async fn from_shared(producto: ProductoSH, db: &Pool<Sqlite>) -> Res<Self> {
-        let qres = sqlx::query_as!(
-            ProductoDB,
-            r#"select id as "id:_",
-        precio_venta as "precio_venta:_",
-        porcentaje as "porcentaje:_",
-        precio_costo as "precio_costo:_",
-        tipo,
-        marca,
-        variedad,
-        presentacion,
-        size as "size:_",
-        updated_at from productos where id = ?"#,
-            producto.id
-        )
-        .fetch_one(db)
-        .await?;
-        Mapper::producto(db, qres).await
-    }
-    pub fn from_shared_complete(producto: ProductoSHC) -> Self {
+    // pub fn to_shared(&self) -> ProductoSHC {
+    //     ProductoSHC {
+    //         id: self.id,
+    //         codigos_de_barras: [
+    //             self.codigos_de_barras[0].to_be_bytes(),
+    //             self.codigos_de_barras[1].to_be_bytes(),
+    //             self.codigos_de_barras[2].to_be_bytes(),
+    //         ],
+    //         precio_venta: self.precio_venta,
+    //         porcentaje: self.porcentaje,
+    //         precio_costo: self.precio_costo,
+    //         tipo_producto: self.tipo_producto.clone(),
+    //         marca: self.marca.clone(),
+    //         variedad: self.variedad.clone(),
+    //         presentacion: self.presentacion.clone(),
+    //         proveedores: self.proveedores.clone(),
+    //     }
+    // }
+    // pub async fn from_shared(producto: ProductoSH, db: &Pool<Sqlite>) -> Res<Self> {
+    //     let qres = sqlx::query_as!(
+    //         ProductoDB,
+    //         r#"select id as "id:_",
+    //     precio_venta as "precio_venta:_",
+    //     porcentaje as "porcentaje:_",
+    //     precio_costo as "precio_costo:_",
+    //     tipo,
+    //     marca,
+    //     variedad,
+    //     presentacion,
+    //     size as "size:_",
+    //     updated_at from productos where id = ?"#,
+    //         producto.id
+    //     )
+    //     .fetch_one(db)
+    //     .await?;
+    //     Mapper::producto(db, qres).await
+    // }
+    pub fn from_shared(producto: ProductoSH) -> Self {
         Producto {
             id: producto.id,
             codigos_de_barras: [

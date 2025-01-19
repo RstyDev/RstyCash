@@ -6,76 +6,67 @@ use crate::client::mods::{
 use pago::*;
 use sycamore::{
     prelude::*,
-    reactive::{create_memo, create_rc_signal},
+    reactive::{create_memo, create_signal},
 };
 #[allow(non_snake_case)]
 #[component]
-pub fn Pagos<G: Html>(cx: Scope, props: ResumenProps) -> View<G> {
-    let other_sale = props.other_sale.clone();
-    let other_sale2 = props.other_sale.clone();
-    let (venta, venta2) = (props.venta.clone(), props.venta.clone());
-    let conf = props.config.clone();
-    let restante = create_rc_signal(venta.get().monto_total - venta.get().monto_pagado);
-    let rest1 = restante.clone();
-    create_memo(cx, move || {
-        let venta = venta2.get();
-        rest1.set(venta.monto_total - venta.monto_pagado);
+pub fn Pagos(props: ResumenProps) -> View {
+    let restante = create_signal(props.venta.with(|v| v.monto_total - v.monto_pagado));
+
+    create_memo(move || {
+        restante.set(props.venta.with(|v| v.monto_total - v.monto_pagado));
     });
-    let foc1 = props.focus.clone();
-    let foc2 = props.focus.clone();
-    let pagos = create_signal(cx, venta.get().pagos.clone());
-    let (pos, pos1) = (props.pos.clone(), props.pos.clone());
-    let medios = create_rc_signal({
-        let filtrado = conf
-            .get()
-            .medios_pago
-            .iter()
-            .cloned()
-            .filter(|m| m.id != 0)
-            .collect::<Vec<MedioPago>>();
-        match venta.get().cliente.clone() {
+
+    let pagos = create_signal(props.venta.with(|v| v.pagos.clone()));
+    let medios = create_signal({
+        let filtrado = props.config.with(|c| {
+            c.medios_pago
+                .iter()
+                .cloned()
+                .filter(|m| m.id != 0)
+                .collect::<Vec<MedioPago>>()
+        });
+
+        props.venta.with(|v| match &v.cliente {
             Cliente::Final => filtrado,
             Cliente::Regular(cli) => match cli.limite {
-                Cuenta::Auth(_) => conf.get().medios_pago.clone(),
+                Cuenta::Auth(_) => props.config.with(|c| c.medios_pago.clone()),
                 Cuenta::Unauth => filtrado,
             },
-        }
+        })
     });
-    let medios2 = medios.clone();
-    create_memo(cx, move || {
-        venta.track();
-        let filtrado = conf
-            .get()
-            .medios_pago
-            .iter()
-            .cloned()
-            .filter(|m| m.id != 0)
-            .collect::<Vec<MedioPago>>();
-        medios2.set(match venta.get().cliente.clone() {
+    create_memo(move || {
+        let venta = props.venta.get_clone();
+        let filtrado = props.config.with(|c| {
+            c.medios_pago
+                .iter()
+                .cloned()
+                .filter(|m| m.id != 0)
+                .collect::<Vec<MedioPago>>()
+        });
+
+        medios.set(match venta.cliente.clone() {
             Cliente::Final => filtrado,
             Cliente::Regular(cli) => match cli.limite {
-                Cuenta::Auth(_) => conf.get().medios_pago.clone(),
+                Cuenta::Auth(_) => props.config.with(|c| c.medios_pago.clone()),
                 Cuenta::Unauth => filtrado,
             },
         });
-        pagos.set(venta.get().pagos.clone());
+        pagos.set(venta.pagos.clone());
     });
 
-    view!(cx,
+    view!(
         article(id="pagos"){
             Keyed(
-                iterable = pagos,
-                view=move |cx,x|{
-                    let pos = pos.clone();
-                    let other_sale=other_sale.clone();
-                    let foc=foc2.clone();
-                    view!(cx,
-                        PagoComp(pago=x.clone(),opciones = create_rc_signal(vec![x.medio_pago.clone()]), monto = Restante::Pagado(x.monto), pos = pos.clone(),other_sale=other_sale.clone(),focus=foc.clone())
+                list = pagos,
+                view=move |x|{
+                    view!(
+                        PagoComp(pago=x.clone(),opciones = create_signal(vec![x.medio_pago.clone()]), monto = Restante::Pagado(x.monto), pos = props.pos.clone(),other_sale=props.other_sale.clone(),focus=props.focus.clone())
                     )
                 },
                 key=|x|x.int_id
             )
-            PagoComp(pago=Pago::default(),opciones=medios.clone(), monto=Restante::NoPagado(restante.clone()), pos = pos1.clone(),other_sale=other_sale2.clone(),focus=foc1.clone())
+            PagoComp(pago=Pago::default(),opciones=medios.clone(), monto=Restante::NoPagado(restante.clone()), pos = props.pos.clone(),other_sale=props.other_sale.clone(),focus=props.focus.clone())
         }
     )
 }

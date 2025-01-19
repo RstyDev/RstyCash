@@ -13,7 +13,7 @@ mod tests {
             .menu(get_menu())
             .build(tauri::generate_context!())
             .unwrap();
-        let win = app.get_window("main").unwrap();
+        let win = app.get_webview_window("main").unwrap();
 
         let handle = app.handle();
         if logged {
@@ -25,13 +25,13 @@ mod tests {
     #[test]
     fn not_open_login_test() {
         let (app, _, _) = build(false);
-        assert!(app.get_window("login").is_none());
+        assert!(app.get_webview_window("login").is_none());
     }
     #[test]
     fn open_login_test() {
         let (app, _, _) = build(false);
         match Runtime::new().unwrap().block_on(async {open_login(app.handle()).await }) {
-            Ok(_) => assert!(app.get_window("login").is_some()),
+            Ok(_) => assert!(app.get_webview_window("login").is_some()),
             Err(e) => panic!("No se abrio la ventana: {}", e),
         }
     }

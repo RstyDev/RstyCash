@@ -2,11 +2,12 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod mods;
+use crate::mods::lib::debug;
+use crate::mods::{Pesable, ProveedorSH, UserSH, UserSHC, ValuableSH};
 use commands::*;
 use mods::{
     cmd::*, db::db, Caja, Cli, Cliente, Config, MedioPago, Pago, Producto, Proveedor, Rango,
-    Result as Res, Rubro, Sistema, SistemaSH, User, UserSHC, Valuable as V, ValuableSH, Venta,
-    VentaSHC,
+    Result as Res, Rubro, Sistema, SistemaSH, User, Valuable as V, Venta, VentaSH,
 };
 use std::sync::Arc;
 use tauri::{
@@ -25,7 +26,7 @@ use tauri::{
 //     agregar_cliente_2(sistema, window, nombre, dni, limite)
 // }
 #[tauri::command]
-fn agregar_pago(sistema: State<Mutex<Sistema>>, pago: Pago, pos: bool) -> Res<VentaSHC> {
+fn agregar_pago(sistema: State<Mutex<Sistema>>, pago: Pago, pos: bool) -> Res<VentaSH> {
     Ok(agregar_pago_2(sistema, pago, pos)?)
 }
 // #[tauri::command]
@@ -49,12 +50,25 @@ fn agregar_pago(sistema: State<Mutex<Sistema>>, pago: Pago, pos: bool) -> Res<Ve
 //     )
 // }
 #[tauri::command]
-async fn agregar_producto<'a>(
+async fn agregar_valuable<'a>(
     window: Window,
     sistema: State<'a, Mutex<Sistema>>,
-    producto: Producto,
+    valuable: ValuableSH,
 ) -> Res<String> {
-    Ok(agregar_producto_2(window, sistema, producto)?)
+    match valuable {
+        ValuableSH::Prod((_, p)) => Ok(agregar_producto_2(
+            window,
+            sistema,
+            Producto::from_shared(p),
+        )?),
+        ValuableSH::Pes((_, p)) => Ok(_agregar_pesable_2(
+            window,
+            sistema,
+            Pesable::from_shared(p),
+        )?),
+        ValuableSH::Rub((_, r)) => Ok(agregar_rubro_2(window, sistema, Rubro::from_shared(r))?),
+    }
+    // Ok(agregar_producto_2(window, sistema, producto)?)
 }
 #[tauri::command]
 fn agregar_producto_a_venta(
@@ -91,10 +105,8 @@ fn agregar_usuario(window: Window, sistema: State<Mutex<Sistema>>, user: User) -
     Ok(agregar_usuario_2(window, sistema, user)?)
 }
 #[tauri::command]
-async fn cerrar_sesion<'a>(
-    sistema: State<'a, Mutex<Sistema>>,window: Window
-) -> Res<()> {
-    Ok(cerrar_sesion_2(sistema,window).await?)
+async fn cerrar_sesion<'a>(sistema: State<'a, Mutex<Sistema>>, window: Window) -> Res<()> {
+    Ok(cerrar_sesion_2(sistema, window).await?)
 }
 #[tauri::command]
 fn cancelar_venta(sistema: State<Mutex<Sistema>>, pos: bool) -> Res<()> {
@@ -135,8 +147,8 @@ fn eliminar_producto_de_venta(
     window: Window,
     index: usize,
     pos: bool,
-) -> Res<VentaSHC> {
-    Ok(eliminar_producto_de_venta_2(sistema, window, index, pos)?.to_shared_complete())
+) -> Res<VentaSH> {
+    Ok(eliminar_producto_de_venta_2(sistema, window, index, pos)?.to_shared())
 }
 #[tauri::command]
 fn eliminar_usuario(sistema: State<Mutex<Sistema>>, user: User) -> Res<()> {
@@ -189,13 +201,22 @@ fn get_medios_pago(sistema: State<Mutex<Sistema>>) -> Res<Vec<MedioPago>> {
 #[tauri::command]
 fn get_productos_filtrado(sistema: State<Mutex<Sistema>>, filtro: &str) -> Res<Vec<ValuableSH>> {
     Ok(get_productos_filtrado_2(sistema, filtro)?
-        .iter()
+        .into_iter()
         .map(|v| v.to_shared())
         .collect::<Vec<ValuableSH>>())
 }
 #[tauri::command]
-fn get_proveedores(sistema: State<'_, Mutex<Sistema>>) -> Res<Vec<String>> {
-    Ok(get_proveedores_2(sistema)?)
+fn get_proveedores(sistema: State<'_, Mutex<Sistema>>) -> Res<Vec<ProveedorSH>> {
+    let provs = get_proveedores_2(sistema.clone())?;
+    debug(
+        &provs
+            .iter()
+            .map(|p| Proveedor::from_shared(p.clone()))
+            .collect::<Vec<Proveedor>>(),
+        204,
+        "main",
+    );
+    Ok(provs)
 }
 #[tauri::command]
 fn get_rango(sistema: State<Mutex<Sistema>>) -> Res<Rango> {
@@ -262,15 +283,18 @@ async fn open_edit_settings(handle: tauri::AppHandle) -> Res<()> {
     Ok(open_edit_settings_2(handle).await?)
 }
 #[tauri::command]
-async fn open_login(handle: tauri::AppHandle, window: Window) -> Res<()> {
-    loop {
-        if window
-            .emit("main", Payload::new(Some(String::from("aca")), None, None))
-            .is_ok()
-        {
-            break;
-        }
-    }
+async fn open_login(
+    handle: tauri::AppHandle,
+    // window: Window
+) -> Res<()> {
+    // loop {
+    //     if window
+    //         .emit("main", Payload::new(Some(String::from("aca")), None, None))
+    //         .is_ok()
+    //     {
+    //         break;
+    //     }
+    // }
     Ok(open_login_2(handle).await?)
 }
 #[tauri::command]
@@ -307,8 +331,8 @@ fn set_cantidad_producto_venta(
     index: usize,
     cantidad: f32,
     pos: bool,
-) -> Res<VentaSHC> {
-    Ok(set_cantidad_producto_venta_2(sistema, index, cantidad, pos)?.to_shared_complete())
+) -> Res<VentaSH> {
+    Ok(set_cantidad_producto_venta_2(sistema, index, cantidad, pos)?.to_shared())
 }
 #[tauri::command]
 fn set_cliente(sistema: State<Mutex<Sistema>>, id: i32, pos: bool) -> Res<Venta> {
@@ -338,12 +362,11 @@ fn unstash_sale(sistema: State<Mutex<Sistema>>, window: Window, pos: bool, index
 fn main() {
     // let menu = get_menu();
 
-    #[cfg(feature="ssr")]
+    #[cfg(feature = "ssr")]
     use mods::lib::debug;
-    #[cfg(feature="ssr")]
-    debug(&"Desde ssr",341,"main");
+    #[cfg(feature = "ssr")]
+    debug(&"Desde ssr", 341, "main");
 
-    
     let db = Arc::from(block_on(db()).unwrap());
     let app = tauri::Builder::default()
         .manage(Mutex::new(Sistema::new(db).unwrap()))
@@ -351,7 +374,7 @@ fn main() {
             //agregar_cliente,
             agregar_pago,
             // agregar_pesable,
-            agregar_producto,
+            agregar_valuable,
             agregar_producto_a_venta,
             agregar_proveedor,
             agregar_rubro,
@@ -410,65 +433,65 @@ fn main() {
         // .menu(menu)
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
-    let window = app.get_window("main").unwrap();
+    // let window = app.get_webview_window("main").unwrap();
 
-    let w2 = window.clone();
-    let handle = app.handle();
-    window.on_menu_event(move |event| {
-        match event.menu_item_id() {
-            "add product" => block_on(open_add_product(handle.clone())),
-            "add prov" => block_on(open_add_prov(handle.clone())),
-            "add user" => block_on(open_add_user(handle.clone())),
-            "add cliente" => block_on(open_add_cliente(handle.clone())),
-            "edit settings" => block_on(open_edit_settings(handle.clone())),
-            "confirm stash" => {
-                loop {
-                    if w2
-                        .emit(
-                            "main",
-                            Payload::new(Some(String::from("confirm stash")), None, None),
-                        )
-                        .is_ok()
-                    {
-                        break;
-                    }
-                }
-                Ok(())
-            }
-            "cerrar sesion" => {
-                loop {
-                    if w2
-                        .emit(
-                            "main",
-                            Payload::new(Some(String::from("cerrar sesion")), None, None),
-                        )
-                        .is_ok()
-                    {
-                        break;
-                    }
-                }
-                Ok(())
-            }
+    // let w2 = window.clone();
+    // let handle = app.handle();
+    // window.on_menu_event(move |_,event| {
+    //     match event.menu_item_id() {
+    //         "add product" => block_on(open_add_product(handle.clone())),
+    //         "add prov" => block_on(open_add_prov(handle.clone())),
+    //         "add user" => block_on(open_add_user(handle.clone())),
+    //         "add cliente" => block_on(open_add_cliente(handle.clone())),
+    //         "edit settings" => block_on(open_edit_settings(handle.clone())),
+    //         // "confirm stash" => {
+    //         //     loop {
+    //         //         if w2
+    //         //             .emit(
+    //         //                 "main",
+    //         //                 Payload::new(Some(String::from("confirm stash")), None, None),
+    //         //             )
+    //         //             .is_ok()
+    //         //         {
+    //         //             break;
+    //         //         }
+    //         //     }
+    //         //     Ok(())
+    //         // }
+    //         // "cerrar sesion" => {
+    //         //     loop {
+    //         //         if w2
+    //         //             .emit(
+    //         //                 "main",
+    //         //                 Payload::new(Some(String::from("cerrar sesion")), None, None),
+    //         //             )
+    //         //             .is_ok()
+    //         //         {
+    //         //             break;
+    //         //         }
+    //         //     }
+    //         //     Ok(())
+    //         // }
 
-            "open stash" => {
-                loop {
-                    if w2
-                        .emit(
-                            "main",
-                            Payload::new(Some(String::from("open stash")), None, None),
-                        )
-                        .is_ok()
-                    {
-                        break;
-                    }
-                }
-                Ok(())
-            }
-            "cerrar caja" => block_on(open_cerrar_caja(handle.clone())),
+    //         // "open stash" => {
+    //         //     loop {
+    //         //         if w2
+    //         //             .emit(
+    //         //                 "main",
+    //         //                 Payload::new(Some(String::from("open stash")), None, None),
+    //         //             )
+    //         //             .is_ok()
+    //         //         {
+    //         //             break;
+    //         //         }
+    //         //     }
+    //         //     Ok(())
+    //         // }
+    //         "cerrar caja" => block_on(open_cerrar_caja(handle.clone())),
 
-            _ => Ok(()),
-        }
-        .unwrap();
-    });
+    //         _ => Ok(()),
+    //     }
+    //     .unwrap();
+    // });
     app.run(|_, _| {})
 }

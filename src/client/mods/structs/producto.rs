@@ -15,18 +15,9 @@ pub struct Producto {
     pub presentacion: Presentacion,
     pub proveedores: Vec<RelacionProdProv>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProductoSH {
-    pub id: i32,
-    pub codigo_de_barras: [u8; 8],
-    pub precio_venta: f32,
-    pub tipo_producto: Arc<str>,
-    pub marca: Arc<str>,
-    pub variedad: Arc<str>,
-    pub presentacion: Presentacion,
-}
-#[derive(Serialize, Deserialize)]
-pub struct ProductoSHC {
     pub id: i32,
     pub codigos_de_barras: [[u8; 8]; 3],
     pub precio_venta: f32,
@@ -84,22 +75,9 @@ impl Producto {
             ),
         }
     }
-    pub fn to_shared(&self, codigo: i64) -> ProductoSH {
+
+    pub fn to_shared(&self) -> ProductoSH {
         ProductoSH {
-            id: self.id,
-            codigo_de_barras: match self.codigos_de_barras.iter().find(|cod| **cod == codigo) {
-                Some(&a) => a.to_be_bytes(),
-                None => 0i64.to_be_bytes(),
-            },
-            precio_venta: self.precio_venta,
-            tipo_producto: self.tipo_producto.clone(),
-            marca: self.marca.clone(),
-            variedad: self.variedad.clone(),
-            presentacion: self.presentacion.clone(),
-        }
-    }
-    pub fn to_shared_complete(&self) -> ProductoSHC {
-        ProductoSHC {
             id: self.id,
             codigos_de_barras: [
                 self.codigos_de_barras[0].to_be_bytes(),
@@ -116,7 +94,7 @@ impl Producto {
             proveedores: self.proveedores.clone(),
         }
     }
-    pub fn from_shared_complete(producto: ProductoSHC) -> Self {
+    pub fn from_shared(producto: ProductoSH) -> Self {
         Producto {
             id: producto.id,
             codigos_de_barras: [

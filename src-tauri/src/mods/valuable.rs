@@ -1,9 +1,6 @@
 use super::{
-    pesable::{PesableSH, PesableSHC},
-    producto::{ProductoSH, ProductoSHC},
-    redondeo,
-    rubro::RubroSHC,
-    Config, Formato, Pesable, Producto, Res, Rubro,
+    pesable::PesableSH, producto::ProductoSH, redondeo, rubro::RubroSH, Config, Formato, Pesable,
+    Producto, Res, Rubro,
 };
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite};
@@ -20,14 +17,7 @@ pub enum Valuable {
 pub enum ValuableSH {
     Prod((u8, ProductoSH)),
     Pes((f32, PesableSH)),
-    Rub((u8, RubroSHC)),
-}
-
-#[derive(Serialize, Deserialize)]
-pub enum ValuableSHC {
-    Prod((u8, ProductoSHC)),
-    Pes((f32, PesableSHC)),
-    Rub((u8, RubroSHC)),
+    Rub((u8, RubroSH)),
 }
 
 impl Valuable {
@@ -63,6 +53,14 @@ impl Valuable {
         };
         res
     }
+
+    pub fn from_shared(val: ValuableSH) -> Self {
+        match val {
+            ValuableSH::Prod(prod) => Valuable::Prod((prod.0, Producto::from_shared(prod.1))),
+            ValuableSH::Pes(pes) => Valuable::Pes((pes.0, Pesable::from_shared(pes.1))),
+            ValuableSH::Rub(rub) => Valuable::Rub((rub.0, Rubro::from_shared(rub.1))),
+        }
+    }
     #[cfg(test)]
     pub fn desc(&self) -> String {
         match self {
@@ -87,19 +85,10 @@ impl Valuable {
     }
     pub fn to_shared(&self) -> ValuableSH {
         match self {
-            Valuable::Prod(p) => {
-                ValuableSH::Prod((p.0, p.1.to_shared(p.1.codigos_de_barras()[0]).unwrap()))
-            }
+            Valuable::Prod(p) => ValuableSH::Prod((p.0, p.1.to_shared())),
             Valuable::Pes(p) => ValuableSH::Pes((p.0, p.1.to_shared())),
-            Valuable::Rub(r) => ValuableSH::Rub((r.0, r.1.to_shared_complete())),
+            Valuable::Rub(r) => ValuableSH::Rub((r.0, r.1.to_shared())),
         }
-    }
-    pub async fn from_shared(val: ValuableSH, db: &Pool<Sqlite>) -> Res<Self> {
-        Ok(match val {
-            ValuableSH::Prod(p) => Valuable::Prod((p.0, Producto::from_shared(p.1, db).await?)),
-            ValuableSH::Pes(p) => Valuable::Pes((p.0, Pesable::from_shared(p.1, db).await?)),
-            ValuableSH::Rub(r) => Valuable::Rub((r.0, Rubro::from_shared_complete(r.1))),
-        })
     }
 }
 

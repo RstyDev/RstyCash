@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::client::mods::{
     lib::{call, debug},
     structs::{
@@ -7,184 +5,162 @@ use crate::client::mods::{
             DecrementarProductoDeVenta, EliminarProductoDeVenta, IncrementarProductoAVenta,
             SetCantidadProductoVenta,
         },
-        Config, Valuable, Venta, VentaSHC,
+        Config, Valuable, Venta, VentaSH,
     },
 };
 use serde_wasm_bindgen::from_value;
-use sycamore::{
-    futures::spawn_local_scoped,
-    prelude::{component, create_effect, create_selector, view, Html, Prop, RcSignal, Scope, View},
-    reactive::{create_signal, create_signal_from_rc},
-};
+use std::rc::Rc;
+use sycamore::{prelude::*, reactive::create_signal, Props};
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::Event;
+use web_sys::KeyboardEvent;
 
-#[derive(Prop)]
+#[derive(Props)]
 pub struct ProdProps {
-    venta: RcSignal<Venta>,
-    valuable: Rc<Valuable>,
-    conf: Rc<Config>,
+    venta: Signal<Venta>,
+    valuable: Valuable,
+    conf: Signal<Config>,
     pos: bool,
-    focus: RcSignal<bool>,
+    focus: Signal<bool>,
 }
 #[allow(non_snake_case)]
 #[component]
-pub fn Prod<G: Html>(cx: Scope, props: ProdProps) -> View<G> {
-    let conf = create_signal_from_rc(cx, props.conf);
-    let cantidad = create_signal(cx, props.valuable.get_f_cant().to_string());
-    let desc = create_signal(cx, props.valuable.get_desc(conf.get().formato_producto));
-    let cambio = create_signal(cx, false);
-    let val = props.valuable.clone();
-    let val1 = props.valuable.clone();
-    let val2 = props.valuable.clone();
-    let val3 = props.valuable.clone();
-    let val5 = props.valuable.clone();
-    let val6 = props.valuable.clone();
-    let disabled = create_selector(cx, move || val6.get_f_cant() <= 1.0);
-    let rc_venta = props.venta.clone();
-    let rc_venta1 = props.venta.clone();
-    let rc_venta2 = props.venta.clone();
-    let rc_venta3 = props.venta.clone();
+pub fn Prod(props: ProdProps) -> View {
+    let cantidad = create_signal(props.valuable.get_f_cant().to_string());
+    let desc = create_signal(props.valuable.get_desc(props.conf.with(|c| c.formato_producto)));
+    let cambio = create_signal(false);
+    let valuable = props.valuable.clone();
+    let disabled = create_selector(move || valuable.get_f_cant() <= 1.0);
+
     let focus = move |_| {
         debug(&"aca", 94, "producto");
         props.focus.set(true)
     };
     let (foc1, foc2, foc3) = (focus.clone(), focus.clone(), focus.clone());
-    create_effect(cx, move || {
-        if *cambio.get() {
-            let rc_venta3 = rc_venta3.clone();
-            let val3 = val3.clone();
-            spawn_local_scoped(cx, async move {
-                if cantidad.get().as_str() == "" {
+    let valuable = props.valuable.clone();
+    create_effect(move || {
+        if cambio.get() {
+            let venta = props.venta.clone();
+            let val = valuable.clone();
+            spawn_local(async move {
+                if cantidad.with(|c| c.eq("")) {
                     let pos = props.pos;
                     let res = call(
                         "eliminar_producto_de_venta",
                         EliminarProductoDeVenta {
-                            index: rc_venta3
-                                .get()
-                                .as_ref()
-                                .clone()
-                                .productos
-                                .iter()
-                                .enumerate()
-                                .find(|v| v.1 == val3.as_ref())
-                                .unwrap()
-                                .0,
+                            index: venta.with(|v| {
+                                v.productos
+                                    .iter()
+                                    .enumerate()
+                                    .find(|v| v.1 == &val)
+                                    .unwrap()
+                                    .0
+                            }),
                             pos,
                         },
                     )
                     .await;
-                    let venta = from_value::<VentaSHC>(res).unwrap();
-                    rc_venta3.set(Venta::from_shared_complete(venta));
+                    let venta_aux = from_value::<VentaSH>(res).unwrap();
+                    venta.set(Venta::from_shared(venta_aux));
                 } else {
                     let res = call(
                         "set_cantidad_producto_venta",
                         SetCantidadProductoVenta {
-                            index: rc_venta3
-                                .get()
-                                .as_ref()
-                                .clone()
-                                .productos
-                                .iter()
-                                .enumerate()
-                                .find(|v| v.1 == val3.as_ref())
-                                .unwrap()
-                                .0,
-                            cantidad: cantidad.get().parse::<f32>().unwrap(),
+                            index: venta.with(|r| {
+                                r.productos
+                                    .iter()
+                                    .enumerate()
+                                    .find(|v| v.1 == &val)
+                                    .unwrap()
+                                    .0
+                            }),
+                            cantidad: cantidad.with(|c| c.parse::<f32>().unwrap()),
                             pos: props.pos,
                         },
                     )
                     .await;
-                    let venta = Venta::from_shared_complete(from_value::<VentaSHC>(res).unwrap());
-                    rc_venta3.set(venta);
+                    let venta_aux = Venta::from_shared(from_value::<VentaSH>(res).unwrap());
+                    venta.set(venta_aux);
                 }
             });
         }
     });
-    view!(cx,
-        article(class="articulo",on:focus=focus.clone()){
-            section(class=format!("descripcion {}",conf.get().modo_mayus)){
-                p(){(desc.get())}
+    let valuable = props.valuable.clone();
+    let valuable2 = props.valuable.clone();
+    let valuable3 = props.valuable.clone();
+    let valuable4 = props.valuable.clone();
+    view!(
+        article(class="articulo",on:focus=move |_|{props.focus.set(true)}){
+            section(class=format!("descripcion {}",props.conf.with(|c|c.modo_mayus.clone()))){
+                p(){(desc.get_clone())}
             }
             section(class="cantidad"){
-                button(tabindex="-1",class=match disabled.get().as_ref(){
+                button(tabindex="-1",class=match disabled.get(){
                     false => "button restar",
                     true => "button restar disabled",
                 },on:click = move |x|{
-                    let val = val5.clone();
+                    let val = props.valuable.clone();
                     focus(x);
                     let pos = props.pos;
-                    let rc_venta = rc_venta2.clone();
+                    let venta = props.venta.clone();
                     spawn_local(async move{
-                        let res = call("descontar_producto_de_venta", DecrementarProductoDeVenta{ index: rc_venta.get()
-                            .as_ref()
-                            .clone()
+                        let res = call("descontar_producto_de_venta", DecrementarProductoDeVenta{ index: venta.with(|v|v
                             .productos
                             .iter()
                             .enumerate()
-                            .find(|v| v.1 == val.as_ref())
+                            .find(|v| v.1 == &val)
                             .unwrap()
-                            .0, pos }).await;
-                        let venta = from_value::<VentaSHC>(res).unwrap();
-                        rc_venta.set(Venta::from_shared_complete(venta));
+                            .0), pos }).await;
+                        let venta_aux = from_value::<VentaSH>(res).unwrap();
+                        venta.set(Venta::from_shared(venta_aux));
                     })
-                },disabled=*disabled.get().as_ref()){"-"}
-                input(type="number",class="cantidad-producto",on:focus=foc1,bind:value=cantidad,on:keyup=|e:Event|{
-                    let event:web_sys::KeyboardEvent = e.clone().unchecked_into();
+                },disabled=disabled.get()){"-"}
+                input(r#type="number",class="cantidad-producto",on:focus=move |_|{props.focus.set(true)},bind:value=cantidad,on:keyup=move |e:KeyboardEvent|{
+                    let event: KeyboardEvent = e.clone().unchecked_into();
                     if event.key().eq("Enter"){
                         cambio.set(true);
                         cambio.set(false);
                     }
                 })
-                button(tabindex="-1",class="button sumar",on:focus=foc2,on:click=move|_|{
-                    let val = val1.clone();
+                button(tabindex="-1",class="button sumar",on:focus=move |_|{props.focus.set(true)},on:click=move|_|{
+                    let val = valuable.clone();
                     let pos = props.pos;
-                    let rc_venta = rc_venta1.clone();
+                    let venta = props.venta.clone();
                     spawn_local(async move{
-                        let res=call("incrementar_producto_a_venta", IncrementarProductoAVenta { index: rc_venta.get()
-                            .as_ref()
-                            .clone()
-                            .productos
-                            .iter()
-                            .enumerate()
-                            .find(|v| v.1 == val.as_ref())
-                            .unwrap()
-                            .0, pos }).await;
-                        let venta=from_value::<VentaSHC>(res).unwrap();
-                        rc_venta.set(Venta::from_shared_complete(venta));
+                        let res=call("incrementar_producto_a_venta", IncrementarProductoAVenta { index: venta.with(|v|v.productos.iter().enumerate().find(|v| v.1==&val).unwrap().0), pos }).await;
+                        let venta_aux=from_value::<VentaSH>(res).unwrap();
+                        venta.set(Venta::from_shared(venta_aux));
                     })
                 }){"+"}
             }
             section(class="monto"){
                 p(){
-                    (format!("{:.2}",props.valuable.get_unit_price()))
+                    (format!("{:.2}",valuable3.get_unit_price()))
                 }
             }
             section(){
                 p(){
-                    (format!("{:.2}",val.get_total_price()))
+                    (format!("{:.2}",valuable4.clone().get_total_price()))
                 }
             }
             section(id="borrar"){
                 button(tabindex="-1",class="button eliminar",on:click=move |_|{
-                    let val = val2.clone();
+                    let val = valuable2.clone();
                     let pos = props.pos;
-                    let rc_venta = rc_venta.clone();
+                    let venta = props.venta.clone();
                     spawn_local(async move{
-                        let res=call("eliminar_producto_de_venta", EliminarProductoDeVenta { index: rc_venta.get()
-                            .as_ref()
-                            .clone()
+                        let res=call("eliminar_producto_de_venta", EliminarProductoDeVenta { index: venta
+                            .with(|v|v
                             .productos
                             .iter()
                             .enumerate()
-                            .find(|v| v.1 == val.as_ref())
+                            .find(|v| v.1 == &val)
                             .unwrap()
-                            .0, pos }).await;
-                        let venta=from_value::<VentaSHC>(res).unwrap();
-                        rc_venta.set(Venta::from_shared_complete(venta));
+                            .0), pos }).await;
+                        let venta_aux=from_value::<VentaSH>(res).unwrap();
+                        venta.set(Venta::from_shared(venta_aux));
                     })
-                },on:focus=foc3){"Borrar"}
+                },on:focus=move |_|{props.focus.set(true)}){"Borrar"}
             }
         }
     )

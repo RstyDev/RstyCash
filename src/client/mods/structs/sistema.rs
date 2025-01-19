@@ -1,4 +1,4 @@
-use super::{Caja, Cliente, Config, ProveedorSH, UserSH, VentaSHC};
+use super::{Caja, Cliente, Config, ProveedorSH, UserSH, VentaSH};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -7,7 +7,7 @@ pub struct SistemaSH {
     pub caja: Caja,
     pub clientes: Vec<Cliente>,
     pub configs: Config,
-    pub ventas: [VentaSHC; 2],
+    pub ventas: [VentaSH; 2],
     pub proveedores: Vec<ProveedorSH>,
 }
 
@@ -17,7 +17,7 @@ impl SistemaSH {
         caja: Caja,
         clientes: Vec<Cliente>,
         configs: Config,
-        ventas: [VentaSHC; 2],
+        ventas: [VentaSH; 2],
         proveedores: Vec<ProveedorSH>,
     ) -> SistemaSH {
         SistemaSH {

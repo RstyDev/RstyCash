@@ -1,3 +1,4 @@
+use crate::mods::UserSH;
 use crate::{
     mods::{
         db::map::{
@@ -6,7 +7,7 @@ use crate::{
             VentaDB,
         },
         AppError, Caja, Cli, Cliente, Config, MedioPago, Pesable, Presentacion, RelacionProdProv,
-        Res, Rubro, User, Valuable,
+        Res, Rubro, Valuable,
     },
     Pago, Producto, Venta,
 };
@@ -61,7 +62,7 @@ impl Mapper {
         .fetch_all(db)
         .await;
         let medios = medios?
-            .iter()
+            .into_iter()
             .map(|model| MedioPago::build(&model.medio, model.id))
             .collect::<Vec<MedioPago>>();
         Ok(Config::build(
@@ -72,7 +73,7 @@ impl Mapper {
             medios,
         ))
     }
-    pub fn rel_prod_prov(rel: &RelacionProdProvDB) -> RelacionProdProv {
+    pub fn rel_prod_prov(rel: RelacionProdProvDB) -> RelacionProdProv {
         RelacionProdProv::build(rel.proveedor, rel.codigo)
     }
     pub async fn producto(db: &Pool<Sqlite>, prod: ProductoDB) -> Res<Producto> {
@@ -92,7 +93,7 @@ impl Mapper {
         .fetch_all(db)
         .await?;
         let rels = rels
-            .iter()
+            .into_iter()
             .map(|r| Mapper::rel_prod_prov(r))
             .collect::<Vec<RelacionProdProv>>();
         let mut codigos = [0, 0, 0];
@@ -171,11 +172,16 @@ impl Mapper {
             cliente.limite,
         )
     }
-    pub async fn venta(db: &Pool<Sqlite>, venta: VentaDB, user: &Option<Arc<User>>) -> Res<Venta> {
+    pub async fn venta(
+        db: &Pool<Sqlite>,
+        venta: VentaDB,
+        user: &Option<Arc<UserSH>>,
+    ) -> Res<Venta> {
         {
-            let qres:Vec<RelatedProdDB>=sqlx::query_as!(RelatedProdDB,r#"select productos.id as "id:_",
-                    precio as "precio: _",porcentaje as "porcentaje: _", precio_costo as "precio_costo: _", tipo, marca, variedad, presentacion, size as "size: _", cantidad as "cantidad: _"
-                    from relacion_venta_prod inner join productos on relacion_venta_prod.id = productos.id where venta = ?
+            let qres:Vec<RelatedProdDB>=sqlx::query_as!(RelatedProdDB,r#"
+            select productos.id as "id:_",
+            precio as "precio: _",porcentaje as "porcentaje: _", precio_costo as "precio_costo: _", tipo, marca, variedad, presentacion, size as "size: _", cantidad as "cantidad: _"
+            from relacion_venta_prod inner join productos on relacion_venta_prod.id = productos.id where venta = ?
                      "#,venta.id).fetch_all(db).await?;
             let mut productos = Vec::new();
             for rel in qres {
@@ -194,7 +200,7 @@ impl Mapper {
                 .fetch_all(db)
                 .await?;
                 let rels = rels
-                    .iter()
+                    .into_iter()
                     .map(|r| Mapper::rel_prod_prov(r))
                     .collect::<Vec<RelacionProdProv>>();
                 let mut codigos = [0, 0, 0];
@@ -426,7 +432,7 @@ pub mod map {
     pub struct ProvDB {
         pub id: i32,
         pub nombre: String,
-        pub contacto: Option<i32>,
+        pub contacto: Option<i64>,
         pub updated: NaiveDateTime,
     }
     #[derive(FromRow)]

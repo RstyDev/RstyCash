@@ -4,43 +4,31 @@ use crate::client::mods::{
 };
 use std::rc::Rc;
 use sycamore::prelude::*;
+use crate::client::mods::lib::debug;
 
-#[derive(Prop)]
+#[derive(Props)]
 pub struct ProdsProps {
-    venta: RcSignal<Venta>,
-    config: Rc<Config>,
+    venta: Signal<Venta>,
+    config: Signal<Config>,
     pos: bool,
-    focus: RcSignal<bool>,
+    focus: Signal<bool>,
 }
 #[allow(non_snake_case)]
 #[component]
-pub fn Productos<G: Html>(cx: Scope, props: ProdsProps) -> View<G> {
-    let venta = props.venta.clone();
-    let venta1 = props.venta.clone();
-    let prods = create_signal(
-        cx,
-        props
-            .venta
-            .get()
-            .productos
-            .iter()
-            .map(|x| Rc::from(x.clone()))
-            .collect::<Vec<Rc<Valuable>>>(),
-    );
-    let conf = create_signal_from_rc(cx, props.config);
-    create_memo(cx, move || {
-        prods.set(Vec::new());
-        prods.set(
-            venta1
-                .get()
-                .productos
-                .iter()
-                .map(|x| Rc::from(x.clone()))
-                .collect::<Vec<Rc<Valuable>>>(),
-        );
-    });
+pub fn Productos(props: ProdsProps) -> View {
+    debug(&props.venta.get_clone(),18,"productos");
+    let venta = props.venta.get_clone();
+    let prods = venta.productos.clone();
 
-    view! {cx,
+    //let prods = create_memo(move || venta.map(|v|v.productos.clone()));
+    //let prods = create_signal(props.venta.get_clone().productos.clone());
+    let conf = props.config.clone();
+    // create_memo(move || {
+    //     prods.set(Vec::new());
+    //     prods.set(props.venta.get_clone().productos.clone());
+    // });
+
+    view! {
         section(id="productos"){
             article(class="articulo"){
                 section(class="descripcion"){
@@ -57,11 +45,11 @@ pub fn Productos<G: Html>(cx: Scope, props: ProdsProps) -> View<G> {
                 }
             }
             Keyed(
-                iterable = prods,
-                view = move |cx,x|{
-                    let venta = venta.clone();
+                list = prods.clone(),
+                view = move |x|{
+                    let venta = props.venta.clone();
                     let focus = props.focus.clone();
-                    view!{cx,Prod(valuable = x.clone(), conf = conf.get(), pos = props.pos, venta = venta.clone(), focus=focus)}
+                    view!{Prod(valuable = x.clone(), conf = conf.clone(), pos = props.pos, venta = venta, focus=focus)}
                 },
                 key = |x|{x.id()}
             )

@@ -93,7 +93,7 @@ impl Pago {
         self.pagado = pagado;
     }
 
-    pub fn to_shared_complete(&self) -> Self {
+    pub fn to_shared(&self) -> Self {
         self.clone()
     }
 }

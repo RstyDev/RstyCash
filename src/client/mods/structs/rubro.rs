@@ -9,7 +9,7 @@ pub struct Rubro {
     pub descripcion: Arc<str>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct RubroSHC {
+pub struct RubroSH {
     pub id: i32,
     pub codigo: [u8; 8],
     pub monto: Option<f32>,
@@ -27,15 +27,15 @@ impl Rubro {
     pub fn get_desc(&self) -> String {
         self.descripcion.to_string()
     }
-    pub fn to_shared_complete(&self) -> RubroSHC {
-        RubroSHC {
+    pub fn to_shared(&self) -> RubroSH {
+        RubroSH {
             id: self.id,
             codigo: self.codigo.to_be_bytes(),
             monto: self.monto,
             descripcion: self.descripcion.clone(),
         }
     }
-    pub fn from_shared_complete(rubro: RubroSHC) -> Self {
+    pub fn from_shared(rubro: RubroSH) -> Self {
         Rubro {
             id: rubro.id,
             codigo: i64::from_be_bytes(rubro.codigo),
@@ -50,7 +50,7 @@ impl PartialEq for Rubro {
         self.id == other.id
     }
 }
-impl PartialEq for RubroSHC {
+impl PartialEq for RubroSH {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }

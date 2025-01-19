@@ -10,7 +10,7 @@ pub struct Proveedor {
     nombre: Arc<str>,
     contacto: Option<i64>,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ProveedorSH {
     pub id: i32,
     pub nombre: Arc<str>,
@@ -63,14 +63,14 @@ impl Proveedor {
     pub fn contacto(&self) -> &Option<i64> {
         &self.contacto
     }
-    pub fn to_shared_complete(&self) -> ProveedorSH {
+    pub fn to_shared(&self) -> ProveedorSH {
         ProveedorSH {
             id: self.id,
             nombre: self.nombre.clone(),
             contacto: self.contacto.map(|c| c.to_be_bytes()),
         }
     }
-    pub fn from_shared_complete(proveedor: ProveedorSH) -> Self {
+    pub fn from_shared(proveedor: ProveedorSH) -> Self {
         Proveedor {
             id: proveedor.id,
             nombre: proveedor.nombre,

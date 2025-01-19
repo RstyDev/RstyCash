@@ -51,11 +51,11 @@ impl User {
     pub fn set_nombre(&mut self, nombre: String) {
         self.nombre = nombre;
     }
-    pub fn to_shared(self) -> UserSH {
+    pub fn to_shared(&self) -> UserSH {
         UserSH {
-            id: self.id,
-            nombre: self.nombre,
-            rango: self.rango,
+            id: self.id.clone(),
+            nombre: self.nombre.clone(),
+            rango: self.rango.clone(),
         }
     }
     pub fn to_shared_complete(&self) -> UserSHC {

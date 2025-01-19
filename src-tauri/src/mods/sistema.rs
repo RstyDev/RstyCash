@@ -9,11 +9,11 @@ use crate::mods::{
         Mapper,
     },
     get_hash, leer_file, AppError, Caja, Cli, Config, Db, Movimiento, Pago, Pesable, Presentacion,
-    Producto, Proveedor, Rango, RelacionProdProv, Res, Rubro, User, Valuable, Venta,
+    Producto, Proveedor, Rango, RelacionProdProv, Res, Rubro, User, Valuable, ValuableSH, Venta,
 };
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use sqlx::{Pool, Sqlite};
+use sqlx::{Error, Pool, Sqlite};
 use std::{collections::HashSet, sync::Arc};
 use tauri::async_runtime::{self, block_on};
 use Valuable as V;
@@ -207,10 +207,7 @@ impl<'a> Sistema {
         println!("Faltante");
     }
     pub fn user(&self) -> Option<Arc<User>> {
-        match &self.user {
-            Some(a) => Some(Arc::clone(a)),
-            None => None,
-        }
+        self.user.clone()
     }
 
     pub fn cancelar_venta(&mut self, pos: bool) -> Res<()> {
@@ -290,15 +287,17 @@ impl<'a> Sistema {
         leer_file(&mut pesables, path_pesables)?;
         leer_file(&mut productos, path_productos)?;
 
-        let mut rubros_valuable: Vec<Valuable> =
-            rubros.iter().map(|a| V::Rub((0, a.to_owned()))).collect();
+        let mut rubros_valuable: Vec<Valuable> = rubros
+            .into_iter()
+            .map(|a| V::Rub((0, a.to_owned())))
+            .collect();
         let mut pesables_valuable: Vec<Valuable> = pesables
-            .iter()
+            .into_iter()
             .map(|a| V::Pes((0.0, a.to_owned())))
             .collect();
         let mut valuables: Vec<Valuable> = productos
             .clone()
-            .iter()
+            .into_iter()
             .map(|a| V::Prod((0, a.to_owned())))
             .collect();
         valuables.append(&mut pesables_valuable);
@@ -370,7 +369,7 @@ impl<'a> Sistema {
                 .collect::<Vec<Cliente>>()
         );
         Ok(qres
-            .iter()
+            .into_iter()
             .map(|cli| {
                 if cli.dni == 1 {
                     Cliente::Final
@@ -424,8 +423,8 @@ impl<'a> Sistema {
                     rango,
                 )));
                 self.ventas = Ventas {
-                    a: Venta::get_or_new(Some(self.arc_user()), &self.db, true).await?,
-                    b: Venta::get_or_new(Some(self.arc_user()), &self.db, false).await?,
+                    a: Venta::get_or_new(Some(self.arc_user_sh()), &self.db, true).await?,
+                    b: Venta::get_or_new(Some(self.arc_user_sh()), &self.db, false).await?,
                 };
                 Ok(self.arc_user().rango().clone())
             }
@@ -506,7 +505,7 @@ impl<'a> Sistema {
                         }
                     }
                     let rels = rels
-                        .iter()
+                        .into_iter()
                         .map(|r| Mapper::rel_prod_prov(r))
                         .collect::<Vec<RelacionProdProv>>();
                     res.push(V::Prod((
@@ -539,7 +538,7 @@ impl<'a> Sistema {
                 let qres: Vec<CodedPesDB> = qres.fetch_all(db).await?;
                 res.append(
                     &mut qres
-                        .iter()
+                        .into_iter()
                         .map(|pes| {
                             V::Pes((
                                 1.0,
@@ -568,7 +567,7 @@ impl<'a> Sistema {
                 let qres: Vec<CodedRubDB> = qres.fetch_all(db).await?;
                 res.append(
                     &mut qres
-                        .iter()
+                        .into_iter()
                         .map(|rub| {
                             V::Rub((
                                 1,
@@ -580,8 +579,7 @@ impl<'a> Sistema {
             }
         }
         Ok(res
-            .iter()
-            .cloned()
+            .into_iter()
             .take(*self.configs.cantidad_productos() as usize)
             .collect())
     }
@@ -598,14 +596,32 @@ impl<'a> Sistema {
         }
     }
     pub async fn proveedores(&self) -> Res<Vec<Proveedor>> {
-        let qres: Vec<ProvDB> = sqlx::query_as!(
+        println!("Pre");
+
+        let qres: Result<Vec<ProvDB>, sqlx::error::Error> = sqlx::query_as!(
             ProvDB,
             r#"select id as "id:_", nombre, contacto as "contacto:_", updated from proveedores"#
         )
         .fetch_all(self.db.as_ref())
-        .await?;
+        .await;
+        match &qres {
+            Ok(o) => debug(
+                &o.iter()
+                    .map(|p| Proveedor::build(p.id, &p.nombre, p.contacto.map(|o| o as i64)))
+                    .collect::<Vec<Proveedor>>(),
+                601,
+                "sistema",
+            ),
+            Err(e) => debug(e, 602, "sistema"),
+        }
+        // debug(match &qres{
+        //     Ok(o) => ,
+        //     Err(e) => &vec![e.clone().to_string()],
+        // }, 600, "sistema");
+        let qres = qres?;
+        println!("Post");
         Ok(qres
-            .iter()
+            .into_iter()
             .map(|prov| {
                 Proveedor::build(
                     prov.id,
@@ -646,7 +662,16 @@ impl<'a> Sistema {
     }
     pub fn pagar_deuda_especifica(&self, cliente: i32, venta: Venta) -> Res<Venta> {
         async_runtime::block_on(async {
-            Cli::pagar_deuda_especifica(cliente, &self.db, venta, &self.user).await
+            Cli::pagar_deuda_especifica(
+                cliente,
+                &self.db,
+                venta,
+                match &self.user() {
+                    None => None,
+                    Some(u) => Some(Arc::from(u.to_shared())),
+                },
+            )
+            .await
         })
     }
     pub fn pagar_deuda_general(&self, cliente: i64, monto: f32) -> Res<f32> {
@@ -676,33 +701,36 @@ impl<'a> Sistema {
         async_runtime::block_on(async { Proveedor::new_to_db(proveedor, self.db()).await })?;
         Ok(())
     }
-    pub async fn agregar_producto_a_venta(&mut self, prod: Valuable, pos: bool) -> Res<()> {
+    pub async fn agregar_producto_a_venta(&mut self, prod: ValuableSH, pos: bool) -> Res<()> {
         let existe = match &prod {
-            Valuable::Prod((_, prod)) => {
+            ValuableSH::Prod((_, prod)) => {
+                let id = prod.id();
                 let qres: Option<IntDB> = sqlx::query_as!(
                     IntDB,
                     r#"select id as "int:_" from productos where id = ? "#,
-                    *prod.id()
+                    id
                 )
                 .fetch_optional(self.db())
                 .await?;
                 qres.is_some()
             }
-            Valuable::Pes((_, pes)) => {
+            ValuableSH::Pes((_, pes)) => {
+                let id = pes.id();
                 let qres: Option<IntDB> = sqlx::query_as!(
                     IntDB,
                     r#"select id as "int:_" from pesables where id = ? "#,
-                    *pes.id()
+                    id
                 )
                 .fetch_optional(self.db())
                 .await?;
                 qres.is_some()
             }
-            Valuable::Rub((_, rub)) => {
+            ValuableSH::Rub((_, rub)) => {
+                let id = rub.id();
                 let qres: Option<IntDB> = sqlx::query_as!(
                     IntDB,
                     r#"select id as "int:_" from rubros where id = ? "#,
-                    *rub.id()
+                    id
                 )
                 .fetch_optional(self.db())
                 .await?;
@@ -716,17 +744,17 @@ impl<'a> Sistema {
                 result = Ok(self
                     .ventas
                     .a
-                    .agregar_producto(prod, &self.configs().politica()))
+                    .agregar_producto(V::from_shared(prod), &self.configs().politica()))
             } else {
                 result = Ok(self
                     .ventas
                     .b
-                    .agregar_producto(prod, &self.configs().politica()))
+                    .agregar_producto(V::from_shared(prod), &self.configs().politica()))
             }
         } else {
             return Err(AppError::NotFound {
                 objeto: String::from("producto"),
-                instancia: prod.descripcion(&self.configs()),
+                instancia: V::from_shared(prod).descripcion(&self.configs()),
             });
         }
 
@@ -817,11 +845,10 @@ impl<'a> Sistema {
             .fetch_all(self.db())
             .await?;
             Ok(qres
-                .iter()
+                .into_iter()
                 .map(|s| s.string.to_owned())
                 .collect::<HashSet<String>>()
-                .iter()
-                .cloned()
+                .into_iter()
                 .collect::<Vec<String>>())
         })
     }
@@ -838,11 +865,10 @@ impl<'a> Sistema {
             .fetch_all(self.db())
             .await?;
             Ok(qres
-                .iter()
+                .into_iter()
                 .map(|d| d.string.to_owned())
                 .collect::<HashSet<String>>()
-                .iter()
-                .cloned()
+                .into_iter()
                 .collect::<Vec<String>>())
         })
     }
@@ -871,7 +897,7 @@ impl<'a> Sistema {
         self.set_venta(
             pos,
             async_runtime::block_on(async {
-                Venta::get_or_new(Some(self.arc_user()), self.db(), pos).await
+                Venta::get_or_new(Some(self.arc_user_sh()), self.db(), pos).await
             })?,
         );
         Ok(())
@@ -888,7 +914,17 @@ impl<'a> Sistema {
         async_runtime::block_on(async { cliente.get_deuda(&self.db).await })
     }
     pub fn get_deuda_detalle(&self, cliente: Cli) -> Res<Vec<Venta>> {
-        async_runtime::block_on(async { cliente.get_deuda_detalle(&self.db, self.user()).await })
+        async_runtime::block_on(async {
+            cliente
+                .get_deuda_detalle(
+                    &self.db,
+                    match &self.user {
+                        None => None,
+                        Some(u) => Some(Arc::from(u.as_ref().to_shared())),
+                    },
+                )
+                .await
+        })
     }
     pub fn eliminar_valuable(&self, val: V) {
         let _res = async_runtime::block_on(async { val.eliminar(self.db.as_ref()).await });
@@ -899,12 +935,15 @@ impl<'a> Sistema {
     pub fn arc_user(&self) -> Arc<User> {
         Arc::clone(&self.user.as_ref().unwrap())
     }
+    pub fn arc_user_sh(&self) -> Arc<UserSH> {
+        Arc::from(self.user.clone().unwrap().to_shared())
+    }
     pub fn stash_sale(&mut self, pos: bool) -> Res<()> {
         self.stash.push(self.venta(pos));
         self.set_venta(
             pos,
             async_runtime::block_on(async {
-                Venta::get_or_new(Some(self.arc_user()), self.db(), pos).await
+                Venta::get_or_new(Some(self.arc_user_sh()), self.db(), pos).await
             })?,
         );
         Ok(())
@@ -966,14 +1005,14 @@ impl<'a> Sistema {
     pub fn to_shared(&self) -> SistemaSH {
         SistemaSH {
             user: self.user.clone().unwrap().to_shared(),
-            caja: self.caja.to_shared_complete(),
-            configs: self.configs.to_shared_complete(),
+            caja: self.caja.to_shared(),
+            configs: self.configs.to_shared(),
             clientes: self.clientes.clone(),
             ventas: [self.ventas.a.to_shared(), self.ventas.b.to_shared()],
             proveedores: self
                 .proveedores
                 .iter()
-                .map(|prov| prov.to_shared_complete())
+                .map(|prov| prov.to_shared())
                 .collect::<Vec<ProveedorSH>>(),
         }
     }

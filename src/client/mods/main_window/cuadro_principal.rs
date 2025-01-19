@@ -1,29 +1,26 @@
 use crate::client::mods::{main_window::cuadro_venta::*, structs::Pos};
 use sycamore::prelude::*;
-#[derive(Prop)]
+#[derive(Props)]
 pub struct PrincProps {
-    pub pos: RcSignal<Pos>,
-    pub focus: RcSignal<bool>,
+    pub pos: Signal<Pos>,
+    pub focus: Signal<bool>,
 }
 #[allow(non_snake_case)]
 #[component]
-pub fn CuadroPrincipal<G: Html>(cx: Scope, props: PrincProps) -> View<G> {
-    let foc = props.focus.clone();
-    view! {cx,
-        section(id="cuadro-principal",class=format!("focuseable {}",match foc.get().as_ref(){
+pub fn CuadroPrincipal(props: PrincProps) -> View {
+    view! {
+        section(id="cuadro-principal",class=format!("focuseable {}",match props.focus.get(){
             true => "",
             false => "not-focused",
         })){
-            (match props.pos.get().as_ref(){
+            (props.pos.with(|p|match p{
                 Pos::A { venta, config, .. } => {
-                    let foc = props.focus.clone();
-                    view!{cx,CuadroVenta(venta=venta.clone(),config=config.get(),pos=true,focus=foc.clone())}
+                    view!{CuadroVenta(venta=venta.clone(),config=config.clone(),pos=true,focus=props.focus.clone())}
                 },
                 Pos::B { venta, config, .. } => {
-                    let foc = props.focus.clone();
-                    view!{cx,CuadroVenta(venta=venta.clone(),config=config.get(),pos=false,focus=foc.clone())}
+                    view!{CuadroVenta(venta=venta.clone(),config=config.clone(),pos=false,focus=props.focus.clone())}
                 },
-            })
+            }))
         }
     }
 }

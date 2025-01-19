@@ -1,16 +1,18 @@
+use crate::client::mods::{
+    lib::{call, debug},
+    structs::args::EmptyArgs,
+};
 use sycamore::{futures::spawn_local_scoped, prelude::*};
-use crate::client::mods::{lib::{call, debug}, structs::{args::EmptyArgs, Windows}};
 
-
-#[derive(Prop)]
-pub struct MenuProps{
-    pub logged: RcSignal<bool>
+#[derive(Props)]
+pub struct MenuProps {
+    pub logged: Signal<bool>,
 }
 
 #[allow(non_snake_case)]
 #[component]
-pub fn Menu<G: Html>(cx:Scope, props: MenuProps)->View<G>{
-    view!(cx,
+pub fn Menu(props: MenuProps) -> View {
+    view!(
         div(id="menu"){
             section(){
                 button(){"Opciones"}
@@ -21,11 +23,10 @@ pub fn Menu<G: Html>(cx:Scope, props: MenuProps)->View<G>{
                     li(){a(){"Agregar usuario"}}
                     li(){a(){"Configuraciones"}}
                     li(){a(on:click= move |_|{
-                        let logged = props.logged.clone();
-                        spawn_local_scoped(cx, async move{
+                        spawn_local_scoped(async move{
                             call("cerrar_sesion", EmptyArgs{}).await;
-                            debug(logged.get().as_ref(),25,"menu");
-                            logged.set(false);
+                            debug(&props.logged.get(),25,"menu");
+                            props.logged.set(false);
                         });
                     }){"Cerrar sesion"}}
                 }

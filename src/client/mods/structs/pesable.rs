@@ -10,15 +10,9 @@ pub struct Pesable {
     pub costo_kilo: f32,
     pub descripcion: Arc<str>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PesableSH {
-    pub id: i32,
-    pub codigo: [u8; 8],
-    pub precio_peso: f32,
-    pub descripcion: Arc<str>,
-}
-#[derive(Serialize, Deserialize)]
-pub struct PesableSHC {
     pub id: i32,
     pub codigo: [u8; 8],
     pub precio_peso: f32,
@@ -47,17 +41,9 @@ impl Pesable {
     pub fn get_desc(&self) -> String {
         self.descripcion.to_string()
     }
+
     pub fn to_shared(&self) -> PesableSH {
         PesableSH {
-            id: self.id,
-            codigo: self.codigo.to_be_bytes(),
-            precio_peso: self.precio_peso,
-            descripcion: self.descripcion.clone(),
-        }
-    }
-
-    pub fn to_shared_complete(&self) -> PesableSHC {
-        PesableSHC {
             id: self.id,
             codigo: self.codigo.to_be_bytes(),
             precio_peso: self.precio_peso,
@@ -66,7 +52,7 @@ impl Pesable {
             descripcion: self.descripcion.clone(),
         }
     }
-    pub fn from_shared_complete(pesable: PesableSHC) -> Self {
+    pub fn from_shared(pesable: PesableSH) -> Self {
         Pesable {
             id: pesable.id,
             codigo: i64::from_be_bytes(pesable.codigo),

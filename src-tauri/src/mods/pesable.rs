@@ -24,16 +24,14 @@ pub struct PesableSH {
     id: i32,
     codigo: [u8; 8],
     precio_peso: f32,
-    descripcion: Arc<str>,
-}
-#[derive(Serialize, Deserialize)]
-pub struct PesableSHC {
-    id: i32,
-    codigo: [u8; 8],
-    precio_peso: f32,
     porcentaje: f32,
     costo_kilo: f32,
     descripcion: Arc<str>,
+}
+impl PesableSH {
+    pub fn id(&self) -> i32 {
+        self.id
+    }
 }
 impl Pesable {
     pub fn build(
@@ -174,39 +172,41 @@ impl Pesable {
             }
         }
     }
+    // pub fn to_shared(&self) -> PesableSH {
+    //     PesableSH {
+    //         id: self.id,
+    //         codigo: self.codigo.to_be_bytes(),
+    //         precio_peso: self.precio_peso,
+    //         porcentaje: self.porcentaje,
+    //         costo_kilo: self.costo_kilo,
+    //         descripcion: self.descripcion.clone(),
+    //     }
+    // }
+    // pub async fn from_shared(pesable: PesableSH, db: &Pool<Sqlite>) -> Res<Self> {
+    //     let qres = sqlx::query_as!(
+    //         PesableDB,
+    //         r#"select id as "id:i32",
+    //     precio_peso as "precio_peso:f32",
+    //     porcentaje as "porcentaje:f32",
+    //     costo_kilo as "costo_kilo:f32",
+    //     descripcion,
+    //     updated_at from pesables where id = ?"#,
+    //         pesable.id
+    //     )
+    //     .fetch_one(db)
+    //     .await?;
+    //     let cod = sqlx::query_as!(
+    //         BigIntDB,
+    //         "select codigo as int from codigos where pesable = ?",
+    //         pesable.id
+    //     )
+    //     .fetch_one(db)
+    //     .await?;
+    //     let res = Mapper::pesable(qres, cod.int);
+    //     Ok(res)
+    // }
     pub fn to_shared(&self) -> PesableSH {
         PesableSH {
-            id: self.id,
-            codigo: self.codigo.to_be_bytes(),
-            precio_peso: self.precio_peso,
-            descripcion: self.descripcion.clone(),
-        }
-    }
-    pub async fn from_shared(pesable: PesableSH, db: &Pool<Sqlite>) -> Res<Self> {
-        let qres = sqlx::query_as!(
-            PesableDB,
-            r#"select id as "id:i32",
-        precio_peso as "precio_peso:f32",
-        porcentaje as "porcentaje:f32",
-        costo_kilo as "costo_kilo:f32",
-        descripcion,
-        updated_at from pesables where id = ?"#,
-            pesable.id
-        )
-        .fetch_one(db)
-        .await?;
-        let cod = sqlx::query_as!(
-            BigIntDB,
-            "select codigo as int from codigos where pesable = ?",
-            pesable.id
-        )
-        .fetch_one(db)
-        .await?;
-        let res = Mapper::pesable(qres, cod.int);
-        Ok(res)
-    }
-    pub fn to_shared_complete(&self) -> PesableSHC {
-        PesableSHC {
             id: self.id,
             codigo: self.codigo.to_be_bytes(),
             precio_peso: self.precio_peso,
@@ -215,7 +215,7 @@ impl Pesable {
             descripcion: self.descripcion.clone(),
         }
     }
-    pub fn from_shared_complete(pesable: PesableSHC) -> Self {
+    pub fn from_shared(pesable: PesableSH) -> Self {
         Pesable {
             id: pesable.id,
             codigo: i64::from_be_bytes(pesable.codigo),

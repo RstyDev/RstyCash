@@ -18,15 +18,17 @@ pub mod commands {
         cmd::{Payload, DENEGADO, INDEX},
         sistema::SistemaSH,
         AppError, Caja, Cli, Cliente, Config, MedioPago, Pago, Pesable, Producto, Proveedor, Rango,
-        Res, Rubro, Sistema, User, Valuable as V, ValuableSH, Venta, VentaSHC,
+        Res, Rubro, Sistema, User, Valuable as V, ValuableSH, Venta, VentaSH,
     };
     use std::sync::Arc;
-    use tauri::{async_runtime::{block_on, spawn, Mutex}, LogicalSize, PhysicalSize, Size};
-    use tauri::window::MenuHandle;
+    // use tauri::window::MenuHandle;
+    use crate::mods::proveedor::ProveedorSH;
     use tauri::{
-        AppHandle, CustomMenuItem, Manager, Menu, State, Submenu, Window, WindowBuilder, WindowUrl,
+        async_runtime::{block_on, spawn, Mutex},
+        menu::Menu,
+        LogicalSize, PhysicalSize, Size, Url, WebviewUrl, WebviewWindowBuilder,
     };
-
+    use tauri::{AppHandle, Manager, State, Window};
     // pub fn get_menu() -> Menu {
     //     let cerrar_caja_menu = CustomMenuItem::new(String::from("cerrar caja"), "Cerrar caja");
     //     let add_product_menu = CustomMenuItem::new(String::from("add product"), "Agregar producto");
@@ -79,30 +81,30 @@ pub mod commands {
         let sis = block_on(sistema.lock());
         sis.access();
         let cli = sis.agregar_cliente(cliente)?;
-        loop {
-            if window
-                .emit(
-                    "main",
-                    Payload {
-                        message: Some(String::from("dibujar venta")),
-                        pos: None,
-                        val: None,
-                    },
-                )
-                .is_ok()
-            {
-                break;
-            }
-        }
+        // loop {
+        //     if window
+        //         .emit(
+        //             "main",
+        //             Payload {
+        //                 message: Some(String::from("dibujar venta")),
+        //                 pos: None,
+        //                 val: None,
+        //             },
+        //         )
+        //         .is_ok()
+        //     {
+        //         break;
+        //     }
+        // }
         close_window_2(window)?;
         Ok(cli)
     }
 
-    pub fn agregar_pago_2(sistema: State<Mutex<Sistema>>, pago: Pago, pos: bool) -> Res<VentaSHC> {
+    pub fn agregar_pago_2(sistema: State<Mutex<Sistema>>, pago: Pago, pos: bool) -> Res<VentaSH> {
         let mut sis = block_on(sistema.lock());
         sis.access();
         sis.agregar_pago(pago, pos)?;
-        Ok(sis.venta(pos).to_shared_complete())
+        Ok(sis.venta(pos).to_shared())
     }
     pub fn _agregar_pesable_2<'a>(
         window: Window,
@@ -143,9 +145,8 @@ pub mod commands {
     ) -> Res<Venta> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        let prod = block_on(async { V::from_shared(prod, sis.db()).await })?;
-        match prod {
-            V::Prod(_) => {
+        match &prod {
+            ValuableSH::Prod(p) => {
                 block_on(sis.agregar_producto_a_venta(prod, pos))?;
                 // loop {
                 //     if let Ok(_) = window
@@ -157,15 +158,15 @@ pub mod commands {
                 //     }
                 // }
             }
-            V::Pes(a) => {
+            ValuableSH::Pes(a) => {
                 // spawn(open_select_amount_2(
                 //     window.app_handle(),
                 //     V::Pes((a.0,Pesable::from_shared(a.1))),
                 //     pos,
                 // ));
             }
-            V::Rub(a) => {
-                spawn(open_select_amount_2(window.app_handle(), V::Rub(a), pos));
+            ValuableSH::Rub(a) => {
+                // spawn(open_select_amount_2(window.app_handle().clone(), V::Rub(a), pos));
             }
         }
         Ok(sis.venta(pos))
@@ -208,23 +209,22 @@ pub mod commands {
     ) -> Res<()> {
         let mut sis = block_on(sistema.lock());
         sis.access();
-        let val = block_on(async { V::from_shared(val, sis.db()).await })?;
         block_on(sis.agregar_producto_a_venta(val, pos))?;
-        loop {
-            if window
-                .emit(
-                    "main",
-                    Payload {
-                        message: Some(String::from("dibujar venta")),
-                        pos: None,
-                        val: None,
-                    },
-                )
-                .is_ok()
-            {
-                break;
-            }
-        }
+        // loop {
+        //     if window
+        //         .emit(
+        //             "main",
+        //             Payload {
+        //                 message: Some(String::from("dibujar venta")),
+        //                 pos: None,
+        //                 val: None,
+        //             },
+        //         )
+        //         .is_ok()
+        //     {
+        //         break;
+        //     }
+        // }
         Ok(close_window_2(window)?)
     }
     pub fn agregar_usuario_2(
@@ -243,11 +243,15 @@ pub mod commands {
         }
     }
     pub async fn cerrar_sesion_2<'a>(
-        sistema: State<'a, Mutex<Sistema>>,window: Window
+        sistema: State<'a, Mutex<Sistema>>,
+        window: Window,
     ) -> Res<()> {
         let mut sis = sistema.lock().await;
         window.set_decorations(false)?;
-        window.set_size(Size::Logical(LogicalSize { width: 400.0, height: 300.0 }))?;
+        window.set_size(Size::Logical(LogicalSize {
+            width: 400.0,
+            height: 300.0,
+        }))?;
         Ok(sis.cerrar_sesion())
     }
     pub fn cancelar_venta_2(sistema: State<Mutex<Sistema>>, pos: bool) -> Res<()> {
@@ -341,7 +345,7 @@ pub mod commands {
     }
     pub fn get_descripciones_2(prods: Vec<V>, conf: Config) -> Vec<(String, Option<f32>)> {
         prods
-            .iter()
+            .into_iter()
             .map(|p| (p.descripcion(&conf), p.price(&conf.politica())))
             .collect::<Vec<(String, Option<f32>)>>()
     }
@@ -379,24 +383,19 @@ pub mod commands {
     pub fn get_medios_pago_2(sistema: State<Mutex<Sistema>>) -> Res<Vec<MedioPago>> {
         let sis = block_on(sistema.lock());
         sis.access();
-        Ok(sis
-            .configs()
-            .medios_pago()
-            .iter()
-            .map(|m| m.clone())
-            .collect())
+        Ok(sis.configs().medios_pago().clone())
     }
     pub fn get_productos_filtrado_2(sistema: State<Mutex<Sistema>>, filtro: &str) -> Res<Vec<V>> {
         let sis = block_on(sistema.lock());
         sis.access();
         Ok(block_on(sis.val_filtrado(filtro, sis.db()))?)
     }
-    pub fn get_proveedores_2(sistema: State<'_, Mutex<Sistema>>) -> Res<Vec<String>> {
+    pub fn get_proveedores_2(sistema: State<'_, Mutex<Sistema>>) -> Res<Vec<ProveedorSH>> {
         let sis = block_on(sistema.lock());
-        sis.access();
+        // sis.access();
         Ok(block_on(sis.proveedores())?
-            .iter()
-            .map(|x| x.to_string())
+            .into_iter()
+            .map(|x| x.to_shared())
             .collect())
     }
     pub fn get_rango_2(sistema: State<Mutex<Sistema>>) -> Res<Rango> {
@@ -470,20 +469,20 @@ pub mod commands {
         Ok(venta)
     }
     pub async fn open_add_prov_2(handle: AppHandle) -> Res<()> {
-        match handle.get_window("add-prov") {
+        match handle.get_webview_window("add-prov") {
             Some(window) => Ok(window.show()?),
             None => {
-                WindowBuilder::new(
+                WebviewWindowBuilder::new(
                     &handle,
                     "add-prov", /* the unique window label */
-                    WindowUrl::App(INDEX.parse().unwrap()),
+                    WebviewUrl::App(INDEX.parse().unwrap()),
                 )
                 .always_on_top(true)
                 .center()
                 .resizable(false)
                 .minimizable(false)
                 .inner_size(330.0, 210.0)
-                .menu(Menu::new())
+                // .menu(Menu::new())
                 .title("Agregar Proveedor")
                 .build()?;
                 Ok(())
@@ -491,31 +490,35 @@ pub mod commands {
         }
     }
     pub async fn open_add_product_2(handle: AppHandle) -> Res<()> {
-        match handle.get_window("add-prod") {
+        match handle.get_webview_window("add-prod") {
             Some(window) => Ok(window.show()?),
             None => {
-                WindowBuilder::new(&handle, "add-prod", WindowUrl::App(INDEX.parse().unwrap()))
-                    .always_on_top(true)
-                    .center()
-                    .resizable(false)
-                    .minimizable(false)
-                    .title("Seleccione una opción")
-                    .inner_size(600.0, 380.0)
-                    .menu(Menu::new())
-                    .build()?;
+                WebviewWindowBuilder::new(
+                    &handle,
+                    "add-prod",
+                    WebviewUrl::App(INDEX.parse().unwrap()),
+                )
+                .always_on_top(true)
+                .center()
+                .resizable(false)
+                .minimizable(false)
+                .title("Seleccione una opción")
+                .inner_size(600.0, 380.0)
+                // .menu(Menu::new())
+                .build()?;
                 Ok(())
             }
         }
     }
 
     pub async fn open_add_user_2(handle: AppHandle) -> Res<()> {
-        match handle.get_window("add-user") {
+        match handle.get_webview_window("add-user") {
             Some(window) => Ok(window.show()?),
             None => {
-                WindowBuilder::new(
+                WebviewWindowBuilder::new(
                     &handle,
                     "add-user", /* the unique window label */
-                    WindowUrl::App(INDEX.parse().unwrap()),
+                    WebviewUrl::App(INDEX.parse().unwrap()),
                 )
                 .always_on_top(true)
                 .center()
@@ -523,20 +526,20 @@ pub mod commands {
                 .minimizable(false)
                 .title("Agregar Usuario")
                 .inner_size(430.0, 200.0)
-                .menu(Menu::new())
+                // .menu(Menu::new())
                 .build()?;
                 Ok(())
             }
         }
     }
     pub async fn open_add_cliente_2(handle: AppHandle) -> Res<()> {
-        match handle.get_window("add-cliente") {
+        match handle.get_webview_window("add-cliente") {
             Some(window) => Ok(window.show()?),
             None => {
-                WindowBuilder::new(
+                WebviewWindowBuilder::new(
                     &handle,
                     "add-cliente",
-                    WindowUrl::App(INDEX.parse().unwrap()),
+                    WebviewUrl::App(INDEX.parse().unwrap()),
                 )
                 .always_on_top(true)
                 .center()
@@ -544,7 +547,7 @@ pub mod commands {
                 .minimizable(false)
                 .title("Agregar Cliente")
                 .inner_size(400.0, 230.0)
-                .menu(Menu::new())
+                // .menu(Menu::new())
                 .build()?;
                 Ok(())
             }
@@ -552,31 +555,31 @@ pub mod commands {
     }
     pub async fn open_cancelar_venta_2(handle: AppHandle, act: bool) -> Res<()> {
         //TODO!(Hay que ver si es necesario usar un mismo html o no asi evi el window.emit)
-        match handle.get_window("confirm-cancel") {
+        match handle.get_webview_window("confirm-cancel") {
             Some(window) => {
                 window.show()?;
-                window.emit(
-                    "get-venta",
-                    Payload {
-                        message: Some(String::from("cancelar venta")),
-                        pos: Some(act),
-                        val: None,
-                    },
-                )?;
+                // window.emit(
+                //     "get-venta",
+                //     Payload {
+                //         message: Some(String::from("cancelar venta")),
+                //         pos: Some(act),
+                //         val: None,
+                //     },
+                // )?;
                 Ok(())
             }
             None => {
-                WindowBuilder::new(
+                WebviewWindowBuilder::new(
                     &handle,
                     "confirm-cancel",
-                    WindowUrl::App(INDEX.parse().unwrap()),
+                    WebviewUrl::App(INDEX.parse().unwrap()),
                 )
                 .always_on_top(true)
                 .center()
                 .resizable(false)
                 .minimizable(false)
                 .inner_size(400.0, 150.0)
-                .menu(Menu::new())
+                // .menu(Menu::new())
                 .title("Confirmar")
                 .build()?;
                 Ok(())
@@ -584,13 +587,13 @@ pub mod commands {
         }
     }
     pub async fn open_cerrar_caja_2(handle: AppHandle) -> Res<()> {
-        match handle.get_window("cerrar-caja") {
+        match handle.get_webview_window("cerrar-caja") {
             Some(window) => Ok(window.show()?),
             None => {
-                WindowBuilder::new(
+                WebviewWindowBuilder::new(
                     &handle,
                     "cerrar-caja",
-                    WindowUrl::App(INDEX.parse().unwrap()),
+                    WebviewUrl::App(INDEX.parse().unwrap()),
                 )
                 .always_on_top(true)
                 .center()
@@ -598,7 +601,7 @@ pub mod commands {
                 .minimizable(false)
                 .title("Cerrar Caja")
                 .inner_size(640.0, 620.0)
-                .menu(Menu::new())
+                // .menu(Menu::new())
                 .build()?;
                 Ok(())
             }
@@ -606,72 +609,72 @@ pub mod commands {
     }
     pub async fn open_confirm_stash_2(handle: AppHandle, act: bool) -> Res<()> {
         //TODO!(Aca la otra parte que usa el confirm)
-        match handle.get_window("confirm-stash") {
+        match handle.get_webview_window("confirm-stash") {
             Some(window) => {
                 window.show()?;
-                window.emit(
-                    "get-venta",
-                    Payload {
-                        message: Some(String::from("stash")),
-                        pos: Some(act),
-                        val: None,
-                    },
-                )?;
+                // window.emit(
+                //     "get-venta",
+                //     Payload {
+                //         message: Some(String::from("stash")),
+                //         pos: Some(act),
+                //         val: None,
+                //     },
+                // )?;
                 Ok(())
             }
             None => {
-                let win = WindowBuilder::new(
+                let win = WebviewWindowBuilder::new(
                     &handle,
                     "confirm-stash", /* the unique window label */
-                    WindowUrl::App(INDEX.parse().unwrap()),
+                    WebviewUrl::App(INDEX.parse().unwrap()),
                 )
                 .always_on_top(true)
                 .center()
                 .resizable(false)
                 .minimizable(false)
                 .inner_size(400.0, 150.0)
-                .menu(Menu::new())
+                // .menu(Menu::new())
                 .title("Confirmar Stash")
                 .build()?;
                 std::thread::sleep(std::time::Duration::from_millis(500));
-                win.emit(
-                    "get-venta",
-                    Payload {
-                        message: Some(String::from("stash")),
-                        pos: Some(act),
-                        val: None,
-                    },
-                )?;
+                // win.emit(
+                //     "get-venta",
+                //     Payload {
+                //         message: Some(String::from("stash")),
+                //         pos: Some(act),
+                //         val: None,
+                //     },
+                // )?;
                 for _ in 0..7 {
                     std::thread::sleep(std::time::Duration::from_millis(175));
-                    win.emit(
-                        "get-venta",
-                        Payload {
-                            message: Some(String::from("stash")),
-                            pos: Some(act),
-                            val: None,
-                        },
-                    )?;
+                    // win.emit(
+                    //     "get-venta",
+                    //     Payload {
+                    //         message: Some(String::from("stash")),
+                    //         pos: Some(act),
+                    //         val: None,
+                    //     },
+                    // )?;
                 }
                 Ok(())
             }
         }
     }
     pub async fn open_edit_settings_2(handle: tauri::AppHandle) -> Res<()> {
-        match handle.get_window("edit-settings") {
+        match handle.get_webview_window("edit-settings") {
             Some(window) => Ok(window.show()?),
             None => {
-                WindowBuilder::new(
+                WebviewWindowBuilder::new(
                     &handle,
                     "edit-settings", /* the unique window label */
-                    WindowUrl::App(INDEX.parse().unwrap()),
+                    WebviewUrl::App(INDEX.parse().unwrap()),
                 )
                 .always_on_top(true)
                 .center()
                 .resizable(false)
                 .minimizable(false)
                 .inner_size(500.0, 360.0)
-                .menu(Menu::new())
+                // .menu(Menu::new())
                 .title("Configuraciones")
                 .build()?;
                 Ok(())
@@ -679,17 +682,17 @@ pub mod commands {
         }
     }
     pub async fn open_login_2(handle: tauri::AppHandle) -> Res<()> {
-        handle.get_window("main").unwrap().minimize()?;
-        match handle.get_window("login") {
+        handle.get_webview_window("main").unwrap().minimize()?;
+        match handle.get_webview_window("login") {
             Some(window) => {
                 window.show()?;
                 Ok(window.set_focus()?)
             }
             None => {
-                let window = WindowBuilder::new(
+                let window = WebviewWindowBuilder::new(
                     &handle,
                     "login", /* the unique window label */
-                    WindowUrl::App(INDEX.parse().unwrap()),
+                    WebviewUrl::App(INDEX.parse().unwrap()),
                 )
                 .inner_size(400.0, 300.0)
                 .resizable(false)
@@ -699,7 +702,7 @@ pub mod commands {
                 .decorations(false)
                 .center()
                 .title("Iniciar Sesión")
-                .menu(Menu::new())
+                // .menu(Menu::new())
                 .build()?;
                 window.set_focus()?;
                 Ok(())
@@ -707,65 +710,65 @@ pub mod commands {
         }
     }
     pub async fn open_select_amount_2(handle: tauri::AppHandle, val: V, pos: bool) -> Res<()> {
-        match handle.get_window("select-amount") {
+        match handle.get_webview_window("select-amount") {
             Some(window) => {
                 window.show()?;
                 std::thread::sleep(std::time::Duration::from_millis(400));
                 let mut res = Err(AppError::IncorrectError(String::from(
                     "Error emitiendo mensaje",
                 )));
-                for _ in 0..8 {
-                    std::thread::sleep(std::time::Duration::from_millis(175));
-                    if window
-                        .emit(
-                            "select-amount",
-                            Payload {
-                                message: None,
-                                pos: Some(pos),
-                                val: Some(val.clone()),
-                            },
-                        )
-                        .is_ok()
-                    {
-                        res = Ok(());
-                    }
-                }
+                // for _ in 0..8 {
+                //     std::thread::sleep(std::time::Duration::from_millis(175));
+                //     if window
+                //         .emit(
+                //             "select-amount",
+                //             Payload {
+                //                 message: None,
+                //                 pos: Some(pos),
+                //                 val: Some(val.clone()),
+                //             },
+                //         )
+                //         .is_ok()
+                //     {
+                //         res = Ok(());
+                //     }
+                // }
                 res
             }
             None => {
-                let window = WindowBuilder::new(
+                let window = WebviewWindowBuilder::new(
                     &handle,
                     "select-amount",
-                    WindowUrl::App(INDEX.parse().unwrap()),
+                    WebviewUrl::App(INDEX.parse().unwrap()),
                 )
                 .always_on_top(true)
                 .center()
                 .resizable(false)
                 .minimizable(false)
                 .inner_size(200.0, 100.0)
-                .menu(Menu::new())
+                // .menu(Menu::new())
                 .title("Seleccione Monto")
                 .build()?;
                 std::thread::sleep(std::time::Duration::from_millis(400));
                 let mut res = Err(AppError::IncorrectError(String::from(
                     "Error emitiendo mensaje",
                 )));
-                for _ in 0..8 {
-                    std::thread::sleep(std::time::Duration::from_millis(175));
-                    if window
-                        .emit(
-                            "select-amount",
-                            Payload {
-                                message: None,
-                                pos: Some(pos),
-                                val: Some(val.clone()),
-                            },
-                        )
-                        .is_ok()
-                    {
-                        res = Ok(());
-                    }
-                }
+                // for _ in 0..8 {
+                //     std::thread::sleep(std::time::Duration::from_millis(175));
+                //     if window
+                //         .emit(
+                //             "select-amount",
+                //             Payload {
+                //                 message: None,
+                //                 pos: Some(pos),
+                //                 val: Some(val.clone()),
+                //             },
+                //         )
+                //         .is_ok()
+                //     {
+                //         res = Ok(());
+                //     }
+                // }
                 res
             }
         }
@@ -778,46 +781,46 @@ pub mod commands {
         if sistema.lock().await.stash().len() == 0 {
             Err(AppError::IncorrectError("Stash vacío".to_string()))
         } else {
-            match handle.get_window("open-stash") {
+            match handle.get_webview_window("open-stash") {
                 Some(window) => {
                     window.show()?;
-                    for _ in 0..7 {
-                        std::thread::sleep(std::time::Duration::from_millis(250));
-                        window.emit(
-                            "stash",
-                            Payload {
-                                message: None,
-                                pos: Some(pos),
-                                val: None,
-                            },
-                        )?;
-                    }
+                    // for _ in 0..7 {
+                    //     std::thread::sleep(std::time::Duration::from_millis(250));
+                    //     window.emit(
+                    //         "stash",
+                    //         Payload {
+                    //             message: None,
+                    //             pos: Some(pos),
+                    //             val: None,
+                    //         },
+                    //     )?;
+                    // }
                 }
                 None => {
-                    let win = WindowBuilder::new(
+                    let win = WebviewWindowBuilder::new(
                         &handle,
                         "open-stash", /* the unique window label */
-                        WindowUrl::App(INDEX.parse().unwrap()),
+                        WebviewUrl::App(INDEX.parse().unwrap()),
                     )
                     .always_on_top(true)
                     .center()
                     .resizable(false)
                     .minimizable(false)
                     .inner_size(900.0, 600.0)
-                    .menu(Menu::new())
+                    // .menu(Menu::new())
                     .title("Ventas en Stash")
                     .build()?;
-                    for _ in 0..7 {
-                        std::thread::sleep(std::time::Duration::from_millis(250));
-                        win.emit(
-                            "stash",
-                            Payload {
-                                message: None,
-                                pos: Some(pos),
-                                val: None,
-                            },
-                        )?;
-                    }
+                    // for _ in 0..7 {
+                    //     std::thread::sleep(std::time::Duration::from_millis(250));
+                    //     win.emit(
+                    //         "stash",
+                    //         Payload {
+                    //             message: None,
+                    //             pos: Some(pos),
+                    //             val: None,
+                    //         },
+                    //     )?;
+                    // }
                 }
             }
             Ok(())
@@ -883,21 +886,21 @@ pub mod commands {
         let mut sis = block_on(sistema.lock());
         sis.access();
         sis.stash_sale(pos)?;
-        loop {
-            if window
-                .emit(
-                    "main",
-                    Payload {
-                        message: Some("dibujar venta".into()),
-                        pos: None,
-                        val: None,
-                    },
-                )
-                .is_ok()
-            {
-                break;
-            }
-        }
+        // loop {
+        //     if window
+        //         .emit(
+        //             "main",
+        //             Payload {
+        //                 message: Some("dibujar venta".into()),
+        //                 pos: None,
+        //                 val: None,
+        //             },
+        //         )
+        //         .is_ok()
+        //     {
+        //         break;
+        //     }
+        // }
         Ok(close_window_2(window)?)
     }
     pub fn try_login_2(
@@ -918,7 +921,7 @@ pub mod commands {
         let rango = block_on(sis.try_login(user))?;
         // let menu = window
         //     .app_handle()
-        //     .get_window("main")
+        //     .get_webview_window("main")
         //     .unwrap()
         //     .menu_handle();
 
@@ -943,7 +946,7 @@ pub mod commands {
         //         val: None,
         //     },
         // )?;
-        // if let Some(window) = Window::get_window(&window, "main") {
+        // if let Some(window) = Window::get_webview_window(&window, "main") {
         window.maximize()?;
         window.set_decorations(true)?;
         // }
@@ -968,21 +971,21 @@ pub mod commands {
                 break;
             }
         }
-        loop {
-            if window
-                .emit(
-                    "main",
-                    Payload {
-                        message: Some(String::from("dibujar venta")),
-                        pos: None,
-                        val: None,
-                    },
-                )
-                .is_ok()
-            {
-                break;
-            }
-        }
+        // loop {
+        //     if window
+        //         .emit(
+        //             "main",
+        //             Payload {
+        //                 message: Some(String::from("dibujar venta")),
+        //                 pos: None,
+        //                 val: None,
+        //             },
+        //         )
+        //         .is_ok()
+        //     {
+        //         break;
+        //     }
+        // }
         Ok(sis.unstash_sale(pos, index)?)
     }
 }

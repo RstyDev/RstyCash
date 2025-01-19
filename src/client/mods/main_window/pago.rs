@@ -1,93 +1,93 @@
-use serde_wasm_bindgen::from_value;
-use sycamore::futures::spawn_local_scoped;
-use sycamore::prelude::{create_effect, create_memo, create_signal, create_signal_from_rc};
-use sycamore::rt::Event;
-use sycamore::{
-    prelude::{component, view, Html, Keyed, Prop, Scope, View},
-    reactive::RcSignal,
+use crate::client::mods::{
+    lib::{call, debug},
+    structs::{
+        args::{AgregarPago, EliminarPago},
+        MedioPago, Pago, Pos, Restante, Venta, VentaSH,
+    },
 };
+use serde_wasm_bindgen::from_value;
+use sycamore::{futures::spawn_local_scoped, prelude::*, reactive::Signal, Props};
 use wasm_bindgen::JsCast;
-use web_sys::KeyboardEvent;
-use crate::client::mods::{lib::{call,debug},structs::{MedioPago,Pago,Pos,Restante,Venta,VentaSHC,args::{AgregarPago,EliminarPago}}};
+use web_sys::{KeyboardEvent, SubmitEvent};
 
-#[derive(Prop)]
+#[derive(Props)]
 pub struct PagoProps {
-    opciones: RcSignal<Vec<MedioPago>>,
+    opciones: Signal<Vec<MedioPago>>,
     pago: Pago,
     monto: Restante,
-    pos: RcSignal<Pos>,
-    other_sale: RcSignal<Venta>,
-    focus: RcSignal<bool>,
+    pos: Signal<Pos>,
+    other_sale: Signal<Venta>,
+    focus: Signal<bool>,
 }
 #[allow(non_snake_case)]
 #[component]
-pub fn PagoComp<G: Html>(cx: Scope, props: PagoProps) -> View<G> {
-    let opts = create_signal_from_rc(cx, props.opciones.get());
-    let pos = props.pos.clone();
-    let restante = props.monto.clone();
-    let rest1 = props.monto.clone();
-    let (pago1,pago2)=(props.pago.clone(),props.pago.clone());
-    let (rest2,rest3,rest4,rest5,rest6) = (props.monto.clone(),props.monto.clone(),props.monto.clone(),props.monto.clone(),props.monto.clone());
-    let opcion = create_signal(cx, props.opciones.get().as_ref()[0].medio.to_string());
-    let monto = create_signal(cx, String::new());
-    let enter = create_signal(cx, false);
-    let borrar = create_signal(cx, false);
-    let focus = props.focus.clone();
-    let focus1 = props.focus.clone();
-    let focus2 = props.focus.clone();
-    create_memo(cx, move || {
-        props.opciones.track();
-        opts.set(props.opciones.get().as_ref().clone())
-    });
-
-    create_memo(cx, move || match &rest1 {
+pub fn PagoComp(props: PagoProps) -> View {
+    let opcion = create_signal(props.opciones.with(|o| o[0].medio.to_string()));
+    let monto = create_signal(String::new());
+    let enter = create_signal(false);
+    let borrar = create_signal(false);
+    let aux_monto = props.monto.clone();
+    let aux_focus = props.focus.clone();
+    // create_memo(move || {
+    //     props.opciones.track();
+    //     opts.set(props.opciones.get_clone())
+    // });
+    let aux_pago = props.pago.clone();
+    create_memo(move || match &aux_monto {
         Restante::Pagado(_) => (),
         Restante::NoPagado(rc_signal) => {
             rc_signal.track();
             monto.set(String::new());
         }
     });
-    create_effect(cx, move || {
-        if *borrar.get() {
-            let pos1 = pos.clone();
-            let pos=pos.get().is_a();
-            let pago = pago2.clone();
-            spawn_local_scoped(cx,async move {
-                let res = call("eliminar_pago",EliminarPago{pago,pos}).await;
-                match pos1.get().as_ref(){
-                    Pos::A { venta, .. } => venta.set(Venta::from_shared_complete(from_value::<VentaSHC>(res).unwrap())),
-                    Pos::B { venta, .. } => venta.set(Venta::from_shared_complete(from_value::<VentaSHC>(res).unwrap())),
-                }
+    create_effect(move || {
+        if borrar.get() {
+            let pos = props.pos.with(|p| p.is_a());
+            let pago = aux_pago.clone();
+            spawn_local_scoped(async move {
+                let res = call("eliminar_pago", EliminarPago { pago, pos }).await;
+                props.pos.with(|pos| match pos {
+                    Pos::A { venta, .. } => {
+                        venta.set(Venta::from_shared(from_value::<VentaSH>(res).unwrap()))
+                    }
+                    Pos::B { venta, .. } => {
+                        venta.set(Venta::from_shared(from_value::<VentaSH>(res).unwrap()))
+                    }
+                });
             });
         }
     });
-    create_effect(cx, move || {
-        if *enter.get().as_ref() {
-            let (pos, venta) = match props.pos.get().as_ref() {
+    let aux_pago = props.pago.clone();
+    create_effect(move || {
+        if enter.get() {
+            let (pos, venta) = props.pos.with(|p| match p {
                 Pos::A { venta, .. } => (true, venta.clone()),
                 Pos::B { venta, .. } => (false, venta.clone()),
+            });
+            let mut pago = aux_pago.clone();
+            let monto = monto.with(|m| m.parse::<f32>().unwrap());
+            pago.pagado = if opcion.with(|o| o.eq("Cuenta Corriente")) {
+                0.0
+            } else {
+                monto
             };
-            let mut pago = pago1.clone();
-            let monto = monto.get().parse::<f32>().unwrap();
-            pago.pagado = if opcion.get().as_ref().eq("Cuenta Corriente"){0.0}else{monto};
-            pago.medio_pago = opts
-            .get()
-            .iter()
-            .find(|m| m.medio.as_ref().eq(opcion.get().as_ref()))
-            .unwrap()
-            .clone();
+            pago.medio_pago = props.opciones.with(|o| {
+                o.iter()
+                    .find(|&m| m.medio.as_str().eq(&opcion.get_clone()))
+                    .unwrap()
+                    .clone()
+            });
             pago.monto = monto;
             let prop_pos = props.pos.clone();
             let other_sale = props.other_sale.clone();
-            spawn_local_scoped(cx, async move {
-                let len_anterior = venta.get().as_ref().productos.len();
+            spawn_local_scoped(async move {
+                let len_anterior = venta.with(|v| v.productos.len());
                 let res = call("agregar_pago", AgregarPago { pago, pos }).await;
-                let venta_nueva =
-                    Venta::from_shared_complete(from_value::<VentaSHC>(res.clone()).unwrap());
+                let venta_nueva = Venta::from_shared(from_value::<VentaSH>(res.clone()).unwrap());
                 let len = venta_nueva.productos.len();
                 if len == 0 && len_anterior > 0 {
-                    debug(prop_pos.get().as_ref(), 80, "Pago");
-                    prop_pos.set(match prop_pos.get().as_ref() {
+                    debug(&prop_pos.get_clone(), 80, "Pago");
+                    prop_pos.set(prop_pos.with(|p| match p {
                         Pos::A {
                             venta: _,
                             config,
@@ -106,51 +106,56 @@ pub fn PagoComp<G: Html>(cx: Scope, props: PagoProps) -> View<G> {
                             config: config.to_owned(),
                             clientes: clientes.to_owned(),
                         },
-                    });
+                    }));
                 }
                 venta.set(venta_nueva);
             });
         }
     });
-    view! {cx,
+    let aux_monto = props.monto.clone();
+    let aux_monto2 = props.monto.clone();
+    let aux_monto3 = props.monto.clone();
+    let aux_monto4 = props.monto.clone();
+    let aux_monto5 = props.monto.clone();
+    view! {
         form(id="form-pago"){
-            input(type="number",placeholder=restante.to_string(),class="input-monto",disabled = rest2.pagado(),bind:value=monto, on:keyup=|e:Event|{
+            input(r#type="number",placeholder=props.monto.clone().to_string(),class="input-monto",disabled = aux_monto2.clone().pagado(),bind:value=monto, on:keyup=move |e:KeyboardEvent|{
                 let event: KeyboardEvent = e.clone().unchecked_into();
-                if event.key().eq("Enter")&&!monto.get().as_ref().eq("")&&monto.get().as_ref().parse::<f32>().unwrap()!=0.0{
+                if event.key().eq("Enter")&&!monto.with(|m|m.eq(""))&&monto.with(|m|m.parse::<f32>().unwrap())!=0.0{
                     e.prevent_default();
                     enter.set(true);
                     enter.set(false);
                 }
             },on:focus=move |_|{
-                if !rest3.pagado() && *focus.get(){
-                    focus.set(false)
+                if !aux_monto4.pagado() && props.focus.get(){
+                    props.focus.set(false)
                 }
             })
-            select(class="opciones-pagos",disabled = rest4.pagado(), bind:value=opcion, tabindex="-1",on:focus=move |_|{
-                if !rest5.pagado() && *focus1.get(){
-                    focus1.set(false)
+            select(class="opciones-pagos",disabled = aux_monto.clone().pagado(), bind:value=opcion, tabindex="-1",on:focus=move |_|{
+                if !aux_monto5.pagado() && props.focus.get(){
+                    props.focus.set(false)
                 }
             }){
             Keyed(
-                iterable = opts,
-                view=|cx,x|view!{cx,
+                list = props.opciones,
+                view=|x|view!{
                     option(){(x.medio)}
                 },
                 key=|x|x.id,
             )
         }
-            input(tabindex="-1",type="submit", value=match rest6{Restante::Pagado(_) => "Borrar",Restante::NoPagado(_) => "Pagar"}, on:click=move |a:Event|{
+            input(r#type="submit", value=match aux_monto3{Restante::Pagado(_) => "Borrar",Restante::NoPagado(_) => "Pagar"}, on:submit=move |a:SubmitEvent|{
                 a.prevent_default();
-                if *focus2.get(){
-                    focus2.set(false);
+                if props.focus.get(){
+                    props.focus.set(false);
                 }
-                match props.monto{
+                match aux_monto3{
                     Restante::Pagado(_) => {
                         borrar.set(true);
                         borrar.set(false);
                     },
                     Restante::NoPagado(_) => {
-                            if !monto.get().as_ref().eq(""){
+                            if !monto.with(|m|m.eq("")){
                             enter.set(true);
                             enter.set(false);
                         }

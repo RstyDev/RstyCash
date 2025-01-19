@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 
 # *************  SYC  *************
-sycamore = { version = "0.8", features = ["suspense"]}
+sycamore = { version = "0.9.1", features = ["suspense"]}
 wasm-bindgen = { version="0.2.93"}
 wasm-bindgen-futures = { version= "0.4.43"}
 js-sys = { version="0.3.70"}

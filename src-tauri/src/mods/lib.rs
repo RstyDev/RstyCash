@@ -112,7 +112,7 @@ impl Db {
                 prods_query.push(',');
             }
             prods_query.push_str(prods_row);
-            for (j, _) in prod.codigos_de_barras().iter().enumerate() {
+            for j in 0..prod.codigos_de_barras().len() {
                 if prod.codigos_de_barras()[j] != 0 {
                     if j > 0 || i > 0 {
                         codigos_query.push(',');

@@ -49,23 +49,6 @@ pub async fn fresh(db: &Pool<Sqlite>) {
     if let Err(e) = sqlx::query(QUERY).execute(db).await {
         println!("{}", e);
     };
-    // let migrations = path::Path::new("./migrations");
-    // println!("{:#?}", migrations);
-    // let migration_results = match sqlx::migrate::Migrator::new(migrations)
-    //     .await{
-    //     Ok(a) => a.run(db).await,
-    //     Err(e) => loop{println!("{}",e)}
-    // };
-    //
-    //
-    // match migration_results {
-    //     Ok(_) => println!("Migration success"),
-    //     Err(error) => {
-    //         panic!("error: {}", error);
-    //     }
-    // }
-    //
-    // println!("migration: {:?}", migration_results);
 }
 
 pub async fn down(db: &Pool<Sqlite>) {

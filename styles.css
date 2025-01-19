@@ -56,7 +56,59 @@ input:disabled, button:disabled, .button:disabled {
     }
   }
 }
+.space-between{
+  display: flex;
+  justify-content: space-between;
+  & button{
+    margin: 5px;
+  }
+}
+.form{
+  margin: 10px;
+  padding: 10px;
+  background: #888;
+  border-style: ridge;
+  border-color: #ddd;
+  border-width: 3px;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  & section{display: grid}
+  &.producto{
+    & section{
+      grid-template-columns: 50% 30% 20%;
+      & label{
+        grid-column-start: 1;
+      }
+      & input{
+        grid-column-start: 2;
+        grid-column-end: 4;
+      }
 
+    }
+    & section:last-of-type input{
+      grid-column-end: 3;
+    }
+  }
+  &.codigos{
+    overflow-y: scroll;
+    & section, & #cod_form{
+      display: grid;
+      grid-template-columns: 60% 40%;
+    }
+  }
+  &.proveedores{
+    overflow-y: scroll;
+    & section, & #prov_form{
+      display: grid;
+      grid-template-columns: 40% 40% 20%;
+    }
+  }
+}
+.frame {
+  border: #9a9a9a 1px solid;
+  padding: 10px;
+}
 .contenedor {
   display: block;
   position: relative;
@@ -84,7 +136,7 @@ input:disabled, button:disabled, .button:disabled {
     height: 10px;
     border: solid white;
     border-width: 0 3px 3px 0;
-    -webkit-transform: rotate(45deg);
+    /*-webkit-transform: rotate(45deg);*/
     -ms-transform: rotate(45deg);
     transform: rotate(45deg);
   }
@@ -139,14 +191,14 @@ input:disabled, button:disabled, .button:disabled {
     top: 18px;
     display: none;
     list-style-type: none;
-    padding: 0px;
-    margin: 0px 1px 0px 8px;
+    padding: 0;
+    margin: 0 1px 0 8px;
   }
   & button{
     display: inline-block;
     padding: 3px 5px;
-    border: 0px;
-    border-radius: 0px;
+    border: 0;
+    border-radius: 0;
     background-color: #222222;
     &:hover{
       cursor: default;
@@ -174,7 +226,7 @@ input:disabled, button:disabled, .button:disabled {
   position:absolute;
 }
 #cuadro-principal .articulo:first-of-type {
-  border-radius: 0px;
+  border-radius: 0;
 
   & section,
   &.cantidad {
@@ -470,7 +522,7 @@ div#pagos section.pago {
   overflow-y: scroll;
   -ms-overflow-style: none;
   scrollbar-width: none;
-  margin: 0px 10px 0px 5px;
+  margin: 0 10px 0 5px;
 
   &::-webkit-scrollbar {
     display: none;
@@ -643,21 +695,29 @@ label {
     margin: 5px;
   }
 }
+label{
+  display: inline;
+}
 #agregar-producto-container {
   display: grid;
-  grid-template-columns: 35% 65% ;
+  grid-template-columns: 50% 50% ;
   grid-template-rows: auto auto;
-  & #agregar-producto{
+  & .right{
     grid-column-start: 2;
+    & .first{
+      grid-row-start: 1;
+    }
+    & .second{
+      grid-row-start: 2;
+    }
+    /*grid-row: 1/span 2;*/
+  }
+  & .left{
+    /*margin-top: 20px;*/
+    grid-column-start: 1;
     grid-row: 1/span 2;
   }
-  & #input-codigo{
-    margin-top: 20px;
-    grid-column-start: 1;
-  }
-  & #agregar-proveedor-producto{
-    grid-column-start: 1;
-  }
+
 
   & form {
     display: flex;

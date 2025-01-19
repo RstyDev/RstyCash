@@ -1,23 +1,23 @@
-use sycamore::prelude::RcSignal;
+use sycamore::prelude::Signal;
 
 use super::{Cliente, Config, Venta};
 #[derive(Debug, PartialEq, Clone)]
 pub enum Pos {
     A {
-        venta: RcSignal<Venta>,
-        config: RcSignal<Config>,
-        clientes: RcSignal<Vec<Cliente>>,
+        venta: Signal<Venta>,
+        config: Signal<Config>,
+        clientes: Signal<Vec<Cliente>>,
     },
     B {
-        venta: RcSignal<Venta>,
-        config: RcSignal<Config>,
-        clientes: RcSignal<Vec<Cliente>>,
+        venta: Signal<Venta>,
+        config: Signal<Config>,
+        clientes: Signal<Vec<Cliente>>,
     },
 }
 
-impl Pos{
-    pub fn is_a(&self)->bool{
-        match self{
+impl Pos {
+    pub fn is_a(&self) -> bool {
+        match self {
             Pos::A { .. } => true,
             Pos::B { .. } => false,
         }
@@ -27,17 +27,17 @@ impl Pos{
 #[derive(Debug, PartialEq, Clone)]
 pub enum Buscando {
     False {
-        pos: RcSignal<Pos>,
-        focus: RcSignal<bool>,
-        other_sale: RcSignal<Venta>,
+        pos: Signal<Pos>,
+        focus: Signal<bool>,
+        other_sale: Signal<Venta>,
     },
     True {
-        nav: RcSignal<Nav>,
-        search: RcSignal<String>,
-        pos: RcSignal<Pos>,
-        other_sale: RcSignal<Venta>,
-        aux: RcSignal<bool>,
-        focus: RcSignal<bool>,
+        nav: Signal<Nav>,
+        search: Signal<String>,
+        pos: Signal<Pos>,
+        other_sale: Signal<Venta>,
+        aux: Signal<bool>,
+        focus: Signal<bool>,
     },
 }
 
@@ -53,7 +53,7 @@ pub enum Nav {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Restante {
     Pagado(f32),
-    NoPagado(RcSignal<f32>),
+    NoPagado(Signal<f32>),
 }
 
 impl Restante {
@@ -63,10 +63,10 @@ impl Restante {
             Restante::NoPagado(_) => false,
         }
     }
-    pub fn monto(&self)->f32{
-        match self{
+    pub fn monto(&self) -> f32 {
+        match self {
             Restante::Pagado(monto) => *monto,
-            Restante::NoPagado(rc_signal) => *rc_signal.get(),
+            Restante::NoPagado(signal) => signal.get(),
         }
     }
 }

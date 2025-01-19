@@ -27,7 +27,7 @@ impl Config {
                 .fetch_all(db)
                 .await;
                 let medios = medios?
-                    .iter()
+                    .into_iter()
                     .map(|med| MedioPago::build(&med.medio, med.id))
                     .collect::<Vec<MedioPago>>();
                 Ok(Config::build(
@@ -93,7 +93,7 @@ impl Config {
     pub fn modo_mayus(&self) -> Mayusculas {
         self.modo_mayus.clone()
     }
-    pub fn to_shared_complete(&self) -> Self {
+    pub fn to_shared(&self) -> Self {
         self.clone()
     }
 }

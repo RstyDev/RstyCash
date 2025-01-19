@@ -2,6 +2,6 @@
 CREATE TABLE IF NOT EXISTS proveedores (
             id integer PRIMARY KEY AUTOINCREMENT not null,
             nombre text not null,
-            contacto bigint,
+            contacto integer,
             updated datetime not null
         )

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite};
 use std::sync::Arc;
 
-use super::{AppError, Res, User, Venta};
+use super::{AppError, Res, User, UserSH, Venta};
 
 #[derive(Serialize, Clone, Debug, Deserialize)]
 pub enum Cliente {
@@ -121,12 +121,12 @@ impl Cli {
         )
         .fetch_all(db)
         .await;
-        Ok(model?.iter().map(|e| e.float).sum::<f32>())
+        Ok(model?.into_iter().map(|e| e.float).sum::<f32>())
     }
     pub async fn get_deuda_detalle(
         &self,
         db: &Pool<Sqlite>,
-        user: Option<Arc<User>>,
+        user: Option<Arc<UserSH>>,
     ) -> Res<Vec<Venta>> {
         let mut ventas = Vec::new();
         let qres: Vec<VentaDB> = sqlx::query_as!(
@@ -147,7 +147,7 @@ impl Cli {
         id_cliente: i32,
         db: &Pool<Sqlite>,
         venta: Venta,
-        user: &Option<Arc<User>>,
+        user: Option<Arc<UserSH>>,
     ) -> Res<Venta> {
         let qres: Option<VentaDB> = sqlx::query_as!(
             VentaDB,
@@ -164,7 +164,7 @@ impl Cli {
         };
 
         if venta.cliente == id_cliente {
-            let venta = Mapper::venta(db, venta, user).await?;
+            let venta = Mapper::venta(db, venta, &user).await?;
             sqlx::query!(
                 "update ventas set paga = ? where id = ? ",
                 *venta.id(),
@@ -251,7 +251,7 @@ impl Cliente {
             None => Cliente::Final,
         }
     }
-    pub fn to_shared_complete(&self) -> Self {
+    pub fn to_shared(&self) -> Self {
         self.clone()
     }
     pub async fn insert_final(db: &Pool<Sqlite>) -> Res<()> {

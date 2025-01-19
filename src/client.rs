@@ -1,3 +1,3 @@
 pub mod app;
-pub mod mods;
 pub mod menu;
+pub mod mods;

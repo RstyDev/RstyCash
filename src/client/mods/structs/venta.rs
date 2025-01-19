@@ -18,7 +18,7 @@ pub struct Venta {
     pub time: NaiveDateTime,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct VentaSHC {
+pub struct VentaSH {
     id: i32,
     monto_total: f32,
     productos: Vec<Valuable>,
@@ -56,8 +56,8 @@ impl Venta {
             time,
         }
     }
-    pub fn to_shared_complete(&self) -> VentaSHC {
-        VentaSHC {
+    pub fn to_shared(&self) -> VentaSH {
+        VentaSH {
             id: self.id,
             monto_total: self.monto_total,
             productos: self.productos.clone(),
@@ -73,7 +73,7 @@ impl Venta {
             time: self.time,
         }
     }
-    pub fn from_shared_complete(venta: VentaSHC) -> Self {
+    pub fn from_shared(venta: VentaSH) -> Self {
         Venta {
             id: venta.id,
             monto_total: venta.monto_total,
